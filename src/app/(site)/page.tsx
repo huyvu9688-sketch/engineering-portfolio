@@ -1,47 +1,14 @@
 import Link from "next/link";
-import {
-  ArrowUpRight,
-  ExternalLink,
-  Mail,
-  User,
-  Calculator,
-  Database,
-} from "lucide-react";
+import { ExternalLink, Mail } from "lucide-react";
 import { AboutSection } from "@/components/shared/about-section";
 import { CustomCursor } from "@/components/shared/custom-cursor";
+import { ExploreShowcase } from "@/components/shared/explore-showcase";
 import { MagneticButton } from "@/components/shared/magnetic-button";
 import { Marquee } from "@/components/shared/marquee";
 import { Reveal } from "@/components/shared/reveal";
 import { ScrollToTopButton } from "@/components/shared/scroll-to-top-button";
 
 const HERO_LINES = ["Joseph", "Vu"];
-
-const ENTRY_CARDS = [
-  {
-    href: "/portfolio",
-    number: "01",
-    title: "Portfolio",
-    description:
-      "Automation and production engineering projects, with embedded 3D models where available.",
-    icon: User,
-  },
-  {
-    href: "/tools",
-    number: "02",
-    title: "Toolkit",
-    description:
-      "Engineering calculators for daily design work — pneumatics, motor sizing, unit conversion.",
-    icon: Calculator,
-  },
-  {
-    href: "/database",
-    number: "03",
-    title: "Database",
-    description:
-      "A searchable library of 3D models, drawings, and technical documents, ready to download.",
-    icon: Database,
-  },
-];
 
 export default function LandingPage() {
   return (
@@ -141,49 +108,8 @@ export default function LandingPage() {
       {/* Skills marquee */}
       <Marquee />
 
-      {/* Entry points */}
-      <section className="px-4 py-24 md:px-6">
-        <div className="mx-auto max-w-[1800px]">
-          <Reveal>
-            <div className="flex items-end justify-between border-b border-hairline pb-6">
-              <h2 className="text-4xl font-semibold uppercase tracking-tighter md:text-7xl">
-                Explore
-              </h2>
-              <p className="font-mono text-xs uppercase tracking-widest text-ink-faint">
-                001 — Entry Points
-              </p>
-            </div>
-          </Reveal>
-
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {ENTRY_CARDS.map((card, index) => (
-              <Reveal key={card.href} delayMs={index * 100}>
-                <Link
-                  href={card.href}
-                  className="group flex h-full flex-col rounded-lg border border-hairline bg-surface p-8 transition-all duration-300 hover:-translate-y-1"
-                >
-                  <div className="flex items-center justify-between">
-                    <card.icon className="h-5 w-5 stroke-[1.5] text-ink-muted transition-colors duration-300 group-hover:text-accent" />
-                    <span className="font-mono text-xs uppercase tracking-widest text-ink-faint">
-                      {card.number}
-                    </span>
-                  </div>
-                  <h3 className="mt-12 text-3xl font-semibold uppercase tracking-tighter md:text-4xl">
-                    {card.title}
-                  </h3>
-                  <p className="mt-4 flex-1 text-base leading-relaxed text-ink-muted">
-                    {card.description}
-                  </p>
-                  <span className="mt-8 inline-flex items-center gap-1 font-mono text-xs uppercase tracking-widest text-ink transition-colors duration-300 group-hover:text-accent">
-                    Enter
-                    <ArrowUpRight className="h-4 w-4 stroke-[1.5] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                  </span>
-                </Link>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Explore showcase — morphed from index3 reference */}
+      <ExploreShowcase />
 
       {/* About & Experience */}
       <AboutSection />

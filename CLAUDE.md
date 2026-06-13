@@ -8,16 +8,13 @@ making any architectural decision:
 2. `context/architecture.md` — system structure, boundaries,
    storage model, and invariants
 3. `context/ui-context.md` — theme, colors, typography, and
-   component conventions
-4. `context/design-reference.html` — source template for the
-   visual design; reference for hero, nav, marquee, and project
-   patterns (content is placeholder; JS is not the
-   implementation pattern)
-5. `context/code-standards.md` — implementation rules and
+   component conventions (full component specs — no separate
+   design-reference file needed)
+4. `context/code-standards.md` — implementation rules and
    conventions
-6. `context/ai-workflow-rules.md` — development workflow,
+5. `context/ai-workflow-rules.md` — development workflow,
    scoping rules, and delivery approach
-7. `context/progress-tracker.md` — current phase, completed
+6. `context/progress-tracker.md` — current phase, completed
    work, open questions, and next steps
 
 Update `context/progress-tracker.md` after each meaningful

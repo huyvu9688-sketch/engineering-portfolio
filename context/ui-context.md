@@ -9,13 +9,11 @@ chrome (nav, tags, captions, metadata). Hairline `black/10`
 borders. Motion is reveal-based (fade/slide-in once), plus a few
 signature marketing-page effects — never scroll-jacked pinning.
 
-**Companion file:** `context/design-reference.html` is the
-source template. Use it as the visual reference for the hero,
-nav, marquee, and project-row patterns. Its CONTENT (name,
-projects, skills) is placeholder — replace with this project's
-content per `project-overview.md`. Its single-file imperative JS
-is NOT the implementation pattern — rebuild effects as React
-components per `code-standards.md`.
+This file is the complete, self-contained component spec — built
+from an owner-supplied single-page HTML reference during Phase 1
+(content rewritten for this project; its imperative JS was
+rebuilt as React components per `code-standards.md`). No
+separate design-reference file is needed.
 
 ## Page Modes — IMPORTANT
 
@@ -85,7 +83,7 @@ Type rules from the template:
 | Cards / panels (utility pages)   | `rounded-lg`   |
 | Full-bleed bands (marquee, footer) | `rounded-none` |
 
-## Signature Components (from design-reference.html)
+## Signature Components
 
 - **Nav**: fixed top, `mix-blend-difference` white text; center
   links in a `bg-white/10 backdrop-blur` pill; solid white pill

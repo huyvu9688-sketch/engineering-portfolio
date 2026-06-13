@@ -191,10 +191,6 @@ Update this file after every meaningful implementation change.
   (`[Company Name]`, `[Degree / Program]`, etc.). Owner to
   provide real role titles, companies, dates, achievements, and
   education before this ships.
-- `context/design-reference.html` is referenced by CLAUDE.md
-  and ui-context.md but does not exist in the repo. Phase 1 was
-  built from the written component specs in ui-context.md.
-  Restore the file or remove the references.
 - Hero now reads "Joseph Vu" / "Engineering Portfolio" /
   "Open to work", contact email huyvu9688@gmail.com — owner to
   confirm this is final (title/role line still TBD for
@@ -221,9 +217,10 @@ Update this file after every meaningful implementation change.
 ## Architecture Decisions
 
 - FINAL design direction: Swiss-style portfolio template
-  (`context/design-reference.html`) — light neutral canvas,
-  #111 ink, single #EB3A14 accent, Inter + mono chrome, pill
-  buttons, reveal-based motion. Replaces both earlier themes
+  (owner-supplied single-page HTML reference, since adapted into
+  `ui-context.md`) — light neutral canvas, #111 ink, single
+  #EB3A14 accent, Inter + mono chrome, pill buttons, reveal-based
+  motion. Replaces both earlier themes
   (dark/amber, Apple/monochrome). Marketing pages get full
   effects (cursor, marquee, magnetic buttons); utility pages
   (calculators, database) stay calm. Percentage loader from

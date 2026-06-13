@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------- */
+/* Design tokens — single source of truth (see ui-context.md) */
+/* ---------------------------------------------------------- */
+
+:root {
+  --canvas: #f5f5f5;
+  --surface: #ffffff;
+  --ink: #111111;
+  --ink-muted: #555555;
+  --ink-faint: #a3a3a3;
+  --surface-dark: #111111;
+  --surface-black: #050505;
+  --on-dark: #f5f5f5;
+  --on-dark-muted: #cccccc;
+  --accent: #eb3a14;
+  --hairline: rgba(0, 0, 0, 0.1);
+  --hairline-dark: rgba(255, 255, 255, 0.1);
+  --state-error: #dc2626;
+  --state-success: #16a34a;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-surface-dark: var(--surface-dark);
+  --color-surface-black: var(--surface-black);
+  --color-on-dark: var(--on-dark);
+  --color-on-dark-muted: var(--on-dark-muted);
+  --color-accent: var(--accent);
+  --color-hairline: var(--hairline);
+  --color-hairline-dark: var(--hairline-dark);
+  --color-error: var(--state-error);
+  --color-success: var(--state-success);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--on-dark);
+}
+
+/* ---------------------------------------------------------- */
+/* Hero — per-line blur + rise reveal, plays once on load     */
+/* ---------------------------------------------------------- */
+
+.hero-line {
+  overflow: hidden;
+}
+
+.hero-line > span {
+  display: block;
+  opacity: 0;
+  transform: translateY(110%);
+  filter: blur(8px);
+  animation: hero-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--rise-delay, 0s);
+}
+
+@keyframes hero-rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* Soft radial accent glow behind the hero (8% opacity) */
+.hero-glow {
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--accent) 8%, transparent),
+    transparent
+  );
+  filter: blur(40px);
+}
+
+/* Status badge — accent bars pulse opacity, independent timing */
+.status-bar {
+  background: var(--accent);
+  border-radius: 9999px;
+  animation: status-pulse var(--pulse-duration, 1s) ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Custom cursor — hide the native cursor on marketing pages    */
+/* only (toggled by CustomCursor while it is mounted)           */
+@media (pointer: fine) {
+  body.custom-cursor-active,
+  body.custom-cursor-active * {
+    cursor: none;
+  }
+}
+
+/* ---------------------------------------------------------- */
+/* Marquee — slow infinite scroll on the dark band            */
+/* ---------------------------------------------------------- */
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 40s linear infinite;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ---------------------------------------------------------- */
+/* Scroll reveal — fades in once when entering the viewport   */
+/* ---------------------------------------------------------- */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  filter: blur(6px);
+  transition:
+    opacity 0.8s ease-out,
+    transform 0.8s ease-out,
+    filter 0.8s ease-out;
+}
+
+[data-reveal].is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+/* ---------------------------------------------------------- */
+/* Reduced motion — content visible immediately, no autoplay  */
+/* ---------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-line > span {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  .status-bar {
+    animation: none;
+    opacity: 1;
+  }
+
+  /* Marquee keeps scrolling — it is a core brand element and is
+     a slow, non-flashing continuous motion (owner's request). */
+
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+}

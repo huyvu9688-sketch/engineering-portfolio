@@ -62,6 +62,19 @@ changes:
 - Theme or component conventions → `ui-context.md`
 - Feature scope → `project-overview.md`
 
+## Git & Deploy Workflow
+
+- Commit locally after each verified unit, as usual (small,
+  descriptive commits) — this keeps history readable and
+  changes easy to roll back.
+- Do NOT `git push` to `main` after every commit. Pushing
+  triggers a Vercel rebuild/redeploy for each one, which is slow
+  and noisy for work-in-progress. Batch local commits and push
+  (one `git push`) only when the owner says a batch of work is
+  ready/final to go live (decided 2026-06-13).
+- Exception: if a change must be live immediately (e.g. a
+  hotfix to the deployed site), push right away and say so.
+
 ## Before Moving to the Next Unit
 
 1. The current unit works end to end within its defined scope

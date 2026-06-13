@@ -6,12 +6,6 @@ export interface Project {
   tags: string[];
   /** Path under /public, e.g. "/portfolio/project-one.jpg". Omitted for a placeholder visual. */
   image?: string;
-  /**
-   * GLB/GLTF model for the interactive 3D viewer. A path under /public
-   * (e.g. "/models/project-one.glb") or an absolute URL. Omitted → the
-   * detail page shows the "viewer waiting for a model" placeholder.
-   */
-  model?: string;
   /** Your role on the project, shown on the detail page. */
   role?: string;
   /** When the work happened, e.g. "2024" or "2023 – 2024". */
@@ -30,9 +24,6 @@ export const PROJECTS: Project[] = [
     tags: ["[Tool / Tech]", "[Tool / Tech]", "[Tool / Tech]"],
     role: "[Your role — e.g. Lead Design Engineer]",
     timeframe: "[Year]",
-    // TEMPORARY demo model so the 3D viewer is visible end to end.
-    // Replace with your own GLB under /public/models/ (e.g. "/models/project-one.glb").
-    model: "https://modelviewer.dev/shared-assets/models/Astronaut.glb",
     overview: [
       "[Describe the problem or brief: what was needed and why.]",
       "[Describe your approach: the design, the calculations, the tools, and any constraints you worked within.]",
@@ -70,6 +61,14 @@ export const PROJECTS: Project[] = [
     ],
   },
 ];
+
+/**
+ * Featured GLB shown in the interactive 3D viewer on the /portfolio page.
+ * TEMPORARY public demo — replace with your own model under /public/models/
+ * (e.g. "/models/featured.glb").
+ */
+export const FEATURED_MODEL =
+  "https://modelviewer.dev/shared-assets/models/Astronaut.glb";
 
 export function getProjectBySlug(slug: string): Project | undefined {
   return PROJECTS.find((project) => project.slug === slug);

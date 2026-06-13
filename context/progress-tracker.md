@@ -4,8 +4,8 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 1 — Foundation & landing page (In progress — local build
-  complete; deploy to Vercel remaining)
+- Phase 1 — Foundation & landing page (Deployed; placeholder
+  content remains — see Open Questions)
 
 ## Phase Plan
 
@@ -22,7 +22,8 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Connect Vercel, verify live URL (GitHub push done)
+- Gather real content for placeholders (Background/Experience,
+  Socials, Location) — see Open Questions
 
 ## Completed
 
@@ -147,6 +148,10 @@ Update this file after every meaningful implementation change.
   - `npm run build` re-verified locally after the change —
     still passes
   - Committed and pushed to `main`; Vercel will auto-redeploy
+  - Redeploy succeeded (commit `1c97c2a`, status Ready). Live at
+    https://engineering-portfolio-svy8.vercel.app — verified
+    hero, status badge, marquee, and contact section render
+    correctly with no broken assets. Phase 1 deploy is DONE
 
 ## In Progress
 
@@ -154,8 +159,9 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-- Connect Vercel to the GitHub repo, deploy, verify live URL
-  (needs owner's Vercel account — quick web flow)
+- Owner to provide real content for Background/Experience,
+  Socials (LinkedIn/GitHub URLs), and Location to replace
+  placeholders (see Open Questions)
 - shadcn/ui setup deferred until first utility page (Phase 3)
   needs form primitives — nothing on the landing page uses it
 
@@ -190,7 +196,7 @@ Update this file after every meaningful implementation change.
 
 - [x] Node.js LTS installed
 - [x] GitHub repo created (huyvu9688-sketch/engineering-portfolio)
-- [ ] Vercel account linked to GitHub
+- [x] Vercel account linked to GitHub
 - [ ] Claude Code installed in VS Code
 - [ ] Content gathering started: resume PDF, 2-3 project
       writeups, photos, shareable GLB exports

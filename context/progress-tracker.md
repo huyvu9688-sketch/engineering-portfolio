@@ -4,15 +4,24 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 1 — Foundation & landing page (Deployed; placeholder
-  content remains — see Open Questions)
+- Phase 1 — Foundation & landing page: COMPLETE (deployed,
+  verified live at https://engineering-portfolio-svy8.vercel.app)
+- Phase 2 — Portfolio: STARTING
 
 ## Phase Plan
 
 1. **Phase 1** — Project setup, theme tokens, navbar/footer,
-   landing page, deploy to Vercel
+   landing page, deploy to Vercel ✅ DONE
 2. **Phase 2** — Portfolio: about, resume, project cards,
    project detail page, GLB viewer embed
+   1. Project data model (`features/portfolio/data/`) + project
+      card component + `/portfolio` listing page (placeholder
+      projects, same bracketed-placeholder pattern as the
+      landing page's Background section)
+   2. Project detail page route (`/portfolio/[slug]`)
+   3. Resume download link/section
+   4. Three.js (react-three-fiber) GLB viewer embed on project
+      detail pages
 3. **Phase 3** — Toolkit: unit converter → pneumatic cylinder
    calculator → motor sizing calculator
 4. **Phase 4** — Database: Supabase setup, schema + RLS,
@@ -22,8 +31,8 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Gather real content for placeholders (Background/Experience,
-  Socials, Location) — see Open Questions
+- Phase 2, unit 1: portfolio project data model + project card
+  component + `/portfolio` listing page
 
 ## Completed
 
@@ -166,8 +175,11 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
+- Phase 2 unit 2: project detail page route (`/portfolio/[slug]`)
+- Phase 2 unit 3: resume download link/section
+- Phase 2 unit 4: Three.js GLB viewer embed
 - Owner to provide real content for Background/Experience,
-  Socials (LinkedIn/GitHub URLs), and Location to replace
+  Socials, Location, and portfolio project write-ups to replace
   placeholders (see Open Questions)
 - shadcn/ui setup deferred until first utility page (Phase 3)
   needs form primitives — nothing on the landing page uses it
@@ -234,6 +246,12 @@ Update this file after every meaningful implementation change.
   `--registry=https://registry.npmjs.org`. If a future install
   mysteriously misses a platform binary, try the official
   registry first.
+- 2026-06-13: Phase 1 wrapped up and deployed. Moving to Phase 2
+  (Portfolio). Workflow change going forward: commit locally
+  after each unit as usual, but hold off on `git push` (which
+  triggers a Vercel redeploy) until the owner says a batch of
+  work is ready/final. See `ai-workflow-rules.md` → "Git &
+  Deploy Workflow".
 - 2026-06-13: CORRECTION to the note above — that install was
   saved with `--save-dev`, which duplicated the package into
   `devDependencies` as a hard (non-optional) dependency. That

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowUpRight, Box, Cog, ImageOff } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Cog, ImageOff } from "lucide-react";
 import { CustomCursor } from "@/components/shared/custom-cursor";
 import { Reveal } from "@/components/shared/reveal";
 import { ModelViewer } from "@/features/portfolio/viewer/components/model-viewer";
@@ -72,8 +72,8 @@ export default async function ProjectDetailPage({
         </Reveal>
 
         <Reveal>
-          <div className="mt-10 aspect-video overflow-hidden rounded-sm border border-hairline bg-surface md:mt-12">
-            {project.image ? (
+          {project.image ? (
+            <div className="mt-10 aspect-video overflow-hidden rounded-sm border border-hairline bg-surface md:mt-12">
               <Image
                 src={project.image}
                 alt={project.title}
@@ -82,15 +82,27 @@ export default async function ProjectDetailPage({
                 className="h-full w-full object-cover"
                 priority
               />
-            ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-ink-faint">
-                <ImageOff className="h-10 w-10 stroke-[1.5]" />
-                <span className="font-mono text-[10px] uppercase tracking-widest">
-                  [Project Visual]
-                </span>
+            </div>
+          ) : project.model ? (
+            <div className="mt-10 md:mt-12">
+              <div className="mb-3 flex items-end justify-between">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-accent">
+                  Interactive 3D Model
+                </p>
+                <p className="hidden font-mono text-[10px] uppercase tracking-widest text-ink-faint sm:block">
+                  Drag to orbit · Scroll to zoom · Right-click a part
+                </p>
               </div>
-            )}
-          </div>
+              <ModelViewer src={project.model} />
+            </div>
+          ) : (
+            <div className="mt-10 flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-sm border border-hairline bg-surface text-ink-faint md:mt-12">
+              <ImageOff className="h-10 w-10 stroke-[1.5]" />
+              <span className="font-mono text-[10px] uppercase tracking-widest">
+                [Project Visual]
+              </span>
+            </div>
+          )}
         </Reveal>
 
         <div className="mt-12 grid grid-cols-1 gap-12 md:mt-20 md:grid-cols-12 md:gap-16">
@@ -140,38 +152,26 @@ export default async function ProjectDetailPage({
           </Reveal>
         </div>
 
-        {/* 3D model viewer — embeds the Three.js engine (Phase 2 unit 4) */}
-        <Reveal>
-          <section className="mt-16 md:mt-24">
-            <div className="flex items-end justify-between border-b border-hairline pb-6">
-              <h2 className="font-mono text-xs uppercase tracking-widest text-ink-faint">
-                3D Model
-              </h2>
-              {project.model ? (
+        {/* When a project has BOTH an image (hero) and a model, the viewer
+            gets its own section here. Model-only projects show the viewer as
+            the hero above, so this section is skipped for them. */}
+        {project.image && project.model ? (
+          <Reveal>
+            <section className="mt-16 md:mt-24">
+              <div className="flex items-end justify-between border-b border-hairline pb-6">
+                <h2 className="font-mono text-xs uppercase tracking-widest text-ink-faint">
+                  3D Model
+                </h2>
                 <p className="hidden font-mono text-[10px] uppercase tracking-widest text-ink-faint sm:block">
                   Drag to orbit · Scroll to zoom · Right-click a part
                 </p>
-              ) : null}
-            </div>
-
-            <div className="mt-8">
-              {project.model ? (
+              </div>
+              <div className="mt-8">
                 <ModelViewer src={project.model} />
-              ) : (
-                <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-hairline bg-surface py-16 text-center">
-                  <Box className="h-8 w-8 stroke-[1.5] text-ink-faint" />
-                  <p className="font-mono text-xs uppercase tracking-widest text-ink-muted">
-                    3D Model Viewer
-                  </p>
-                  <p className="max-w-sm text-sm text-ink-faint">
-                    An interactive GLB viewer will load here once a model is
-                    attached to this project.
-                  </p>
-                </div>
-              )}
-            </div>
-          </section>
-        </Reveal>
+              </div>
+            </section>
+          </Reveal>
+        ) : null}
 
         <Reveal>
           <div className="mt-20 border-t border-hairline pt-10">

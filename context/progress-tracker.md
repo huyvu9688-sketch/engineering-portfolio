@@ -421,7 +421,10 @@ Update this file after every meaningful implementation change.
   viewer modules to integrate. Built the viewer core this session
   (see Completed). Engine kept as plain JS behind a typed React
   wrapper; measurement tool + view cube deferred to unit 4b.
-  Commits held locally per the batch-push workflow — not pushed.
+  Pushed to GitHub `main` (commit 6dbb00c) and auto-deployed to
+  Vercel at the owner's request (they will run/view the site via
+  the deployment rather than local dev). Verified live:
+  /portfolio/project-one returns 200 with the viewer present.
 - 2026-06-13: Owner reported `next dev` pegging RAM + SSD to 100%
   (machine thrashing) after `three` was added. Two-part cause:
   the WebGL render loop/context leaked across Strict Mode + Fast

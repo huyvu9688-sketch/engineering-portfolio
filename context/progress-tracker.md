@@ -22,7 +22,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Push to GitHub, connect Vercel, verify live URL
+- Connect Vercel, verify live URL (GitHub push done)
 
 ## Completed
 
@@ -121,14 +121,41 @@ Update this file after every meaningful implementation change.
     longer in the reduced-motion block; `custom-cursor-active`
     rule present)
 
+- Git + GitHub setup — 2026-06-13:
+  - Initialized git repo (`main`), identity `Joseph Vu
+    <huyvu9688@gmail.com>`, `.agents`/`skills-lock.json`
+    git-ignored, default scaffold README replaced with a
+    project README
+  - Reconciled stale metadata in `layout.tsx`: title now
+    "Joseph Vu — Engineering Portfolio" (was "EngiHub …", desc
+    said "Joe"). EngiHub kept as internal working/package name
+  - First commit (31 files, no heavy/ignored dirs) pushed to
+    https://github.com/huyvu9688-sketch/engineering-portfolio
+    (private). Verified remote `main` matches local HEAD
+
+- Fix Vercel build failure (`EBADPLATFORM`) — 2026-06-13:
+  - First Vercel deploy failed during `npm install` with
+    `EBADPLATFORM` for `@tailwindcss/oxide-win32-x64-msvc`
+    (wanted win32/x64, Vercel runners are linux/x64)
+  - Root cause: that package was listed in BOTH
+    `devDependencies` (hard dep — fails on platform mismatch)
+    AND `optionalDependencies` (correctly skippable) in
+    `package.json`/`package-lock.json`. Removed the duplicate
+    `devDependencies` entry; the `optionalDependencies` entry
+    alone is sufficient — npm installs it on win32/x64 (local
+    dev) and silently skips it on linux/x64 (Vercel)
+  - `npm run build` re-verified locally after the change —
+    still passes
+  - Committed and pushed to `main`; Vercel will auto-redeploy
+
 ## In Progress
 
 - None.
 
 ## Next Up
 
-- Push to GitHub, connect Vercel, verify live URL (needs
-  owner's GitHub/Vercel accounts)
+- Connect Vercel to the GitHub repo, deploy, verify live URL
+  (needs owner's Vercel account — quick web flow)
 - shadcn/ui setup deferred until first utility page (Phase 3)
   needs form primitives — nothing on the landing page uses it
 
@@ -161,8 +188,8 @@ Update this file after every meaningful implementation change.
 
 ## Pre-Flight Checklist (before first build session)
 
-- [ ] Node.js LTS installed
-- [ ] GitHub repo created
+- [x] Node.js LTS installed
+- [x] GitHub repo created (huyvu9688-sketch/engineering-portfolio)
 - [ ] Vercel account linked to GitHub
 - [ ] Claude Code installed in VS Code
 - [ ] Content gathering started: resume PDF, 2-3 project
@@ -193,6 +220,17 @@ Update this file after every meaningful implementation change.
   configured to the npmmirror.com registry, which 503'd on
   `@tailwindcss/oxide-win32-x64-msvc` (Tailwind's native
   Windows binary). Fixed by installing that one package with
-  `--registry=https://registry.npmjs.org`; it is now pinned in
-  devDependencies. If a future install mysteriously misses a
-  platform binary, try the official registry first.
+  `--registry=https://registry.npmjs.org`. If a future install
+  mysteriously misses a platform binary, try the official
+  registry first.
+- 2026-06-13: CORRECTION to the note above — that install was
+  saved with `--save-dev`, which duplicated the package into
+  `devDependencies` as a hard (non-optional) dependency. That
+  broke `npm install` on Vercel (linux/x64) with `EBADPLATFORM`,
+  since the package only ships a win32/x64 binary. Fixed by
+  removing the `devDependencies` entry; the existing
+  `optionalDependencies` entry (added by Tailwind itself) is
+  correct and platform-aware on its own. Lesson: never
+  `--save-dev` a platform-specific `@tailwindcss/oxide-*` /
+  `@next/swc-*`-style native binary package — let
+  `optionalDependencies` handle it.

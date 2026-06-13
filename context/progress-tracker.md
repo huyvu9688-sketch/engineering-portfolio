@@ -421,10 +421,15 @@ Update this file after every meaningful implementation change.
   viewer modules to integrate. Built the viewer core this session
   (see Completed). Engine kept as plain JS behind a typed React
   wrapper; measurement tool + view cube deferred to unit 4b.
-  Pushed to GitHub `main` (commit 6dbb00c) and auto-deployed to
-  Vercel at the owner's request (they will run/view the site via
-  the deployment rather than local dev). Verified live:
-  /portfolio/project-one returns 200 with the viewer present.
+  Pushed to GitHub `main` and auto-deployed to Vercel at the
+  owner's request (they run/view the site via the deployment
+  rather than local dev).
+- 2026-06-13: Owner asked to move the 3D viewer OUT of the project
+  detail pages and onto the main `/portfolio` page. Done: the
+  viewer is now a featured section at the top of `/portfolio`
+  (loads `FEATURED_MODEL` from projects.ts); detail pages reverted
+  to image/placeholder hero only; per-project `model` field
+  removed from the `Project` type. `npm run build`/lint pass.
 - 2026-06-13: Owner reported `next dev` pegging RAM + SSD to 100%
   (machine thrashing) after `three` was added. Two-part cause:
   the WebGL render loop/context leaked across Strict Mode + Fast

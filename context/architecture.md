@@ -59,9 +59,10 @@ React client component (`viewer/components/model-viewer.tsx`).
   dynamically imported inside the component's effect, so it never
   runs during SSR/prerender. DRACO decoder is loaded from the
   gstatic CDN.
-- **Models** load from a URL (a project's `model` path under
-  `/public`, or an absolute URL) — there is no file-upload UI on
-  the public site.
+- **Models** load from a URL — the `FEATURED_MODEL` constant in
+  `features/portfolio/data/projects.ts` (a path under `/public`
+  or an absolute URL). The viewer is featured on the `/portfolio`
+  listing page; there is no file-upload UI on the public site.
 
 ## Storage Model
 

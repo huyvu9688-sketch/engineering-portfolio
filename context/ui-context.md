@@ -123,7 +123,7 @@ Type rules from the template:
   grayscale → color on hover with slight scale; mono accent
   eyebrow with icon; tech chips as bordered white pills;
   "View Project ↗" mono link.
-- **3D model viewer** (project detail pages): a dark "viewport
+- **3D model viewer** (featured on the Portfolio page): a dark "viewport
   screen" (`bg-surface-dark`, `rounded-lg border-hairline`) framed
   by the light page. Floating chrome uses the dark-band side of the
   palette — dark-glass pills/panels (`bg-surface-dark/80–90

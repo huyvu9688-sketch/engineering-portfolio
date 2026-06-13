@@ -6,7 +6,9 @@ Update this file after every meaningful implementation change.
 
 - Phase 1 — Foundation & landing page: COMPLETE (deployed,
   verified live at https://engineering-portfolio-svy8.vercel.app)
-- Phase 2 — Portfolio: STARTING
+- Phase 2 — Portfolio: IN PROGRESS (units 1, 2, and the unit-4
+  viewer core done; unit 3 deferred; unit-4 measurement + view
+  cube remaining)
 
 ## Phase Plan
 
@@ -31,8 +33,10 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Phase 2, unit 1: portfolio project data model + project card
-  component + `/portfolio` listing page
+- Phase 2, unit 4b: add the measurement tool + view cube to the
+  3D viewer, and replace the temporary demo model with a real GLB.
+- Phase 2, unit 3 (resume download): DEFERRED at owner's request —
+  jumped to unit 4 first. Revisit after the viewer is finished.
 
 ## Completed
 
@@ -169,15 +173,157 @@ Update this file after every meaningful implementation change.
     https://github.com/huyvu9688-sketch (both `target="_blank"`)
   - `npm run build` passes
 
+- Landing "Explore" section replaced with the index3 "showcase"
+  layout (owner-supplied reference) — 2026-06-13:
+  - Old "Explore / 001 — Entry Points" 3-card grid (Portfolio /
+    Toolkit / Database) swapped for a morphed version of
+    `engineering-portfolio/index3.html`: centred gradient
+    headline → two floating tag pills over a fanned 6-image grid
+    → subcopy → two CTAs. Structure/layout/motion kept from the
+    reference; restyled to the EngiHub design system
+  - New `ExploreShowcase` (`src/components/shared/
+    explore-showcase.tsx`, server) composes the section; new
+    `ShowcaseCards` (`showcase-cards.tsx`, client) holds the
+    fanned grid + the reference's click-to-focus interaction
+    (its inline `<script>` rebuilt as React state per
+    code-standards.md; added keyboard + `aria-pressed` a11y)
+  - Morph decisions: section is a full-bleed light band — owner
+    asked for `bg-[oklch(0.97_0_0)]` / `text-[oklch(0.145_0_0)]`
+    (Tailwind arbitrary values, the one intentional exception to
+    the no-hardcoded-color rule, per explicit request). White→
+    neutral gradient headline → `--ink`→`--ink-muted` clip-text
+    gradient (kept the technique, avoided accent on a large
+    headline). Two colored tag pills → one `--accent`, one
+    `--ink` (single-accent system). Elaborate dark-glow primary
+    button → standard primary pill (`bg-ink` → `hover:bg-accent`).
+    Reference's load-triggered `fadeSlideIn` (0.1/0.3/0.5/0.7s)
+    expressed via the project's scroll-triggered `<Reveal>` with
+    matching `delayMs` (100/300/500/700)
+  - PLACEHOLDERS to revisit: card images are the reference's
+    remote Supabase URLs (`<img>`, lint-suppressed) — owner to
+    replace; copy ("Showcase your work…", "designer"/"artist"
+    tags, "Get started today"/"View Examples") is reference text;
+    CTA targets are provisional (`/portfolio`, `/tools`).
+    Removing the old section also removed the only on-page
+    Portfolio/Toolkit/Database entry-point cards (still reachable
+    via the navbar)
+  - `npm run build` passes (clean `.next` rebuild); prerendered
+    `/` verified to contain the new section and not the old one
+
+- Phase 2 unit 1: portfolio data model + project card +
+  `/portfolio` listing page — 2026-06-13:
+  - New `Project` type + 3 placeholder entries in
+    `src/features/portfolio/data/projects.ts` (slug, title,
+    category, summary, tags, optional `image` path under
+    `/public`). Content uses the same bracketed-placeholder
+    pattern as `AboutSection` — owner to replace with real
+    project write-ups
+  - New `ProjectRow` (`src/features/portfolio/components/
+    project-row.tsx`, server component) implements the
+    `ui-context.md` "Project rows" spec: alternating 7/5 grid,
+    mono accent eyebrow with `Cog` icon, bordered pill tech
+    chips, "View Project" + `ArrowUpRight` link, whole row
+    wrapped in a `Link` to `/portfolio/[slug]`. When
+    `project.image` is set it renders via `next/image` with the
+    spec's grayscale→color hover; until then it shows a
+    placeholder box (`ImageOff` icon + "[Project Visual]")
+  - `/portfolio/page.tsx` rewritten: real listing (header +
+    project count eyebrow, `CustomCursor` + `Reveal` per row —
+    marketing-surface treatment per `ui-context.md` Page Modes),
+    replacing the "coming in the next build phase" placeholder
+  - `npm run build` passes (clean `.next` rebuild); prerendered
+    `/portfolio` verified to contain the header, all 3 rows
+    (alternating order), tags, icons, and correct links
+  - Two follow-up bug fixes (caught in dev by the owner): the
+    tag `key` collided on repeated placeholder tags — now keyed
+    `${tag}-${index}`; and two Tailwind canonical-class lint
+    warnings cleaned up (`aspect-[16/10]` → `aspect-16/10`)
+
+- Phase 2 unit 2: project detail page route `/portfolio/[slug]`
+  — 2026-06-13:
+  - New dynamic route `src/app/(site)/portfolio/[slug]/page.tsx`
+    (SSG): `generateStaticParams` prerenders the 3 project slugs,
+    `generateMetadata` sets a per-project title, unknown slugs
+    call `notFound()`. Resolves the unit-1 known gap (project
+    links no longer 404)
+  - Layout (marketing surface — `CustomCursor` + `Reveal`): back
+    link → header (accent category eyebrow, big uppercase title,
+    summary, tech chips) → full-width hero visual (`next/image`
+    when `project.image` set, else `[Project Visual]` placeholder)
+    → two-column Overview body + sticky Role/Timeframe/Category
+    sidebar → a dashed-border "3D Model Viewer" placeholder slot
+    (the react-three-fiber GLB embed is unit 4) → bottom back link
+  - `Project` type extended with optional `role`, `timeframe`,
+    `overview: string[]`; added `getProjectBySlug()` helper. All
+    new content is bracketed placeholders — owner to fill in
+  - Build workflow note: verified via the running dev server
+    (curl) first; then stopped the dev server cleanly, ran
+    `npm run build`, and restarted dev — NOT by deleting `.next`
+    under a live dev server (see memory: that corrupts the dev
+    cache and 500s the site)
+  - `npm run build` passes; route table shows `/portfolio/[slug]`
+    as SSG with project-one/two/three prerendered. Dev server
+    re-verified: 3 slugs 200, unknown slug 404
+
+- Phase 2 unit 4 (core): Three.js GLB viewer embedded on the
+  project detail page — 2026-06-13:
+  - DECISION: wrap the owner's existing vanilla Three.js modules
+    instead of rewriting them in react-three-fiber (see
+    Architecture Decisions + `architecture.md` → "3D Viewer
+    Engine"). `three@0.184` installed as a bundled dependency
+  - Ported the owner's modules into
+    `src/features/portfolio/viewer/lib/` (plain JS): `three.js`
+    (import hub), `utils`, `scene-manager`, `model-loader`,
+    `component-list`, `interaction`, `controls`, `context-menu`,
+    `history-manager`, `viewer-core` (orchestrator). Adapted: CDN
+    globals → bundled `three` imports; `outputEncoding`/
+    `sRGBEncoding` → `outputColorSpace`/`SRGBColorSpace`; load
+    from a URL instead of a file upload; added `dispose()` for
+    clean React unmount; removed the body-scroll-lock hack
+    (OrbitControls already prevents page scroll on wheel); dropped
+    the global-`lucide` dependency (inline SVGs in injected HTML)
+  - New typed React client boundary
+    `viewer/components/model-viewer.tsx`: dynamically imports the
+    engine inside `useEffect` (so `three` never runs during
+    SSR/prerender), renders the restyled chrome, owns load/error
+    overlay state, and disposes on unmount
+  - UI redesigned to the Swiss system: dark "viewport screen"
+    framed by the light page; dark-glass toolbar (reset / isolate
+    / show-all / edges / grid / axes / undo / redo via
+    `lucide-react`), top-right component-list toggle, collapsible
+    component-hierarchy panel (mono labels, search pill),
+    right-click part context menu, hover/isolate read-out pills,
+    and mono loading/error overlays — all on `--on-dark` /
+    `--hairline-dark` / `--accent` tokens. Documented in
+    `ui-context.md` → "3D model viewer"
+  - `Project` type gained an optional `model` (GLB path/URL). The
+    detail page renders `<ModelViewer>` when a project has a
+    model, else keeps the dashed placeholder. `project-one` points
+    at a TEMPORARY public demo GLB (modelviewer.dev Astronaut) so
+    the viewer is verifiable end to end — owner to replace with a
+    real GLB under `/public/models/`
+  - Lint: added `.agents/**` to `eslint.config.mjs` ignores (it's
+    already git-ignored + tsconfig-excluded; it was the only
+    source of `npm run lint` errors). `npm run lint` now clean
+  - `npm run build` passes (TypeScript clean, Turbopack); all 3
+    project slugs prerender. Verified the prerendered
+    `/portfolio/project-one` HTML contains the viewer chrome
+    (toolbar, component panel, "3D Model" header, loading overlay)
+    and `/portfolio/project-two` (no model) shows the placeholder
+    with no toolbar
+  - DEFERRED to unit 4b: `measurement.js` (distance tool) and
+    `view-cube.js` (the latter was not in the files the owner
+    supplied)
+
 ## In Progress
 
 - None.
 
 ## Next Up
 
-- Phase 2 unit 2: project detail page route (`/portfolio/[slug]`)
-- Phase 2 unit 3: resume download link/section
-- Phase 2 unit 4: Three.js GLB viewer embed
+- Phase 2 unit 4b: port `measurement.js` + add a view cube to the
+  viewer; replace the temporary demo GLB with a real model
+- Phase 2 unit 3: resume download link/section (deferred)
 - Owner to provide real content for Background/Experience,
   Socials, Location, and portfolio project write-ups to replace
   placeholders (see Open Questions)
@@ -200,7 +346,10 @@ Update this file after every meaningful implementation change.
 - Final project/site name (working name: EngiHub)
 - Domain: Vercel subdomain first, custom domain later?
 - Which portfolio projects (and GLB files) go in first? Confirm
-  company-IP clearance for anything published
+  company-IP clearance for anything published. NOTE: `project-one`
+  currently loads a TEMPORARY public demo GLB (modelviewer.dev
+  Astronaut) purely so the viewer is testable — replace with a
+  real model under `/public/models/` (set `project.model`)
 - Phase 3 prerequisite: owner writes `calculator-specs.md`
   (formulas, input ranges, units, defaults) before each
   calculator is built — AI must not invent engineering math
@@ -216,6 +365,13 @@ Update this file after every meaningful implementation change.
 
 ## Architecture Decisions
 
+- 3D viewer: wrap the owner's existing vanilla Three.js modules in
+  one typed React client component rather than rewriting in
+  react-three-fiber (decided 2026-06-13). The engine is bundled
+  `three` (dynamically imported, client-only), loads models from a
+  URL, and is the one place the dark palette leads. See
+  `architecture.md` → "3D Viewer Engine". Supersedes the earlier
+  "react-three-fiber" note in the stack table.
 - FINAL design direction: Swiss-style portfolio template
   (owner-supplied single-page HTML reference, since adapted into
   `ui-context.md`) — light neutral canvas, #111 ink, single
@@ -260,3 +416,26 @@ Update this file after every meaningful implementation change.
   `--save-dev` a platform-specific `@tailwindcss/oxide-*` /
   `@next/swc-*`-style native binary package — let
   `optionalDependencies` handle it.
+- 2026-06-13: Owner asked to skip unit 3 (resume) for now and jump
+  to unit 4 (3D viewer), supplying their pre-built vanilla Three.js
+  viewer modules to integrate. Built the viewer core this session
+  (see Completed). Engine kept as plain JS behind a typed React
+  wrapper; measurement tool + view cube deferred to unit 4b.
+  Commits held locally per the batch-push workflow — not pushed.
+- 2026-06-13: Owner reported `next dev` pegging RAM + SSD to 100%
+  (machine thrashing) after `three` was added. Two-part cause:
+  the WebGL render loop/context leaked across Strict Mode + Fast
+  Refresh, and the TS language server auto-loaded `@types/three`
+  plus crawled `three`'s own large type defs. Fixes applied:
+  - Viewer lifecycle hardened (full `dispose()` +
+    `forceContextLoss()`, single-instance ref, render loop pauses
+    on tab hidden, capped pixel-ratio 1.5 + 1024 shadow map).
+  - Removed `@types/three` (unused — engine is JS); added
+    `viewer/lib/viewer-core.d.ts` and excluded the JS engine from
+    the TS program in `tsconfig.json`, so the TS server no longer
+    parses `three` types. `three` itself stays a bundled runtime
+    dep, lazily compiled only on the `/portfolio/[slug]` route.
+  - Owner-side: exclude the project (or `.next` + `node_modules`)
+    from Windows Defender real-time scanning — the usual cause of
+    SSD 100% during Next dev — and reload the VS Code window so the
+    TS server drops the old `three` types from memory.

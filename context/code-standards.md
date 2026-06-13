@@ -18,6 +18,11 @@
   never bare `number` names like `x` or `value`
 - Validate unknown external input (form data, API payloads,
   Supabase responses) at system boundaries before trusting it
+- **One documented exception:** the imperative Three.js viewer
+  engine under `features/portfolio/viewer/lib/` is plain JS (the
+  owner's authored modules, adapted). It is wrapped by a strictly
+  typed React component (`viewer/components/model-viewer.tsx`),
+  which is the typed boundary. All other code is strict TS.
 
 ## Next.js
 

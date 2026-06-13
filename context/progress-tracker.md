@@ -153,6 +153,13 @@ Update this file after every meaningful implementation change.
     hero, status badge, marquee, and contact section render
     correctly with no broken assets. Phase 1 deploy is DONE
 
+- Real social links — 2026-06-13:
+  - Contact section Socials (LinkedIn, GitHub) and the hero
+    icon button now link to the owner's real profiles:
+    https://www.linkedin.com/in/quochuyvu99 and
+    https://github.com/huyvu9688-sketch (both `target="_blank"`)
+  - `npm run build` passes
+
 ## In Progress
 
 - None.
@@ -180,10 +187,8 @@ Update this file after every meaningful implementation change.
   "Open to work", contact email huyvu9688@gmail.com — owner to
   confirm this is final (title/role line still TBD for
   nav/footer)
-- Contact section's Socials column links to `#` placeholders
-  (LinkedIn, GitHub) and Location is bracketed
-  (`[City, Country]`, `[Remote / On-site]`) — owner to provide
-  real URLs and location
+- Location is bracketed (`[City, Country]`,
+  `[Remote / On-site]`) — owner to provide real location
 - Final project/site name (working name: EngiHub)
 - Domain: Vercel subdomain first, custom domain later?
 - Which portfolio projects (and GLB files) go in first? Confirm

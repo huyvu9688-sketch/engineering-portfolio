@@ -124,10 +124,10 @@ export default function LandingPage() {
               </MagneticButton>
               <MagneticButton>
                 <a
-                  href="#"
+                  href="https://github.com/huyvu9688-sketch"
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="External profile"
+                  aria-label="GitHub profile"
                   className="inline-flex items-center justify-center rounded-full border border-hairline bg-surface p-3.5 text-ink transition-colors duration-300 hover:text-accent"
                 >
                   <ExternalLink className="h-5 w-5 stroke-[1.5]" />
@@ -223,13 +223,17 @@ export default function LandingPage() {
                   Socials
                 </h4>
                 <a
-                  href="#"
+                  href="https://www.linkedin.com/in/quochuyvu99"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="mb-1 block text-sm font-medium transition-colors duration-300 hover:text-accent md:text-base"
                 >
                   LinkedIn
                 </a>
                 <a
-                  href="#"
+                  href="https://github.com/huyvu9688-sketch"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="block text-sm font-medium transition-colors duration-300 hover:text-accent md:text-base"
                 >
                   GitHub

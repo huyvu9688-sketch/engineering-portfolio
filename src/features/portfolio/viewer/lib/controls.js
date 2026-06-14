@@ -53,6 +53,11 @@ export class ViewerControls {
         const banner = document.getElementById("isolate-banner");
         if (banner) banner.style.display = "none";
 
+        // Clear the toolbar button's "active" styling when leaving pick mode
+        // (whether cancelled or after a part was picked).
+        const btn = document.getElementById("isolate-mode");
+        if (btn) btn.classList.remove("text-accent", "bg-white/10");
+
         const dom = this.sceneManager.renderer?.domElement;
         if (dom) {
             dom.style.cursor = "auto";
@@ -118,10 +123,10 @@ export class ViewerControls {
             p.visible = targetMeshes.has(p.uuid);
         });
 
-        const isolatedInfo = document.getElementById("isolated-info");
-        const isolatedPartName = document.getElementById("isolated-part-name");
-        if (isolatedInfo) isolatedInfo.style.display = "block";
-        if (isolatedPartName) isolatedPartName.textContent = part.name;
+        const banner = document.getElementById("isolated-banner");
+        const bannerName = document.getElementById("isolated-banner-name");
+        if (banner) banner.style.display = "block";
+        if (bannerName) bannerName.textContent = part.name;
 
         fitCameraToModel(part, this.sceneManager.camera, this.sceneManager.controls);
 
@@ -149,8 +154,8 @@ export class ViewerControls {
 
         this.isolatedPart = null;
 
-        const isolatedInfo = document.getElementById("isolated-info");
-        if (isolatedInfo) isolatedInfo.style.display = "none";
+        const banner = document.getElementById("isolated-banner");
+        if (banner) banner.style.display = "none";
 
         if (this.modelLoader.model) {
             fitCameraToModel(

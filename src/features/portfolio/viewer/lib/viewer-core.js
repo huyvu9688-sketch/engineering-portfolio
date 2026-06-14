@@ -68,31 +68,44 @@ export class ViewerCore {
                 this.sceneManager.fitHelpersToModel(model);
                 this.logViewerDiagnostics(model);
 
-                const hierarchy = this.componentList.extractHierarchy(model);
-                if (hierarchy.length > 0) {
-                    this.componentList.display(
-                        (component, element) => this.handleComponentClick(component, element),
-                        (event, object) =>
-                            this.contextMenu.show(event.clientX, event.clientY, object),
-                        () => {},
-                    );
-                    this.componentList.expandAllArrows();
-                    this.toggleList(true);
-                }
-
-                // Reset the exploded view for the freshly loaded model.
-                this.explodeTool.prepare();
-                const slider = document.getElementById("explode-slider");
-                if (slider) slider.value = "0";
-
-                // Reset interaction modes/state carried over from a prior model.
-                this.exitMeasureMode();
-                this.viewerControls.isolatedPart = null;
-                this.viewerControls.selectedPart = null;
-                const isoBanner = document.getElementById("isolated-banner");
-                if (isoBanner) isoBanner.style.display = "none";
-
+                // The model is framed and drawable now — clear the loading
+                // overlay immediately. Everything below is secondary UI setup;
+                // running it AFTER onLoaded means a failure there can never leave
+                // the opaque overlay stuck on top of the rendered model.
                 callbacks.onLoaded?.();
+
+                // Second diagnostic ~1s later: is the render loop alive, is the
+                // GPU drawing anything, and what DOM element is actually on top
+                // of the canvas centre (i.e. is a layer covering it)?
+                setTimeout(() => this.logFrameDiagnostics(), 1000);
+
+                try {
+                    const hierarchy = this.componentList.extractHierarchy(model);
+                    if (hierarchy.length > 0) {
+                        this.componentList.display(
+                            (component, element) => this.handleComponentClick(component, element),
+                            (event, object) =>
+                                this.contextMenu.show(event.clientX, event.clientY, object),
+                            () => {},
+                        );
+                        this.componentList.expandAllArrows();
+                        this.toggleList(true);
+                    }
+
+                    // Reset the exploded view for the freshly loaded model.
+                    this.explodeTool.prepare();
+                    const slider = document.getElementById("explode-slider");
+                    if (slider) slider.value = "0";
+
+                    // Reset interaction modes/state carried over from a prior model.
+                    this.exitMeasureMode();
+                    this.viewerControls.isolatedPart = null;
+                    this.viewerControls.selectedPart = null;
+                    const isoBanner = document.getElementById("isolated-banner");
+                    if (isoBanner) isoBanner.style.display = "none";
+                } catch (err) {
+                    console.warn("[viewer] post-load UI setup failed (model still shown):", err);
+                }
             },
             (err) => callbacks.onError?.(err),
         );
@@ -153,6 +166,63 @@ export class ViewerCore {
             }
         } catch (err) {
             console.warn("[viewer] diagnostics failed", err);
+        }
+    }
+
+    // Runs ~1s after load. Distinguishes the only three remaining causes of a
+    // black view when the scene/camera are correct: dead render loop, no GPU
+    // draw calls, or a DOM layer covering the canvas.
+    logFrameDiagnostics() {
+        try {
+            const sm = this.sceneManager;
+            const renderer = sm.renderer;
+            const canvas = renderer?.domElement;
+            const rect = canvas?.getBoundingClientRect?.();
+
+            let topElementAtCentre = null;
+            let canvasIsOnTop = null;
+            if (rect && rect.width > 0 && rect.height > 0) {
+                const el = document.elementFromPoint(
+                    rect.left + rect.width / 2,
+                    rect.top + rect.height / 2,
+                );
+                canvasIsOnTop = el === canvas;
+                topElementAtCentre = el
+                    ? `${el.tagName.toLowerCase()}${el.id ? "#" + el.id : ""}${
+                          typeof el.className === "string" && el.className
+                              ? "." + el.className.trim().split(/\s+/).slice(0, 3).join(".")
+                              : ""
+                      }`
+                    : null;
+            }
+
+            console.info("[viewer] frame check (1s after load)", {
+                renderLoopRunning: sm.running,
+                framesRendered: sm.frameCount,
+                drawCallsLastFrame: renderer?.info?.render?.calls,
+                trianglesLastFrame: renderer?.info?.render?.triangles,
+                canvasOnScreen: canvas?.isConnected,
+                canvasRect: rect ? [Math.round(rect.width), Math.round(rect.height)] : null,
+                canvasIsTopElementAtCentre: canvasIsOnTop,
+                topElementAtCentre,
+                sceneChildren: sm.scene?.children?.length,
+            });
+
+            if (canvasIsOnTop === false) {
+                console.warn(
+                    "[viewer] A DOM element is covering the canvas centre:",
+                    topElementAtCentre,
+                    "— this is the layer hiding the model.",
+                );
+            }
+            if (sm.frameCount === 0) {
+                console.warn("[viewer] Render loop produced 0 frames — it is not running.");
+            }
+            if (renderer?.info?.render?.calls === 0) {
+                console.warn("[viewer] 0 draw calls last frame — nothing is being drawn.");
+            }
+        } catch (err) {
+            console.warn("[viewer] frame diagnostics failed", err);
         }
     }
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Axis3d,
+  Boxes,
   Crosshair,
   Eye,
   Frame,
@@ -100,7 +101,7 @@ export function ModelViewer({ src }: ModelViewerProps) {
   }, [src]);
 
   return (
-    <div className="relative h-[60vh] min-h-[420px] w-full overflow-hidden rounded-lg border border-hairline bg-surface-dark">
+    <div className="relative h-[60vh] min-h-105 w-full overflow-hidden rounded-lg border border-hairline bg-surface-dark">
       {/* Renderer canvas mounts here */}
       <div ref={canvasRef} className="absolute inset-0" />
 
@@ -125,6 +126,19 @@ export function ModelViewer({ src }: ModelViewerProps) {
         <button type="button" id="toggle-axes" className={TOOL_BTN} title="Toggle axes" aria-label="Toggle axes">
           <Axis3d className="h-4 w-4 stroke-[1.5]" />
         </button>
+        <span className="mx-0.5 h-5 w-px bg-hairline-dark" />
+        <div className="flex items-center gap-1.5 px-1" title="Explode model">
+          <Boxes className="h-4 w-4 shrink-0 stroke-[1.5] text-on-dark-muted" />
+          <input
+            type="range"
+            id="explode-slider"
+            min="0"
+            max="100"
+            defaultValue="0"
+            className="h-1 w-20 cursor-pointer accent-accent"
+            aria-label="Explode model"
+          />
+        </div>
         <span className="mx-0.5 h-5 w-px bg-hairline-dark" />
         <button type="button" id="undo-action" className={TOOL_BTN} title="Undo" aria-label="Undo">
           <Undo2 className="h-4 w-4 stroke-[1.5]" />

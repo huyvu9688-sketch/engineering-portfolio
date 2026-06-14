@@ -55,27 +55,35 @@ export function fitCameraToModel(targetObject, camera, controls) {
     controls.update();
 }
 
-// Accent glow applied to a part on hover / focus.
-export function highlightPart(node) {
+// Set the emissive glow on every mesh under a node.
+function applyEmissive(node, colorHex, intensity) {
     node.traverse((child) => {
         if (child.isMesh && child.material && !child.userData.isEdgeHelper) {
             const mats = Array.isArray(child.material) ? child.material : [child.material];
             mats.forEach((mat) => {
-                mat.emissive = new THREE.Color(0x4488ff);
-                mat.emissiveIntensity = 0.3;
+                mat.emissive = new THREE.Color(colorHex);
+                mat.emissiveIntensity = intensity;
             });
         }
     });
 }
 
+// Hover glow (blue).
+export function highlightPart(node) {
+    applyEmissive(node, 0x4488ff, 0.3);
+}
+
+// Persistent selection glow (accent). Marked so hover-out won't clear it.
+export function selectHighlight(node) {
+    applyEmissive(node, 0xeb3a14, 0.55);
+}
+
+// Clear a hover glow — but if the node is the current selection, keep its
+// accent glow instead of going dark.
 export function resetHighlight(node) {
-    node.traverse((child) => {
-        if (child.isMesh && child.material && !child.userData.isEdgeHelper) {
-            const mats = Array.isArray(child.material) ? child.material : [child.material];
-            mats.forEach((mat) => {
-                mat.emissive = new THREE.Color(0x000000);
-                mat.emissiveIntensity = 0;
-            });
-        }
-    });
+    if (node.userData && node.userData.isSelected) {
+        applyEmissive(node, 0xeb3a14, 0.55);
+    } else {
+        applyEmissive(node, 0x000000, 0);
+    }
 }

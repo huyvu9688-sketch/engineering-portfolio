@@ -1,7 +1,7 @@
 // View controls: isolate, show-all, focus, reset camera.
 
 import { THREE } from "./three.js";
-import { fitCameraToModel, highlightPart } from "./utils.js";
+import { fitCameraToModel, resetHighlight, selectHighlight } from "./utils.js";
 
 export class ViewerControls {
     constructor(sceneManager, modelLoader, componentList, historyManager) {
@@ -11,7 +11,27 @@ export class ViewerControls {
         this.historyManager = historyManager;
         this.isolateMode = false;
         this.isolatedPart = null;
+        this.selectedPart = null;
         this.onIsolateClickBound = (e) => this.onIsolateClick(e);
+    }
+
+    /** Persistently glow a part (accent) and clear any previous selection. */
+    selectPart(node) {
+        if (this.selectedPart && this.selectedPart !== node) {
+            this.selectedPart.userData.isSelected = false;
+            resetHighlight(this.selectedPart);
+        }
+        this.selectedPart = node;
+        node.userData.isSelected = true;
+        selectHighlight(node);
+    }
+
+    clearSelection() {
+        if (this.selectedPart) {
+            this.selectedPart.userData.isSelected = false;
+            resetHighlight(this.selectedPart);
+            this.selectedPart = null;
+        }
     }
 
     enableIsolateMode() {
@@ -153,7 +173,7 @@ export class ViewerControls {
     }
 
     focusOnPart(node) {
-        highlightPart(node);
+        this.selectPart(node);
         fitCameraToModel(node, this.sceneManager.camera, this.sceneManager.controls);
 
         const hoverInfo = document.getElementById("hover-info");

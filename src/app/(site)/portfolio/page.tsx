@@ -25,9 +25,10 @@ export default function PortfolioPage() {
           </div>
         </Reveal>
 
-        {/* Interactive 3D viewer — featured at the top of the portfolio. */}
+        {/* Interactive 3D viewer — featured at the top of the portfolio.
+            Capped width + centered so the page background shows on both sides. */}
         <Reveal>
-          <div className="mt-12 md:mt-16">
+          <div className="mx-auto mt-12 max-w-6xl md:mt-16">
             <div className="mb-3 flex items-end justify-between">
               <p className="font-mono text-[10px] uppercase tracking-widest text-accent">
                 Interactive 3D Model

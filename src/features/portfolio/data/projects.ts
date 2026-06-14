@@ -62,14 +62,6 @@ export const PROJECTS: Project[] = [
   },
 ];
 
-/**
- * Featured GLB shown in the interactive 3D viewer on the /portfolio page.
- * Self-hosted under /public/models/. Currently a sample 2-cylinder engine
- * (Khronos glTF sample) so explode + the component tree have many parts to
- * show — replace with your own assembly GLB when ready.
- */
-export const FEATURED_MODEL = "/models/2-cylinder-engine.glb";
-
 export function getProjectBySlug(slug: string): Project | undefined {
   return PROJECTS.find((project) => project.slug === slug);
 }

@@ -26,8 +26,7 @@ across bookmarks, USB drives, and vendor catalogs.
 
 1. Visitor lands on the homepage and sees three entry points:
    Portfolio, Tools, Database
-2. Visitor browses portfolio projects (with embedded 3D viewer
-   where available)
+2. Visitor browses portfolio projects
 3. Visitor opens a calculator, enters inputs, gets instant
    results with units
 4. Visitor browses the file database by category and downloads
@@ -40,7 +39,8 @@ across bookmarks, USB drives, and vendor catalogs.
 
 - About/profile section with resume download
 - Project cards with detail pages
-- Embedded Three.js GLB viewer for 3D project models
+  (an in-browser 3D model viewer was tried and removed on
+  2026-06-14 — see progress-tracker.md)
 
 ### Engineering Toolkit
 

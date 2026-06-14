@@ -18,17 +18,13 @@
   never bare `number` names like `x` or `value`
 - Validate unknown external input (form data, API payloads,
   Supabase responses) at system boundaries before trusting it
-- **One documented exception:** the imperative Three.js viewer
-  engine under `features/portfolio/viewer/lib/` is plain JS (the
-  owner's authored modules, adapted). It is wrapped by a strictly
-  typed React component (`viewer/components/model-viewer.tsx`),
-  which is the typed boundary. All other code is strict TS.
+  (all code is strict TS — the earlier plain-JS Three.js viewer
+  engine that was the one exception was removed on 2026-06-14)
 
 ## Next.js
 
 - Default to server components; add `"use client"` only when
-  browser interactivity requires it (calculators, forms,
-  3D viewer)
+  browser interactivity requires it (calculators, forms)
 - Keep route handlers focused on a single responsibility
 - Use the App Router conventions; no `pages/` directory
 

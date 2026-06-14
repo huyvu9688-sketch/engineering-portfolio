@@ -72,6 +72,23 @@ export class ModelLoader {
         });
 
         this.sceneManager.scene.add(this.model);
+        this.recenterModel();
+    }
+
+    // Move the model so its bounding-box centre sits at the world origin.
+    // Real CAD assemblies are often exported far from origin (assembly
+    // coordinates), which leaves them off-screen, makes the grid/axes look
+    // absent, and causes float-precision artefacts. Translating only — never
+    // scaling — keeps measurements true to the model's units.
+    recenterModel() {
+        if (!this.model) return;
+        this.model.updateWorldMatrix(true, true);
+        const box = new THREE.Box3().setFromObject(this.model);
+        if (box.isEmpty()) return;
+        const center = box.getCenter(new THREE.Vector3());
+        if (![center.x, center.y, center.z].every(Number.isFinite)) return; // NaN guard
+        this.model.position.sub(center);
+        this.model.updateMatrixWorld(true);
     }
 
     optimizeMaterial(mesh) {

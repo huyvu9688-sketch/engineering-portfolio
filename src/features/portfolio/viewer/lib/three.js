@@ -10,5 +10,6 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { ViewHelper } from "three/examples/jsm/helpers/ViewHelper.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
-export { THREE, OrbitControls, GLTFLoader, DRACOLoader, ViewHelper };
+export { THREE, OrbitControls, GLTFLoader, DRACOLoader, ViewHelper, RoomEnvironment };

@@ -1,6 +1,6 @@
 // Scene, camera, renderer, lighting and the orbit controls.
 
-import { THREE, OrbitControls, ViewHelper } from "./three.js";
+import { THREE, OrbitControls, ViewHelper, RoomEnvironment } from "./three.js";
 
 export class SceneManager {
     constructor(container) {
@@ -11,6 +11,7 @@ export class SceneManager {
         this.controls = null;
         this.gridHelper = null;
         this.axesHelper = null;
+        this.environmentTexture = null;
         this.viewHelper = null; // navigation "view cube" gizmo (bottom-left)
         this.clock = new THREE.Clock();
         this.animationId = null;
@@ -39,6 +40,13 @@ export class SceneManager {
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.2;
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+        // Neutral image-based lighting so metallic/PBR materials (common in CAD
+        // exports) reflect a soft room instead of rendering pure black.
+        const pmrem = new THREE.PMREMGenerator(this.renderer);
+        this.environmentTexture = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+        this.scene.environment = this.environmentTexture;
+        pmrem.dispose();
 
         this.container.innerHTML = "";
         this.container.appendChild(this.renderer.domElement);
@@ -110,6 +118,27 @@ export class SceneManager {
 
         this.axesHelper = new THREE.AxesHelper(5);
         this.scene.add(this.axesHelper);
+    }
+
+    // Scale the grid + axes to the loaded model and drop the grid to its base,
+    // so they're always visible whether the model is 5mm or 5m. Called after a
+    // model loads (and after it's been recentred to the origin).
+    fitHelpersToModel(model) {
+        if (!model) return;
+        const box = new THREE.Box3().setFromObject(model);
+        if (box.isEmpty()) return;
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        if (!Number.isFinite(maxDim) || maxDim <= 0) return;
+
+        const scale = maxDim / 10;
+        if (this.gridHelper) {
+            this.gridHelper.scale.setScalar(scale);
+            this.gridHelper.position.set(0, -size.y / 2, 0);
+        }
+        if (this.axesHelper) {
+            this.axesHelper.scale.setScalar(scale);
+        }
     }
 
     onWindowResize() {
@@ -204,6 +233,11 @@ export class SceneManager {
             this.viewHelper.dispose();
             this.viewHelper = null;
         }
+        if (this.environmentTexture) {
+            this.environmentTexture.dispose();
+            this.environmentTexture = null;
+        }
+        if (this.scene) this.scene.environment = null;
         this.disposeHelper(this.gridHelper);
         this.disposeHelper(this.axesHelper);
 

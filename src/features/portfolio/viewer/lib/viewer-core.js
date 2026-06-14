@@ -63,6 +63,7 @@ export class ViewerCore {
             (pct) => callbacks.onProgress?.(pct),
             (model) => {
                 fitCameraToModel(model, this.sceneManager.camera, this.sceneManager.controls);
+                this.sceneManager.fitHelpersToModel(model);
 
                 const hierarchy = this.componentList.extractHierarchy(model);
                 if (hierarchy.length > 0) {

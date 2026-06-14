@@ -38,10 +38,12 @@ export function resolvePartNode(mesh, model) {
 // Frame the camera so the given object fully fits the view.
 export function fitCameraToModel(targetObject, camera, controls) {
     const box = new THREE.Box3().setFromObject(targetObject);
+    if (box.isEmpty()) return; // nothing renderable to frame
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
 
-    const maxDim = Math.max(size.x, size.y, size.z) || 1;
+    const maxDim = Math.max(size.x, size.y, size.z);
+    if (!Number.isFinite(maxDim) || maxDim <= 0) return; // degenerate geometry
     const fov = camera.fov * (Math.PI / 180);
     const cameraDistance = Math.abs(maxDim / 2 / Math.tan(fov / 2)) * 2.2;
 

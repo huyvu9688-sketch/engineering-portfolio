@@ -470,6 +470,18 @@ Update this file after every meaningful implementation change.
   click an axis to snap the camera to that view, orbiting the current
   controls target. Disposed with the scene. `ViewHelper` added to the
   `three.js` import hub. `npm run lint`/`build` pass.
+- 2026-06-13: Fixed imported real-CAD models rendering black with no
+  visible grid/axes (owner imported a 485-part assembly; nothing showed).
+  Root causes + fixes (committed locally, NOT pushed):
+  (a) model far from world origin (CAD assembly coords) → `model-loader`
+  now RECENTRES the model to the origin on load (translate only, so
+  measurements stay true); (b) fixed 20-unit grid / 5-unit axes were
+  specks at any real scale → `scene-manager.fitHelpersToModel` scales them
+  to the model and drops the grid to its base; (c) metallic/PBR CAD
+  materials render black with no IBL → added a neutral `RoomEnvironment`
+  PMREM as `scene.environment`; (d) NaN/empty bounding-box guards in
+  `fitCameraToModel` + recentre so degenerate geometry can't blank the
+  view. `RoomEnvironment` added to the import hub. lint/build pass.
 - 2026-06-13: Added two viewer features at owner's request — an
   EXPLODE control (toolbar slider; `explode.js` pushes each mesh
   outward from the model centre) and a persistent part-SELECTION

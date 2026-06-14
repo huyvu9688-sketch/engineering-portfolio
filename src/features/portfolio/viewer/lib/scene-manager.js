@@ -1,6 +1,6 @@
 // Scene, camera, renderer, lighting and the orbit controls.
 
-import { THREE, OrbitControls } from "./three.js";
+import { THREE, OrbitControls, ViewHelper } from "./three.js";
 
 export class SceneManager {
     constructor(container) {
@@ -11,10 +11,13 @@ export class SceneManager {
         this.controls = null;
         this.gridHelper = null;
         this.axesHelper = null;
+        this.viewHelper = null; // navigation "view cube" gizmo (bottom-left)
+        this.clock = new THREE.Clock();
         this.animationId = null;
         this.running = false;
         this.onResize = () => this.onWindowResize();
         this.onVisibility = () => this.handleVisibility();
+        this.onPointerUp = (e) => this.handlePointerUp(e);
     }
 
     init() {
@@ -49,8 +52,28 @@ export class SceneManager {
 
         this.setupLighting();
         this.setupHelpers();
+        this.setupViewHelper();
         window.addEventListener("resize", this.onResize);
         document.addEventListener("visibilitychange", this.onVisibility);
+    }
+
+    setupViewHelper() {
+        // A clickable axis gizmo (view cube): click an axis to snap the camera
+        // to that orthographic-style view. Placed bottom-left so it never sits
+        // under the component-list panel on the right.
+        this.viewHelper = new ViewHelper(this.camera, this.renderer.domElement);
+        this.viewHelper.setLabels("X", "Y", "Z");
+        this.viewHelper.location = { top: null, right: 0, bottom: 12, left: 12 };
+        this.renderer.domElement.addEventListener("pointerup", this.onPointerUp);
+    }
+
+    handlePointerUp(event) {
+        // Let the gizmo claim the click if it was on an axis; otherwise it's a
+        // no-op and OrbitControls keeps working as normal. Sync the orbit centre
+        // first so it snaps around the current target, not the world origin.
+        if (!this.viewHelper) return;
+        if (this.controls) this.viewHelper.center.copy(this.controls.target);
+        this.viewHelper.handleClick(event);
     }
 
     setupLighting() {
@@ -118,9 +141,20 @@ export class SceneManager {
     loop() {
         if (!this.running) return;
         this.animationId = requestAnimationFrame(() => this.loop());
+
+        const delta = this.clock.getDelta();
+
+        // Drive the view-cube animation first (it moves the camera around the
+        // controls target); OrbitControls then reconciles from the new pose.
+        if (this.viewHelper && this.viewHelper.animating) {
+            this.viewHelper.center.copy(this.controls.target);
+            this.viewHelper.update(delta);
+        }
+
         if (this.controls) this.controls.update();
         if (this.renderer && this.scene && this.camera) {
             this.renderer.render(this.scene, this.camera);
+            if (this.viewHelper) this.viewHelper.render(this.renderer);
         }
     }
 
@@ -161,8 +195,15 @@ export class SceneManager {
         this.stop();
         window.removeEventListener("resize", this.onResize);
         document.removeEventListener("visibilitychange", this.onVisibility);
+        if (this.renderer?.domElement) {
+            this.renderer.domElement.removeEventListener("pointerup", this.onPointerUp);
+        }
 
         if (this.controls) this.controls.dispose();
+        if (this.viewHelper) {
+            this.viewHelper.dispose();
+            this.viewHelper = null;
+        }
         this.disposeHelper(this.gridHelper);
         this.disposeHelper(this.axesHelper);
 

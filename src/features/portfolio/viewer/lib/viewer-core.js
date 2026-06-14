@@ -9,6 +9,7 @@ import { ContextMenu } from "./context-menu.js";
 import { ViewerControls } from "./controls.js";
 import { HistoryManager } from "./history-manager.js";
 import { ExplodeTool } from "./explode.js";
+import { MeasureTool } from "./measure.js";
 import { fitCameraToModel } from "./utils.js";
 
 export class ViewerCore {
@@ -36,6 +37,7 @@ export class ViewerCore {
             this.historyManager,
         );
         this.explodeTool = new ExplodeTool(this.modelLoader);
+        this.measureTool = new MeasureTool(this.sceneManager, this.modelLoader);
 
         this.boundListeners = [];
         this.onKeyDown = (e) => this.handleKeyDown(e);
@@ -78,6 +80,13 @@ export class ViewerCore {
                 this.explodeTool.prepare();
                 const slider = document.getElementById("explode-slider");
                 if (slider) slider.value = "0";
+
+                // Reset interaction modes/state carried over from a prior model.
+                this.exitMeasureMode();
+                this.viewerControls.isolatedPart = null;
+                this.viewerControls.selectedPart = null;
+                const isoBanner = document.getElementById("isolated-banner");
+                if (isoBanner) isoBanner.style.display = "none";
 
                 callbacks.onLoaded?.();
             },
@@ -127,14 +136,36 @@ export class ViewerCore {
 
         this.bind("isolate-mode", "click", (e) => {
             if (!this.modelLoader.model) return;
+            // A part chosen in the component tree? Isolate it straight away.
+            if (this.viewerControls.selectedPart) {
+                this.exitMeasureMode();
+                this.viewerControls.isolatePart(this.viewerControls.selectedPart);
+                return;
+            }
+            // Otherwise enter pick mode: click a part in the view to isolate it.
+            this.exitMeasureMode();
             this.viewerControls.enableIsolateMode();
             this.setToolActive(e.currentTarget, true);
         });
         this.bind("exit-isolate-mode", "click", () => {
             this.viewerControls.disableIsolateMode();
-            const btn = document.getElementById("isolate-mode");
-            if (btn) this.setToolActive(btn, false);
         });
+        // Exit the isolated *state* (restore the rest of the model).
+        this.bind("exit-isolate", "click", () => this.viewerControls.showAllParts());
+
+        this.bind("measure-mode", "click", (e) => {
+            if (!this.modelLoader.model) return;
+            if (this.measureTool.active) {
+                this.exitMeasureMode();
+                return;
+            }
+            // Measure and isolate pick-mode both own the canvas click; only one
+            // at a time.
+            this.viewerControls.disableIsolateMode();
+            this.measureTool.enable();
+            this.setToolActive(e.currentTarget, true);
+        });
+        this.bind("exit-measure", "click", () => this.exitMeasureMode());
 
         this.bind("explode-slider", "input", (e) => {
             const value01 = Number(e.currentTarget.value) / 100;
@@ -157,6 +188,13 @@ export class ViewerCore {
         container.classList.toggle("hidden", !next);
     }
 
+    exitMeasureMode() {
+        if (!this.measureTool.active) return;
+        this.measureTool.disable();
+        const btn = document.getElementById("measure-mode");
+        if (btn) this.setToolActive(btn, false);
+    }
+
     handleCanvasContextMenu(e) {
         e.preventDefault();
         if (!this.modelLoader.model) return;
@@ -168,6 +206,19 @@ export class ViewerCore {
 
     handleKeyDown(e) {
         if (!this.modelLoader.model) return;
+
+        // Esc backs out of whatever mode/state is active, most transient first.
+        if (e.key === "Escape") {
+            if (this.measureTool.active) {
+                this.exitMeasureMode();
+            } else if (this.viewerControls.isolateMode) {
+                this.viewerControls.disableIsolateMode();
+            } else if (this.viewerControls.isolatedPart) {
+                this.viewerControls.showAllParts();
+            }
+            return;
+        }
+
         const mod = e.ctrlKey || e.metaKey;
         if (mod && e.key === "z" && !e.shiftKey) {
             e.preventDefault();
@@ -190,6 +241,7 @@ export class ViewerCore {
 
         this.contextMenu.remove();
         this.viewerControls.disableIsolateMode();
+        this.measureTool.dispose();
         this.interactionManager.dispose();
         this.modelLoader.dispose();
         this.sceneManager.dispose();

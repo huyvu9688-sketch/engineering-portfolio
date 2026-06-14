@@ -449,6 +449,27 @@ Update this file after every meaningful implementation change.
   block in `portfolio/page.tsx`) so the page background shows on both
   sides. Model stays centred automatically (`fitCameraToModel` +
   canvas sized from its mount element). Committed locally, NOT pushed.
+- 2026-06-13: Three more viewer features (committed locally, NOT
+  pushed — same batch):
+  (1) Smarter ISOLATE — if a part is selected in the component tree,
+  clicking Isolate isolates it immediately; with nothing selected it
+  falls back to the click-to-pick mode. `disableIsolateMode` now also
+  clears the toolbar button's active styling.
+  (2) EXIT affordances — isolate state shows a top-center banner with
+  an Exit button; pick mode + measure mode show top-center banners
+  with Cancel; `Esc` backs out of measure → pick mode → isolation (in
+  that order). The old bottom-center `isolated-info` read-out was
+  replaced by the top banner (`isolated-banner` / `-name`); controls.js
+  + history-manager.js repointed to the new ids.
+  (3) MEASURE tool (`measure.js`) — toolbar ruler button; click two
+  points on the model to draw markers + a line and show the straight-
+  line distance (model units) in a bottom-center read-out; a 3rd click
+  starts over; markers scale to the model.
+  (4) 3D VIEW CUBE — three.js `ViewHelper` axis gizmo wired into
+  scene-manager's render loop (bottom-left, clear of the list panel);
+  click an axis to snap the camera to that view, orbiting the current
+  controls target. Disposed with the scene. `ViewHelper` added to the
+  `three.js` import hub. `npm run lint`/`build` pass.
 - 2026-06-13: Added two viewer features at owner's request — an
   EXPLODE control (toolbar slider; `explode.js` pushes each mesh
   outward from the model centre) and a persistent part-SELECTION

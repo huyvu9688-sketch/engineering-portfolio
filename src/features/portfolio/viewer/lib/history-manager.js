@@ -114,8 +114,8 @@ export class HistoryManager {
 
         this.viewerControls.isolatedPart = null;
 
-        const isolatedInfo = document.getElementById("isolated-info");
-        if (isolatedInfo) isolatedInfo.style.display = "none";
+        const banner = document.getElementById("isolated-banner");
+        if (banner) banner.style.display = "none";
 
         if (this.modelLoader.model) {
             fitCameraToModel(

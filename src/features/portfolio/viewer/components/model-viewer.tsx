@@ -12,6 +12,7 @@ import {
   LoaderCircle,
   Redo2,
   RotateCcw,
+  Ruler,
   TriangleAlert,
   Undo2,
   Upload,
@@ -144,6 +145,9 @@ export function ModelViewer({ src }: ModelViewerProps) {
         <button type="button" id="show-all-parts" className={TOOL_BTN} title="Show all parts" aria-label="Show all parts">
           <Eye className="h-4 w-4 stroke-[1.5]" />
         </button>
+        <button type="button" id="measure-mode" className={TOOL_BTN} title="Measure distance between two points" aria-label="Measure">
+          <Ruler className="h-4 w-4 stroke-[1.5]" />
+        </button>
         <span className="mx-0.5 h-5 w-px bg-hairline-dark" />
         <button type="button" id="toggle-edges" className={TOOL_BTN} title="Toggle edges" aria-label="Toggle edges">
           <Frame className="h-4 w-4 stroke-[1.5]" />
@@ -225,7 +229,7 @@ export function ModelViewer({ src }: ModelViewerProps) {
         </div>
       </div>
 
-      {/* Isolate-mode banner */}
+      {/* Isolate pick-mode banner (top-center) */}
       <div
         id="isolate-banner"
         style={{ display: "none" }}
@@ -233,7 +237,7 @@ export function ModelViewer({ src }: ModelViewerProps) {
       >
         <div className="flex items-center gap-3">
           <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark">
-            Click a part to isolate
+            Click a part to isolate · Esc to cancel
           </span>
           <button
             type="button"
@@ -245,11 +249,52 @@ export function ModelViewer({ src }: ModelViewerProps) {
         </div>
       </div>
 
-      {/* Hover read-out */}
+      {/* Isolated-state banner (top-center) — exit returns the whole model */}
+      <div
+        id="isolated-banner"
+        style={{ display: "none" }}
+        className="absolute left-1/2 top-3 z-30 -translate-x-1/2 rounded-full border border-accent/40 bg-surface-dark/90 px-4 py-2 backdrop-blur"
+      >
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">
+            Isolated{" "}
+            <span id="isolated-banner-name" className="text-accent" />
+          </span>
+          <button
+            type="button"
+            id="exit-isolate"
+            className="rounded-full border border-hairline-dark px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-on-dark-muted transition-colors hover:text-accent"
+          >
+            Exit · Esc
+          </button>
+        </div>
+      </div>
+
+      {/* Measure-mode banner (top-center) */}
+      <div
+        id="measure-banner"
+        style={{ display: "none" }}
+        className="absolute left-1/2 top-3 z-30 -translate-x-1/2 rounded-full border border-hairline-dark bg-surface-dark/90 px-4 py-2 backdrop-blur"
+      >
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark">
+            Click two points to measure · Esc to exit
+          </span>
+          <button
+            type="button"
+            id="exit-measure"
+            className="rounded-full border border-hairline-dark px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-on-dark-muted transition-colors hover:text-accent"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      {/* Hover read-out — offset right of the bottom-left view-cube gizmo */}
       <div
         id="hover-info"
         style={{ display: "none" }}
-        className="pointer-events-none absolute bottom-3 left-3 z-20 rounded-full border border-hairline-dark bg-surface-dark/80 px-3 py-1.5 backdrop-blur"
+        className="pointer-events-none absolute bottom-3 left-40 z-20 rounded-full border border-hairline-dark bg-surface-dark/80 px-3 py-1.5 backdrop-blur"
       >
         <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">
           Hover{" "}
@@ -257,13 +302,17 @@ export function ModelViewer({ src }: ModelViewerProps) {
         <span id="hover-part-name" className="font-mono text-[10px] text-on-dark" />
       </div>
 
-      {/* Isolated read-out */}
+      {/* Measure result (bottom-center) */}
       <div
-        id="isolated-info"
+        id="measure-result"
         style={{ display: "none" }}
         className="pointer-events-none absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-accent/40 bg-surface-dark/80 px-3 py-1.5 backdrop-blur"
       >
-        <span id="isolated-part-name" className="font-mono text-[10px] uppercase tracking-widest text-accent" />
+        <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">
+          Distance{" "}
+        </span>
+        <span id="measure-value" className="font-mono text-[10px] text-accent" />
+        <span className="font-mono text-[10px] text-on-dark-muted"> units</span>
       </div>
 
       {/* Loading overlay */}

@@ -482,6 +482,16 @@ Update this file after every meaningful implementation change.
   PMREM as `scene.environment`; (d) NaN/empty bounding-box guards in
   `fitCameraToModel` + recentre so degenerate geometry can't blank the
   view. `RoomEnvironment` added to the import hub. lint/build pass.
+- 2026-06-13: Imported model STILL rendered invisible after the above,
+  but the hover read-out showed a real part name — i.e. the raycaster
+  was hitting geometry, so it was loaded + framed but rendering blank.
+  That's a material problem. `optimizeMaterial` now: forces near-zero
+  opacity (<0.2) back to fully opaque (CAD parts often export as
+  transparent), sets `envMapIntensity = 1` (some exports zero it, leaving
+  metals black), and uses `DoubleSide` (inverted/one-sided CAD normals
+  were invisible from outside). lint/build pass. THIS BATCH WAS PUSHED to
+  origin/main → Vercel deploy (owner asked to deploy after the fix). All
+  the local-only viewer commits since the last deploy went out together.
 - 2026-06-13: Added two viewer features at owner's request — an
   EXPLODE control (toolbar slider; `explode.js` pushes each mesh
   outward from the model centre) and a persistent part-SELECTION

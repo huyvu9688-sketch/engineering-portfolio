@@ -432,6 +432,14 @@ Update this file after every meaningful implementation change.
   view always frames the whole model; added an Import button
   (toolbar) to load a local `.glb` from the user's computer via an
   object URL.
+- 2026-06-13: Viewer layout change (committed locally, NOT pushed —
+  same batch as above): moved the component list OUT of the 3D view
+  zone. It was an absolute overlay covering the canvas; it's now its
+  own column to the right of the viewer (`lg:w-72`), so the 3D view
+  is the left `flex-1` column and is no longer full page width. The
+  engine's DOM ids (`component-list-container`, `toggle-list`,
+  `close-list`) are unchanged, so the show/hide toggle still works.
+  On narrow screens the list stacks below the viewer.
 - 2026-06-13: Added two viewer features at owner's request — an
   EXPLODE control (toolbar slider; `explode.js` pushes each mesh
   outward from the model centre) and a persistent part-SELECTION

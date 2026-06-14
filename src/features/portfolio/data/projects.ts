@@ -64,11 +64,11 @@ export const PROJECTS: Project[] = [
 
 /**
  * Featured GLB shown in the interactive 3D viewer on the /portfolio page.
- * TEMPORARY public demo — replace with your own model under /public/models/
- * (e.g. "/models/featured.glb").
+ * Self-hosted under /public/models/. Currently a sample 2-cylinder engine
+ * (Khronos glTF sample) so explode + the component tree have many parts to
+ * show — replace with your own assembly GLB when ready.
  */
-export const FEATURED_MODEL =
-  "https://modelviewer.dev/shared-assets/models/Astronaut.glb";
+export const FEATURED_MODEL = "/models/2-cylinder-engine.glb";
 
 export function getProjectBySlug(slug: string): Project | undefined {
   return PROJECTS.find((project) => project.slug === slug);

@@ -8,6 +8,7 @@ import { InteractionManager } from "./interaction.js";
 import { ContextMenu } from "./context-menu.js";
 import { ViewerControls } from "./controls.js";
 import { HistoryManager } from "./history-manager.js";
+import { ExplodeTool } from "./explode.js";
 import { fitCameraToModel } from "./utils.js";
 
 export class ViewerCore {
@@ -34,6 +35,7 @@ export class ViewerCore {
             this.componentList,
             this.historyManager,
         );
+        this.explodeTool = new ExplodeTool(this.modelLoader);
 
         this.boundListeners = [];
         this.onKeyDown = (e) => this.handleKeyDown(e);
@@ -71,6 +73,12 @@ export class ViewerCore {
                     this.componentList.expandAllArrows();
                     this.toggleList(true);
                 }
+
+                // Reset the exploded view for the freshly loaded model.
+                this.explodeTool.prepare();
+                const slider = document.getElementById("explode-slider");
+                if (slider) slider.value = "0";
+
                 callbacks.onLoaded?.();
             },
             (err) => callbacks.onError?.(err),
@@ -126,6 +134,11 @@ export class ViewerCore {
             this.viewerControls.disableIsolateMode();
             const btn = document.getElementById("isolate-mode");
             if (btn) this.setToolActive(btn, false);
+        });
+
+        this.bind("explode-slider", "input", (e) => {
+            const value01 = Number(e.currentTarget.value) / 100;
+            this.explodeTool.setFromSlider(value01);
         });
 
         this.bind("toggle-list", "click", () => this.toggleList());

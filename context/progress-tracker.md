@@ -492,6 +492,18 @@ Update this file after every meaningful implementation change.
   were invisible from outside). lint/build pass. THIS BATCH WAS PUSHED to
   origin/main → Vercel deploy (owner asked to deploy after the fix). All
   the local-only viewer commits since the last deploy went out together.
+- 2026-06-13: Still invisible after deploy; console showed
+  `GLTFLoader: Couldn't load texture blob:` (embedded textures failing to
+  decode) plus harmless Clock/PCFSoftShadowMap deprecations. No CSP in
+  next.config, so it's the image data itself. Since hover hit real parts,
+  the geometry was loaded + framed but not drawn — a render-not-raycast
+  problem. Kitchen-sink fix in `model-loader` (pushed → Vercel):
+  per-mesh `frustumCulled = false` + `visible = true` (bad CAD bounding
+  spheres get culled from drawing but not raycasting); per-material
+  `visible/colorWrite = true`, drop any texture map whose image failed to
+  load (so the base colour shows instead of sampling black), force ~zero
+  opacity opaque, lift near-black colours by luminance, `DoubleSide`,
+  `envMapIntensity = 1`. lint/build pass.
 - 2026-06-13: Added two viewer features at owner's request — an
   EXPLODE control (toolbar slider; `explode.js` pushes each mesh
   outward from the model centre) and a persistent part-SELECTION

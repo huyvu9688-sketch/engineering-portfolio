@@ -65,6 +65,11 @@ export class ModelLoader {
                 this.allParts.push(child);
                 child.castShadow = true;
                 child.receiveShadow = true;
+                child.visible = true;
+                // Some CAD tessellations produce bad bounding spheres, which the
+                // renderer frustum-culls (draws nothing) even though raycasting
+                // still hits them — i.e. an invisible model you can still hover.
+                child.frustumCulled = false;
 
                 this.optimizeMaterial(child);
                 this.computeNormals(child);
@@ -94,19 +99,35 @@ export class ModelLoader {
     optimizeMaterial(mesh) {
         if (!mesh.material) return;
         const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        const TEXTURE_SLOTS = ["map", "emissiveMap", "metalnessMap", "roughnessMap", "aoMap", "normalMap"];
+
         materials.forEach((mat) => {
+            // A material flagged invisible / not writing colour renders nothing
+            // but is still raycast-hittable.
+            mat.visible = true;
+            mat.colorWrite = true;
+
+            // Textures that fail to decode (see the console "Couldn't load
+            // texture" errors) leave a map whose image never arrived; sampling
+            // it renders the surface black/blank. Drop any such broken map so
+            // the base colour shows instead.
+            TEXTURE_SLOTS.forEach((slot) => {
+                if (mat[slot] && !mat[slot].image) mat[slot] = null;
+            });
+
             // CAD exporters often ship parts as fully transparent (opacity 0) or
-            // flagged transparent with no real alpha — which renders nothing
-            // while the geometry is still there (and still hover/raycast-hits).
-            // Force anything essentially invisible back to opaque.
+            // flagged transparent with no real alpha — renders nothing while the
+            // geometry is still there. Force anything ~invisible back to opaque.
             if (mat.opacity === undefined || mat.opacity < 0.2) {
                 mat.opacity = 1;
                 mat.transparent = false;
             }
 
-            // Black base colour has no diffuse response → lift it to mid grey.
-            if (mat.color && mat.color.r === 0 && mat.color.g === 0 && mat.color.b === 0) {
-                mat.color.setHex(0x808080);
+            // Very dark base colour has little/no diffuse response → lift it to
+            // mid grey so the part is at least shaded and visible.
+            if (mat.color) {
+                const lum = 0.299 * mat.color.r + 0.587 * mat.color.g + 0.114 * mat.color.b;
+                if (lum < 0.05) mat.color.setHex(0x808080);
             }
 
             if (mat.isMeshStandardMaterial || mat.isMeshPhysicalMaterial) {

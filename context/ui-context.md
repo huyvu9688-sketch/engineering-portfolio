@@ -123,19 +123,10 @@ Type rules from the template:
   grayscale → color on hover with slight scale; mono accent
   eyebrow with icon; tech chips as bordered white pills;
   "View Project ↗" mono link.
-- **3D model viewer** (featured on the Portfolio page): a dark "viewport
-  screen" (`bg-surface-dark`, `rounded-lg border-hairline`) framed
-  by the light page. Floating chrome uses the dark-band side of the
-  palette — dark-glass pills/panels (`bg-surface-dark/80–90
-  backdrop-blur border-hairline-dark`), `--on-dark` /
-  `--on-dark-muted` text, `--accent` on hover/active. A top-left
-  toolbar of circular icon buttons (reset, isolate, show-all,
-  edges, grid, axes, undo, redo), a top-right component-list toggle,
-  a collapsible component-hierarchy panel (mono uppercase labels,
-  search pill), a right-click part context menu, and hover/isolate
-  read-out pills. Loading/error overlays are mono uppercase on the
-  dark viewport. This is the one place the dark palette leads, since
-  3D models read best on a dark ground.
+- **3D model viewer**: REMOVED on 2026-06-14 (the in-browser GLB
+  viewer never rendered reliably; see progress-tracker.md). The
+  Portfolio page is now header → project rows. If a viewer is
+  revisited, it was the one place the dark palette led.
 - **Chips/tags**: white pill, hairline border, mono uppercase
   `text-[10px]`–`text-xs`, `--ink-muted`.
 - **Buttons**: pill, mono uppercase bold; primary = `--ink` bg

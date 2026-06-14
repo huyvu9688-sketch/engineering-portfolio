@@ -6,9 +6,10 @@ Update this file after every meaningful implementation change.
 
 - Phase 1 — Foundation & landing page: COMPLETE (deployed,
   verified live at https://engineering-portfolio-svy8.vercel.app)
-- Phase 2 — Portfolio: IN PROGRESS (units 1, 2, and the unit-4
-  viewer core done; unit 3 deferred; unit-4 measurement + view
-  cube remaining)
+- Phase 2 — Portfolio: IN PROGRESS (units 1 & 2 done; unit 3
+  deferred; unit 4 — the 3D viewer — was built then REMOVED on
+  2026-06-14 because it never rendered reliably for imported CAD
+  GLBs, see Session Notes)
 
 ## Phase Plan
 
@@ -33,10 +34,13 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Phase 2, unit 4b: add the measurement tool + view cube to the
-  3D viewer, and replace the temporary demo model with a real GLB.
-- Phase 2, unit 3 (resume download): DEFERRED at owner's request —
-  jumped to unit 4 first. Revisit after the viewer is finished.
+- Phase 2, unit 3 (resume download): DEFERRED at owner's request.
+  Now the next portfolio item, since the 3D viewer (unit 4) was
+  removed.
+- The 3D viewer is shelved (removed 2026-06-14). Only revisit if
+  the owner explicitly wants to try a different approach (e.g.
+  Google `<model-viewer>` web component) — the bespoke Three.js
+  engine never rendered imported CAD GLBs reliably.
 
 ## Completed
 
@@ -321,9 +325,10 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-- Phase 2 unit 4b: port `measurement.js` + add a view cube to the
-  viewer; replace the temporary demo GLB with a real model
-- Phase 2 unit 3: resume download link/section (deferred)
+- Phase 2 unit 3: resume download link/section (deferred) — now the
+  next portfolio task
+- 3D viewer: shelved (removed 2026-06-14). Not on the roadmap unless
+  the owner revisits it with a different approach
 - Owner to provide real content for Background/Experience,
   Socials, Location, and portfolio project write-ups to replace
   placeholders (see Open Questions)
@@ -365,13 +370,15 @@ Update this file after every meaningful implementation change.
 
 ## Architecture Decisions
 
-- 3D viewer: wrap the owner's existing vanilla Three.js modules in
-  one typed React client component rather than rewriting in
-  react-three-fiber (decided 2026-06-13). The engine is bundled
-  `three` (dynamically imported, client-only), loads models from a
-  URL, and is the one place the dark palette leads. See
-  `architecture.md` → "3D Viewer Engine". Supersedes the earlier
-  "react-three-fiber" note in the stack table.
+- 3D viewer: REMOVED 2026-06-14. The decision to wrap the owner's
+  vanilla Three.js modules in a typed React component (2026-06-13)
+  is reversed — after many fixes it still rendered black for the
+  owner's imported CAD GLBs even when diagnostics showed a perfect
+  scene (canvas sized, camera framed on a centred model, all meshes
+  drawn). Deleted the `features/portfolio/viewer/` engine, the
+  `ModelViewer` usage, the `three` dependency, and the demo GLB;
+  recoverable from git. If revisited, prefer Google's
+  `<model-viewer>` web component over a bespoke engine.
 - FINAL design direction: Swiss-style portfolio template
   (owner-supplied single-page HTML reference, since adapted into
   `ui-context.md`) — light neutral canvas, #111 ink, single
@@ -564,3 +571,25 @@ Update this file after every meaningful implementation change.
   proves the robust box frames the good geometry) + `npm run lint` and
   `npm run build` pass. NOT pushed — owner to verify locally
   (`npm run dev`, import the CAD .glb) before deploying.
+- 2026-06-14 (later): the bounds fix was deployed, but the viewer was
+  STILL black — even for the clean public engine GLB. Frame
+  diagnostics added to the engine proved the scene was perfect:
+  canvas 711x620, camera framed on a model centred at the origin
+  (size ~745x303x275), all 115 meshes drawn, 0 hidden. So it was not
+  geometry, framing, canvas size, or a stuck overlay. With a correct
+  scene still rendering black across all models, the owner decided to
+  STOP and REMOVE the viewer.
+- 2026-06-14: REMOVED the entire 3D viewer feature at the owner's
+  request. Deleted `src/features/portfolio/viewer/` (engine + React
+  wrapper), the `<ModelViewer>` usage and "Interactive 3D Model"
+  section on `/portfolio` (page is now header → project rows; the
+  redundant "Selected Projects" heading went too), the
+  `FEATURED_MODEL` constant, the demo `public/models/2-cylinder-
+  engine.glb`, the `three` dependency (uninstalled — also resolves
+  the 2026-06-13 dev RAM/SSD thrashing), and the viewer's
+  `tsconfig.json` JS-exclude. Context files updated to match
+  (architecture, ui-context, project-overview, code-standards,
+  this tracker). All of it is recoverable from git history if the
+  viewer is ever revisited (a Google `<model-viewer>` web component
+  would be the simpler next attempt). `npm run lint` + `npm run
+  build` pass clean.

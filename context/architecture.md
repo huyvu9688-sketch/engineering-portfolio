@@ -9,7 +9,6 @@
 | Auth         | Supabase Auth               | Admin sign-in only (single admin user)     |
 | Database     | Supabase (PostgreSQL)       | File metadata, categories, project data    |
 | File Storage | Supabase Storage            | STEP/SLDPRT/GLB/PDF binaries               |
-| 3D Viewer    | Three.js (vanilla engine + React wrapper) | GLB model rendering in portfolio/database |
 | Hosting      | Vercel                      | Deployment, CI on git push                 |
 
 ## System Boundaries
@@ -20,15 +19,8 @@
 - `src/app/api/` — server endpoints. Owns auth checks and
   Supabase mutations. Nothing else calls Supabase with write
   access.
-- `src/features/portfolio/` — project data, project card and
-  detail components, and the 3D viewer:
-  - `viewer/lib/` — the imperative Three.js engine (scene,
-    loader, component hierarchy, interaction, controls, context
-    menu, undo/redo history). Plain JS, framework-agnostic, owns
-    all WebGL/DOM work for the viewport.
-  - `viewer/components/` — the `ModelViewer` React client
-    component: the only React boundary, renders the restyled
-    chrome and drives the engine via init/loadModel/dispose.
+- `src/features/portfolio/` — project data plus the project card
+  and detail components.
 - `src/features/calculators/` — all calculator logic and UIs.
   `lib/` holds pure math functions (no React, no I/O);
   `components/` holds the UIs that call them.
@@ -41,28 +33,15 @@
 - `src/lib/` — Supabase client setup, shared utilities,
   constants. No feature-specific code.
 
-## 3D Viewer Engine
+## 3D Viewer (removed)
 
-The GLB viewer is a self-contained imperative Three.js engine
-(`features/portfolio/viewer/lib/`, plain JS) wrapped by one typed
-React client component (`viewer/components/model-viewer.tsx`).
-
-- **Why not react-three-fiber:** the engine (component hierarchy,
-  isolate/hide, undo/redo, context menu, measurement) was authored
-  as working vanilla Three.js modules. Wrapping them is far less
-  risky and more maintainable than re-expressing all of it as R3F
-  components, and reuses code the owner already understands.
-- **Boundary:** React renders the chrome (toolbar, panels,
-  banners, overlays) with the element IDs the engine expects and
-  owns load/error overlay state; the engine attaches listeners and
-  does all scene/DOM work. `three` is a bundled dependency and is
-  dynamically imported inside the component's effect, so it never
-  runs during SSR/prerender. DRACO decoder is loaded from the
-  gstatic CDN.
-- **Models** load from a URL — the `FEATURED_MODEL` constant in
-  `features/portfolio/data/projects.ts` (a path under `/public`
-  or an absolute URL). The viewer is featured on the `/portfolio`
-  listing page; there is no file-upload UI on the public site.
+The interactive in-browser 3D model viewer was **removed on
+2026-06-14** (it never rendered reliably across imported CAD GLBs —
+see `progress-tracker.md`). The `three` dependency and the
+`features/portfolio/viewer/` engine were deleted; the full history
+is recoverable from git if it is ever revisited. Note this is only
+the in-page *viewer* — the file database can still host GLB files
+for **download** (see Storage Model).
 
 ## Storage Model
 

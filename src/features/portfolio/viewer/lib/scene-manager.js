@@ -17,6 +17,7 @@ export class SceneManager {
         this.clock = new THREE.Clock();
         this.animationId = null;
         this.running = false;
+        this.frameCount = 0; // diagnostics: frames actually rendered
         this.onResize = () => this.onWindowResize();
         this.onVisibility = () => this.handleVisibility();
         this.onPointerUp = (e) => this.handlePointerUp(e);
@@ -184,6 +185,7 @@ export class SceneManager {
         if (this.controls) this.controls.update();
         if (this.renderer && this.scene && this.camera) {
             this.renderer.render(this.scene, this.camera);
+            this.frameCount++; // diagnostics: proves the render loop is alive
             if (this.viewHelper) this.viewHelper.render(this.renderer);
         }
     }

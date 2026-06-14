@@ -424,6 +424,22 @@ Update this file after every meaningful implementation change.
   Pushed to GitHub `main` and auto-deployed to Vercel at the
   owner's request (they run/view the site via the deployment
   rather than local dev).
+- 2026-06-13: Viewer tweaks (committed locally, NOT pushed —
+  owner is batching more changes before the next deploy): viewer
+  height 60vh → 75vh; `fitCameraToModel` now adapts clip planes +
+  zoom limits to model scale (fixes "reset view" not showing large
+  models — the fixed maxDistance/far were clamping them); reset
+  view always frames the whole model; added an Import button
+  (toolbar) to load a local `.glb` from the user's computer via an
+  object URL.
+- 2026-06-13: Added two viewer features at owner's request — an
+  EXPLODE control (toolbar slider; `explode.js` pushes each mesh
+  outward from the model centre) and a persistent part-SELECTION
+  glow (picking a part in the component tree applies an accent
+  emissive that survives hover). Swapped the featured demo to a
+  self-hosted multi-part engine assembly
+  (`public/models/2-cylinder-engine.glb`) so both features have
+  real parts to show. Built, pushed, deployed, verified live.
 - 2026-06-13: Owner asked to move the 3D viewer OUT of the project
   detail pages and onto the main `/portfolio` page. Done: the
   viewer is now a featured section at the top of `/portfolio`

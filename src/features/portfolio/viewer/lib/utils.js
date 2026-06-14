@@ -35,15 +35,21 @@ export function resolvePartNode(mesh, model) {
     return mesh;
 }
 
-// Frame the camera so the given object fills the view.
+// Frame the camera so the given object fully fits the view.
 export function fitCameraToModel(targetObject, camera, controls) {
     const box = new THREE.Box3().setFromObject(targetObject);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
 
-    const maxDim = Math.max(size.x, size.y, size.z);
+    const maxDim = Math.max(size.x, size.y, size.z) || 1;
     const fov = camera.fov * (Math.PI / 180);
-    const cameraDistance = Math.abs(maxDim / 2 / Math.tan(fov / 2)) * 2.5;
+    const cameraDistance = Math.abs(maxDim / 2 / Math.tan(fov / 2)) * 2.2;
+
+    // Adapt clip planes + zoom limits to the model's scale so a model of any
+    // size (mm to m) is fully visible and never clipped or distance-clamped.
+    camera.near = Math.max(maxDim / 1000, 0.01);
+    camera.far = Math.max(maxDim * 100, 1000);
+    camera.updateProjectionMatrix();
 
     camera.position.set(
         center.x + cameraDistance * 0.7,
@@ -51,7 +57,10 @@ export function fitCameraToModel(targetObject, camera, controls) {
         center.z + cameraDistance * 0.7,
     );
     camera.lookAt(center);
+
     controls.target.copy(center);
+    controls.minDistance = maxDim * 0.05;
+    controls.maxDistance = maxDim * 10;
     controls.update();
 }
 

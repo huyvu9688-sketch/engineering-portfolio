@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
   Axis3d,
   Boxes,
@@ -14,6 +14,7 @@ import {
   RotateCcw,
   TriangleAlert,
   Undo2,
+  Upload,
   X,
 } from "lucide-react";
 
@@ -47,6 +48,7 @@ const TOOL_BTN =
 export function ModelViewer({ src }: ModelViewerProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const coreRef = useRef<ViewerCoreInstance | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState("");
@@ -100,8 +102,31 @@ export function ModelViewer({ src }: ModelViewerProps) {
     };
   }, [src]);
 
+  // Load a model the user picks from their computer (a local .glb).
+  function handleImport(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // let the same file be re-imported later
+    if (!file || !coreRef.current) return;
+
+    const url = URL.createObjectURL(file);
+    setStatus("loading");
+    setProgress(0);
+    coreRef.current.loadModel(url, {
+      onProgress: (pct) => setProgress(pct),
+      onLoaded: () => {
+        setStatus("ready");
+        URL.revokeObjectURL(url);
+      },
+      onError: (err) => {
+        setErrorMessage(err?.message ?? "Failed to load model");
+        setStatus("error");
+        URL.revokeObjectURL(url);
+      },
+    });
+  }
+
   return (
-    <div className="relative h-[60vh] min-h-105 w-full overflow-hidden rounded-lg border border-hairline bg-surface-dark">
+    <div className="relative h-[75vh] min-h-120 w-full overflow-hidden rounded-lg border border-hairline bg-surface-dark">
       {/* Renderer canvas mounts here */}
       <div ref={canvasRef} className="absolute inset-0" />
 
@@ -146,7 +171,26 @@ export function ModelViewer({ src }: ModelViewerProps) {
         <button type="button" id="redo-action" className={TOOL_BTN} title="Redo" aria-label="Redo">
           <Redo2 className="h-4 w-4 stroke-[1.5]" />
         </button>
+        <span className="mx-0.5 h-5 w-px bg-hairline-dark" />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className={TOOL_BTN}
+          title="Import a .glb model from your computer"
+          aria-label="Import model"
+        >
+          <Upload className="h-4 w-4 stroke-[1.5]" />
+        </button>
       </div>
+
+      {/* Hidden picker for importing a local model */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".glb,.gltf,model/gltf-binary"
+        onChange={handleImport}
+        className="hidden"
+      />
 
       {/* Component list toggle */}
       <button

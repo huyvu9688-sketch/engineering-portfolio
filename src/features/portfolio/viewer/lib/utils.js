@@ -1,6 +1,7 @@
 // Shared helpers for the GLB viewer engine.
 
 import { THREE } from "./three.js";
+import { computeRobustBox } from "./bounds.js";
 
 // Inline SVG inner-markup describing each component type. Rendered inside an
 // <svg> in the component-list panel. The shape encodes the type; colour is
@@ -37,8 +38,11 @@ export function resolvePartNode(mesh, model) {
 
 // Frame the camera so the given object fully fits the view.
 export function fitCameraToModel(targetObject, camera, controls) {
-    const box = new THREE.Box3().setFromObject(targetObject);
-    if (box.isEmpty()) return; // nothing renderable to frame
+    // Bound only the finite geometry: a single NaN/Inf part would otherwise make
+    // the box non-finite and bail out here, leaving the camera pointed at
+    // nothing (a black viewport).
+    const box = computeRobustBox(targetObject);
+    if (!box) return; // nothing renderable to frame
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
 

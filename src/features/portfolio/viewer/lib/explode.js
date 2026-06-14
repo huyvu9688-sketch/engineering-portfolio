@@ -2,6 +2,7 @@
 // individual parts of an assembly separate. Factor 0 = assembled.
 
 import { THREE } from "./three.js";
+import { computeRobustBox } from "./bounds.js";
 
 export class ExplodeTool {
     constructor(modelLoader) {
@@ -20,7 +21,9 @@ export class ExplodeTool {
         if (!model) return;
         model.updateWorldMatrix(true, true);
 
-        const center = new THREE.Box3().setFromObject(model).getCenter(new THREE.Vector3());
+        const box = computeRobustBox(model);
+        if (!box) return; // no finite geometry to explode around
+        const center = box.getCenter(new THREE.Vector3());
 
         this.modelLoader.allParts.forEach((mesh) => {
             const meshCenter = new THREE.Box3()

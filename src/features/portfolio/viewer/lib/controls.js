@@ -183,9 +183,13 @@ export class ViewerControls {
     }
 
     resetCamera() {
-        const target = this.isolatedPart || this.modelLoader.model;
-        if (target) {
-            fitCameraToModel(target, this.sceneManager.camera, this.sceneManager.controls);
+        // Always frame the whole model so "reset view" shows everything.
+        if (this.modelLoader.model) {
+            fitCameraToModel(
+                this.modelLoader.model,
+                this.sceneManager.camera,
+                this.sceneManager.controls,
+            );
         }
     }
 }

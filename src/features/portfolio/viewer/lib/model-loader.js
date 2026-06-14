@@ -1,6 +1,7 @@
 // Loads a GLB/GLTF model from a URL and prepares its meshes.
 
 import { THREE, GLTFLoader, DRACOLoader } from "./three.js";
+import { computeRobustBox, hasFiniteGeometry } from "./bounds.js";
 
 const DRACO_DECODER_PATH =
     "https://www.gstatic.com/draco/versioned/decoders/1.5.6/";
@@ -61,6 +62,17 @@ export class ModelLoader {
                     this.partMap[child.name] = child;
                 }
 
+                // Degenerate geometry (NaN/Inf vertices) is common in CAD
+                // exports. It can't render meaningfully and poisons whole-model
+                // bounds, so hide it and keep it out of the interactive part
+                // list (hover / isolate / explode / measure) while leaving it in
+                // the component tree for completeness.
+                if (!hasFiniteGeometry(child)) {
+                    child.userData.degenerate = true;
+                    child.visible = false;
+                    return;
+                }
+
                 child.userData.isPart = true;
                 this.allParts.push(child);
                 child.castShadow = true;
@@ -87,11 +99,9 @@ export class ModelLoader {
     // scaling — keeps measurements true to the model's units.
     recenterModel() {
         if (!this.model) return;
-        this.model.updateWorldMatrix(true, true);
-        const box = new THREE.Box3().setFromObject(this.model);
-        if (box.isEmpty()) return;
+        const box = computeRobustBox(this.model);
+        if (!box) return; // no finite geometry to centre on
         const center = box.getCenter(new THREE.Vector3());
-        if (![center.x, center.y, center.z].every(Number.isFinite)) return; // NaN guard
         this.model.position.sub(center);
         this.model.updateMatrixWorld(true);
     }

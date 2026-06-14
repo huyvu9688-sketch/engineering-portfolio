@@ -535,3 +535,32 @@ Update this file after every meaningful implementation change.
     from Windows Defender real-time scanning — the usual cause of
     SSD 100% during Next dev — and reload the VS Code window so the
     TS server drops the old `three` types from memory.
+- 2026-06-14: ROOT-CAUSED the imported-CAD "black viewport" for real
+  (the 2026-06-13 saga only chased symptoms). The component list fills
+  in (485 parts) and the bottom-left view-cube gizmo renders, so WebGL
+  + the render loop are alive — the MAIN scene just frames nothing.
+  Cause: the imported GLB contains degenerate geometry (NaN/Inf
+  vertices — confirmed via three's own `computeBoundingBox(): Computed
+  min/max have NaN values` warning). A single such mesh makes
+  `Box3.setFromObject(model)` non-finite for the WHOLE model, so the
+  2026-06-13 "NaN guards" in `fitCameraToModel`/`recenterModel`
+  EARLY-RETURNED — leaving the camera at its default (5,5,5) pose with
+  the model/grid/axes out of frame (hence black, gizmo still drawn).
+  The public engine GLB (0 textures, sane bounds) was never affected.
+  Fix: new `viewer/lib/bounds.js` — `computeRobustBox()` unions only
+  the meshes whose geometry bounding box is finite (skips the bad
+  ones), with `isFiniteBox()` + `hasFiniteGeometry()` helpers. Routed
+  every bounds consumer through it: `fitCameraToModel` (utils),
+  `recenterModel` + `fitHelpersToModel`, and the explode/measure tools.
+  `processModel` now also detects degenerate meshes, marks
+  `userData.degenerate`, hides them, and keeps them out of `allParts`
+  (so hover/isolate/explode/measure ignore broken bodies) while leaving
+  them in the component tree. The `GLTFLoader: Couldn't load texture
+  blob:` errors are a SEPARATE, non-fatal issue and only on the OLD
+  deployed build — three r184 returns null on a failed texture (parse
+  still completes) and `optimizeMaterial` already drops the empty map
+  so the base colour shows; they'll disappear on redeploy. Verified:
+  Node unit test of `bounds.js` (reproduces the NaN-poisoned box, then
+  proves the robust box frames the good geometry) + `npm run lint` and
+  `npm run build` pass. NOT pushed — owner to verify locally
+  (`npm run dev`, import the CAD .glb) before deploying.

@@ -11,6 +11,8 @@ import { HistoryManager } from "./history-manager.js";
 import { ExplodeTool } from "./explode.js";
 import { MeasureTool } from "./measure.js";
 import { fitCameraToModel } from "./utils.js";
+import { THREE } from "./three.js";
+import { computeRobustBox } from "./bounds.js";
 
 export class ViewerCore {
     /**
@@ -64,6 +66,7 @@ export class ViewerCore {
             (model) => {
                 fitCameraToModel(model, this.sceneManager.camera, this.sceneManager.controls);
                 this.sceneManager.fitHelpersToModel(model);
+                this.logViewerDiagnostics(model);
 
                 const hierarchy = this.componentList.extractHierarchy(model);
                 if (hierarchy.length > 0) {
@@ -93,6 +96,64 @@ export class ViewerCore {
             },
             (err) => callbacks.onError?.(err),
         );
+    }
+
+    // One-shot load diagnostic — prints exactly why a model is or isn't
+    // visible (drawn-mesh count, finite bounds, where the camera ended up, and
+    // whether the canvas has a real size). Read this in the browser console
+    // after a model loads. Remove once the viewer is confirmed working.
+    logViewerDiagnostics(model) {
+        try {
+            const v3 = () => new THREE.Vector3();
+            const round = (arr) => arr.map((n) => Math.round(n * 100) / 100);
+
+            let meshes = 0;
+            let degenerate = 0;
+            model.traverse((c) => {
+                if (!c.isMesh) return;
+                meshes++;
+                if (c.userData.degenerate) degenerate++;
+            });
+
+            const box = computeRobustBox(model);
+            const cam = this.sceneManager.camera;
+            const controls = this.sceneManager.controls;
+            const renderer = this.sceneManager.renderer;
+            const size = renderer?.getSize ? renderer.getSize(new THREE.Vector2()) : null;
+
+            console.info("[viewer] load diagnostics", {
+                meshesTotal: meshes,
+                meshesDrawn: this.modelLoader.allParts.length,
+                meshesHiddenDegenerate: degenerate,
+                robustBox: box
+                    ? {
+                          center: round(box.getCenter(v3()).toArray()),
+                          size: round(box.getSize(v3()).toArray()),
+                      }
+                    : null,
+                camera: {
+                    position: round(cam.position.toArray()),
+                    target: round(controls.target.toArray()),
+                    near: cam.near,
+                    far: cam.far,
+                    aspect: Math.round(cam.aspect * 1000) / 1000,
+                },
+                canvasPixels: size ? [size.x, size.y] : null,
+            });
+
+            if (!box) {
+                console.warn(
+                    "[viewer] No finite geometry — every mesh has NaN/Inf bounds, so there is nothing drawable to frame.",
+                );
+            }
+            if (size && (size.x === 0 || size.y === 0)) {
+                console.warn(
+                    "[viewer] Canvas has zero size — the 3D view element wasn't laid out yet, so nothing can render.",
+                );
+            }
+        } catch (err) {
+            console.warn("[viewer] diagnostics failed", err);
+        }
     }
 
     handleComponentClick(component, element) {

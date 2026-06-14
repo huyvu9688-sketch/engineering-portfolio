@@ -1,6 +1,7 @@
 // Scene, camera, renderer, lighting and the orbit controls.
 
 import { THREE, OrbitControls, ViewHelper, RoomEnvironment } from "./three.js";
+import { computeRobustBox } from "./bounds.js";
 
 export class SceneManager {
     constructor(container) {
@@ -125,8 +126,8 @@ export class SceneManager {
     // model loads (and after it's been recentred to the origin).
     fitHelpersToModel(model) {
         if (!model) return;
-        const box = new THREE.Box3().setFromObject(model);
-        if (box.isEmpty()) return;
+        const box = computeRobustBox(model);
+        if (!box) return;
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         if (!Number.isFinite(maxDim) || maxDim <= 0) return;

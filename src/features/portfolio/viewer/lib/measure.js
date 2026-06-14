@@ -5,6 +5,7 @@
 // starts a fresh measurement.
 
 import { THREE } from "./three.js";
+import { computeRobustBox } from "./bounds.js";
 
 const MEASURE_COLOR = 0xeb3a14; // accent
 
@@ -36,8 +37,9 @@ export class MeasureTool {
         // or a 5m assembly alike.
         const model = this.modelLoader.model;
         if (model) {
-            const size = new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3());
-            const maxDim = Math.max(size.x, size.y, size.z) || 1;
+            const box = computeRobustBox(model);
+            const size = box ? box.getSize(new THREE.Vector3()) : null;
+            const maxDim = (size && Math.max(size.x, size.y, size.z)) || 1;
             this.markerRadius = maxDim * 0.008;
         }
 

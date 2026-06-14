@@ -95,13 +95,31 @@ export class ModelLoader {
         if (!mesh.material) return;
         const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
         materials.forEach((mat) => {
+            // CAD exporters often ship parts as fully transparent (opacity 0) or
+            // flagged transparent with no real alpha — which renders nothing
+            // while the geometry is still there (and still hover/raycast-hits).
+            // Force anything essentially invisible back to opaque.
+            if (mat.opacity === undefined || mat.opacity < 0.2) {
+                mat.opacity = 1;
+                mat.transparent = false;
+            }
+
+            // Black base colour has no diffuse response → lift it to mid grey.
             if (mat.color && mat.color.r === 0 && mat.color.g === 0 && mat.color.b === 0) {
                 mat.color.setHex(0x808080);
             }
+
             if (mat.isMeshStandardMaterial || mat.isMeshPhysicalMaterial) {
                 mat.metalness = Math.min(mat.metalness, 0.5);
                 mat.roughness = Math.max(mat.roughness, 0.4);
+                // Ensure the part actually picks up the scene environment map
+                // (some exports zero this out, leaving metals pitch black).
+                mat.envMapIntensity = 1;
             }
+
+            // Draw both faces so parts with inverted/one-sided normals (very
+            // common from CAD tessellation) aren't invisible from the outside.
+            mat.side = THREE.DoubleSide;
             mat.needsUpdate = true;
         });
     }

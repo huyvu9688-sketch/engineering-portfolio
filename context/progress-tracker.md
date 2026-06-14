@@ -440,6 +440,15 @@ Update this file after every meaningful implementation change.
   engine's DOM ids (`component-list-container`, `toggle-list`,
   `close-list`) are unchanged, so the show/hide toggle still works.
   On narrow screens the list stacks below the viewer.
+- 2026-06-13: REVERSED the above per owner — component list is back
+  INSIDE the 3D view as an overlay; removed the panel's X (close)
+  button since the top-right Toggle button already hides/shows the
+  tree (engine still binds `close-list` but it no-ops when absent).
+  Instead of the side-column trick, the whole viewer is now capped +
+  centered at the page level (`mx-auto max-w-6xl` around the featured
+  block in `portfolio/page.tsx`) so the page background shows on both
+  sides. Model stays centred automatically (`fitCameraToModel` +
+  canvas sized from its mount element). Committed locally, NOT pushed.
 - 2026-06-13: Added two viewer features at owner's request — an
   EXPLODE control (toolbar slider; `explode.js` pushes each mesh
   outward from the model centre) and a persistent part-SELECTION

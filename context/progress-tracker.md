@@ -21,6 +21,12 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes (most recent first)
 
+- 2026-06-15: CAD Viewer measure — now AXIS-ALIGNED (owner picked
+  "measure along one axis"): two clicks → dominant X/Y/Z axis, reports
+  that axis distance. Units shown as `mm (in)` with `unitToMm`
+  auto-detected from model span (< 10 units → ×1000 metre export, else
+  ×1 mm). Read-out: `1234.5 mm (48.60 in) · X`. lint/build pass; pushed.
+
 - 2026-06-15: CAD Viewer — added ISOLATE + MEASURE. Toolbar (top-left):
   reset view, isolate, show-all, measure, import. Isolate = toolbar
   button isolates the selected tree part, else click-to-pick; show-all

@@ -142,8 +142,11 @@ Type rules from the template:
   toggle → `component-list.js`; click a part to frame + accent-glow it),
   **isolate** (toolbar button isolates the selected tree part, or enters
   a click-to-pick mode; show-all / Esc to exit; banner shows the
-  isolated part), and **measure** (`measure.js`; click two points for a
-  straight-line distance, shown bottom-centre; Esc to exit). No view-cube
+  isolated part), and **measure** (`measure.js`; click two points → snaps
+  to the dominant X/Y/Z axis and reports that axis distance as `mm (in)`
+  bottom-centre; Esc to exit. GLB has no unit, so `unitToMm` is
+  auto-detected from the model span: < 10 units across → metre export
+  ×1000, else mm ×1). No view-cube
   (the one thing that blanked the canvas — see warning below). **Real
   component colours**: the
   file's own materials are KEPT and lit by a neutral `RoomEnvironment`

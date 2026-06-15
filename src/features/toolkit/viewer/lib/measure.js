@@ -1,7 +1,8 @@
-// Two-point straight-line distance measurement on the loaded model.
+// Axis-aligned two-point distance measurement on the loaded model.
 //
-// Click two points on visible geometry; the tool draws markers + a line and
-// reports the distance in the model's own units. A third click starts over.
+// Click two points on visible geometry; the tool finds the dominant axis
+// (X, Y or Z), snaps the span to it, and reports that axis distance in mm (in).
+// A third click starts over.
 
 import * as THREE from "three";
 
@@ -75,10 +76,35 @@ export class MeasureTool {
         this.addMarker(point);
         this.points.push(point);
 
-        if (this.points.length === 2) {
-            this.drawLine();
-            this.showDistance();
+        if (this.points.length === 2) this.measureAxis();
+    }
+
+    // Snap the span to the dominant axis and report that axis distance.
+    measureAxis() {
+        const [p1, p2] = this.points;
+        const dx = Math.abs(p2.x - p1.x);
+        const dy = Math.abs(p2.y - p1.y);
+        const dz = Math.abs(p2.z - p1.z);
+        const maxDelta = Math.max(dx, dy, dz);
+
+        const aligned = p2.clone();
+        let axis;
+        if (maxDelta === dx) {
+            aligned.y = p1.y;
+            aligned.z = p1.z;
+            axis = "X";
+        } else if (maxDelta === dy) {
+            aligned.x = p1.x;
+            aligned.z = p1.z;
+            axis = "Y";
+        } else {
+            aligned.x = p1.x;
+            aligned.y = p1.y;
+            axis = "Z";
         }
+
+        this.drawLine(p1, aligned);
+        this.showDistance(maxDelta, axis);
     }
 
     addMarker(point) {
@@ -91,22 +117,21 @@ export class MeasureTool {
         this.markers.push(marker);
     }
 
-    drawLine() {
-        const geometry = new THREE.BufferGeometry().setFromPoints(this.points);
+    drawLine(a, b) {
+        const geometry = new THREE.BufferGeometry().setFromPoints([a, b]);
         const material = new THREE.LineBasicMaterial({ color: MEASURE_COLOR, depthTest: false });
         this.line = new THREE.Line(geometry, material);
         this.line.renderOrder = 999;
         this.group.add(this.line);
     }
 
-    showDistance() {
-        const raw = this.points[0].distanceTo(this.points[1]);
-        const mm = raw * (this.core.unitToMm || 1);
+    showDistance(rawDelta, axis) {
+        const mm = rawDelta * (this.core.unitToMm || 1);
         const inches = mm / 25.4;
         const result = document.getElementById("measure-result");
         const value = document.getElementById("measure-value");
         if (result) result.style.display = "block";
-        if (value) value.textContent = `${mm.toFixed(1)} mm (${inches.toFixed(2)} in)`;
+        if (value) value.textContent = `${mm.toFixed(1)} mm (${inches.toFixed(2)} in) · ${axis}`;
     }
 
     clear() {

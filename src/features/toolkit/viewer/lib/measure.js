@@ -1,7 +1,8 @@
-// Axis-aligned two-point distance measurement on the loaded model.
+// Face-to-face two-point distance measurement on the loaded model.
 //
-// Click two points on visible geometry; the tool finds the dominant axis
-// (X, Y or Z), snaps the span to it, and reports that axis distance in mm (in).
+// Click a point on one component face, then a point on another; both ends stay
+// on real surfaces (raycast hits) and the line is drawn directly between them.
+// Reports the straight-line distance plus the per-axis ΔX/ΔY/ΔZ, all in mm (in).
 // A third click starts over.
 
 import * as THREE from "three";
@@ -72,39 +73,16 @@ export class MeasureTool {
 
         if (this.points.length >= 2) this.clear();
 
+        // Snap the point to the exact surface hit so both ends are on faces.
         const point = intersects[0].point.clone();
         this.addMarker(point);
         this.points.push(point);
 
-        if (this.points.length === 2) this.measureAxis();
-    }
-
-    // Snap the span to the dominant axis and report that axis distance.
-    measureAxis() {
-        const [p1, p2] = this.points;
-        const dx = Math.abs(p2.x - p1.x);
-        const dy = Math.abs(p2.y - p1.y);
-        const dz = Math.abs(p2.z - p1.z);
-        const maxDelta = Math.max(dx, dy, dz);
-
-        const aligned = p2.clone();
-        let axis;
-        if (maxDelta === dx) {
-            aligned.y = p1.y;
-            aligned.z = p1.z;
-            axis = "X";
-        } else if (maxDelta === dy) {
-            aligned.x = p1.x;
-            aligned.z = p1.z;
-            axis = "Y";
-        } else {
-            aligned.x = p1.x;
-            aligned.y = p1.y;
-            axis = "Z";
+        if (this.points.length === 2) {
+            const [p1, p2] = this.points;
+            this.drawLine(p1, p2);
+            this.showDistance(p1, p2);
         }
-
-        this.drawLine(p1, aligned);
-        this.showDistance(maxDelta, axis);
     }
 
     addMarker(point) {
@@ -125,13 +103,22 @@ export class MeasureTool {
         this.group.add(this.line);
     }
 
-    showDistance(rawDelta, axis) {
-        const mm = rawDelta * (this.core.unitToMm || 1);
+    showDistance(p1, p2) {
+        const scale = this.core.unitToMm || 1;
+        const mm = p1.distanceTo(p2) * scale;
         const inches = mm / 25.4;
+        const dx = Math.abs(p2.x - p1.x) * scale;
+        const dy = Math.abs(p2.y - p1.y) * scale;
+        const dz = Math.abs(p2.z - p1.z) * scale;
+
         const result = document.getElementById("measure-result");
         const value = document.getElementById("measure-value");
+        const deltas = document.getElementById("measure-deltas");
         if (result) result.style.display = "block";
-        if (value) value.textContent = `${mm.toFixed(1)} mm (${inches.toFixed(2)} in) · ${axis}`;
+        if (value) value.textContent = `${mm.toFixed(1)} mm (${inches.toFixed(2)} in)`;
+        if (deltas) {
+            deltas.textContent = `ΔX ${dx.toFixed(1)} · ΔY ${dy.toFixed(1)} · ΔZ ${dz.toFixed(1)} mm`;
+        }
     }
 
     clear() {

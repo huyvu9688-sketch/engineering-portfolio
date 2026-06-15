@@ -246,7 +246,7 @@ export function CadViewer() {
       >
         <div className="flex items-center gap-3">
           <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark">
-            Click two points · snaps to X / Y / Z · Esc to exit
+            Click a point on two component faces · Esc to exit
           </span>
           <button
             type="button"
@@ -262,10 +262,13 @@ export function CadViewer() {
       <div
         id="measure-result"
         style={{ display: "none" }}
-        className="pointer-events-none absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-accent/40 bg-surface-dark/85 px-3 py-1.5 backdrop-blur"
+        className="pointer-events-none absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-lg border border-accent/40 bg-surface-dark/85 px-3 py-2 text-center backdrop-blur"
       >
-        <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">Distance </span>
-        <span id="measure-value" className="font-mono text-[10px] tabular-nums text-accent" />
+        <div>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">Distance </span>
+          <span id="measure-value" className="font-mono text-[10px] tabular-nums text-accent" />
+        </div>
+        <div id="measure-deltas" className="mt-0.5 font-mono text-[9px] tabular-nums text-on-dark-muted" />
       </div>
 
       {/* Empty / upload state */}

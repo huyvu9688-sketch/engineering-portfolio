@@ -28,8 +28,9 @@ export default function CadViewerPage() {
       </div>
 
       <p className="mt-8 max-w-2xl text-base leading-relaxed text-ink-muted md:text-lg">
-        Drop a GLB or GLTF model to view it in 3D and walk its component tree.
-        The file is read locally in your browser — nothing is uploaded or stored.
+        Drop a GLB or GLTF model to inspect an assembly in 3D — walk its
+        component tree, isolate a part, and measure between two points. The file
+        is read locally in your browser — nothing is uploaded or stored.
       </p>
 
       <div className="mt-12">
@@ -37,7 +38,7 @@ export default function CadViewerPage() {
       </div>
 
       <p className="mt-4 font-mono text-[10px] uppercase tracking-widest text-ink-faint">
-        Drag to orbit · Scroll to zoom · Right-drag to pan · Click a part in the tree to focus
+        Drag to orbit · Scroll to zoom · Click a part to focus · Isolate · Measure
       </p>
     </section>
   );

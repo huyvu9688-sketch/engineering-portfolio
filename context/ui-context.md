@@ -73,6 +73,15 @@ Type rules from the template:
 - Body: Inter 400, `text-base`–`text-lg`, relaxed leading,
   `--ink-muted`.
 - Calculator results, units, part numbers, file sizes: mono.
+- Numeric data — calculator results, reference tables, input
+  fields — use `tabular-nums` so digits align in columns and the
+  layout never jitters as values change (an engineering-data
+  detail; added 2026-06-15 in the Toolkit refine pass).
+- **Instrument readout**: a calculator's single governing result
+  is rendered large in tabular mono with the accent and set off by
+  a hairline rule (converter "To" output `text-2xl`; motor-sizing
+  "Required torque (×SF)" `text-3xl`). It is the one loud element;
+  supporting values stay as quiet label→value rows.
 
 ## Border Radius
 
@@ -123,10 +132,33 @@ Type rules from the template:
   grayscale → color on hover with slight scale; mono accent
   eyebrow with icon; tech chips as bordered white pills;
   "View Project ↗" mono link.
-- **3D model viewer**: REMOVED on 2026-06-14 (the in-browser GLB
-  viewer never rendered reliably; see progress-tracker.md). The
-  Portfolio page is now header → project rows. If a viewer is
-  revisited, it was the one place the dark palette led.
+- **CAD Viewer** (utility, `/tools/cad-viewer`): full-featured GLB/GLTF
+  inspector. A multi-module vanilla Three.js engine
+  (`viewer/lib/*.js` — scene-manager, model-loader, component-list,
+  interaction, controls, context-menu, history-manager, measure,
+  viewer-core; excluded from tsconfig, typed via `viewer-core.d.ts`)
+  wrapped by one typed React client component (`cad-viewer.tsx`).
+  **White 3D environment** (TEMPORARY per owner, 2026-06-15) — NOT the
+  dark palette — because a grey CAD model on a near-black viewport was
+  the real reason it "didn't show"; the model was always rendering. The
+  floating chrome is DARK (toolbar/panel/banners/read-outs) so it reads
+  over white and still works if the background goes back to dark; the
+  empty/loading/error overlays are LIGHT to match the white viewport.
+  Import via file picker + drag-drop (read locally, never uploaded).
+  Features: top-left pill **toolbar** (reset view, isolate, show-all,
+  measure, edges/grid/axes, undo/redo, load-another), top-right
+  searchable **component-tree** overlay (click→focus, right-click→
+  isolate/hide/show-all), top-centre mode **banners** (isolate /
+  isolated / measure, each with Esc), bottom-left **view-cube**
+  (three.js `ViewHelper`), bottom read-outs (hovered part, measured
+  distance). **Real component colours**: the file's own materials are
+  KEPT and lit by a neutral `RoomEnvironment` map under
+  `NeutralToneMapping`; only *sanitised* for invisible-import causes
+  (near-zero opacity → opaque, broken texture maps stripped,
+  `DoubleSide`, `envMapIntensity = 1`); normals recomputed,
+  `frustumCulled` off, model recentred to origin, helpers + camera fit
+  to scale. Lifecycle hardened: one WebGL context per mount, full
+  `dispose()` + `forceContextLoss()`, capped DPR (1.5), visibility-pause.
 - **Chips/tags**: white pill, hairline border, mono uppercase
   `text-[10px]`–`text-xs`, `--ink-muted`.
 - **Buttons**: pill, mono uppercase bold; primary = `--ink` bg
@@ -142,6 +174,56 @@ Type rules from the template:
   pages. Runs regardless of reduced-motion (core brand effect).
 - **Magnetic buttons** (marketing pages only): slight
   translate-toward-cursor on hover.
+- **Unit converter** (utility, `/tools`): calm — no cursor,
+  marquee, or magnetic effects. Lives in a **sticky control-panel
+  card docked at the far right** of the page (`lg:order-2 lg:sticky
+  lg:top-28 lg:self-start lg:max-h-[calc(100vh-8rem)]
+  lg:overflow-y-auto`). The `/tools` page is a wide two-column grid
+  (`max-w-[1800px]`, `lg:grid-cols-[1fr_320px]`) — ALL page
+  sections go in the LEFT column, so the right panel stays visible
+  while scrolling through every section (it releases only at the
+  page bottom; on short viewports it scrolls internally). On mobile
+  it stacks first, above the content. Note: this utility page
+  intentionally uses the wide `max-w-[1800px]` (not the usual
+  `max-w-6xl`) to dock the panel far-right; body text stays capped
+  (`max-w-xl`) for readability. The left column also carries a
+  static "Common Conversions" quick-reference grid. Inside the
+  `rounded-lg` hairline
+  card the content is a **vertical stack**: category pills (mono
+  uppercase; active = `--ink` fill + `--on-dark`, inactive =
+  hairline + `--ink-muted`, hover → accent) → **From** (value
+  `<input>` + unit `<select>`) → a centered circular **Swap**
+  button (`ArrowLeftRight`, rotated 90°) → **To** (read-only
+  `<output>` on `--canvas` + unit `<select>`) → a top-hairline
+  footer with a live `1 x = y` equivalence and a precision selector
+  (4/6/8/10 sig figs). All numbers mono; invalid input switches the
+  field + helper text to `--state-error`. Built from native
+  token-styled form controls (not shadcn).
+- **Motor sizing calculator** (utility, `/tools/motor-sizing`):
+  calm, its own route (linked from the toolkit overview). Two-column
+  `lg:grid-cols-[1fr_360px]`: a left input stack of grouped
+  `<fieldset>` cards (Mechanism / Motion / Drive / Candidate motor),
+  each with a mono accent `<legend>` and a `sm:grid-cols-2` field
+  grid; a right **sticky results card** (`lg:sticky lg:top-28`) of
+  label→value rows (peak speed, torques, power, inertia, ratio, duty
+  cycle) plus a pass/over acceptance block. The **mechanism
+  selector is an illustration card grid** (`grid-cols-2
+  sm:grid-cols-3 lg:grid-cols-5`): each card shows a line-art
+  mechanism image (`/public/mechanisms/*.png` — ball screw, belt
+  conveyor, rack & pinion, index table, direct drive; ~96 px,
+  `object-contain`) over a mono label, with the active card
+  `border-accent`. If an image file is missing, the card falls back
+  automatically to the built-in SVG line icon (`mechanism-icons.tsx`
+  + the `MechanismVisual` `onError` swap). **Nothing below the cards
+  shows until one is selected** — on open, only the card grid + a
+  "select a mechanism" hint appear; clicking a card reveals that
+  mechanism's **formula panel** (reflected inertia / load torque /
+  motor speed + shared force, accel-torque, required-torque
+  formulas), the input fieldsets, and the results column. Motor type
+  is a pill group (none / servo / stepper / AC); acceptance checks
+  use small `--state-success` / `--state-error` bordered pills.
+  Native token-styled controls; results format via the converter's
+  `formatResult`.
 
 ## Motion Rules
 
@@ -162,19 +244,26 @@ Type rules from the template:
 
 ## Component Library
 
-shadcn/ui (neutral base) for utility-page primitives — inputs,
-selects, dialogs, tables. Restyle via tokens to match this
-system (pill buttons, mono labels, hairline borders). Marketing
-components (hero, marquee, project rows, cursor) are custom,
-built in `src/components/shared/` or feature folders. Never
-hand-edit `components/ui/*`.
+shadcn/ui (neutral base) is reserved for **richer** utility
+primitives (dialogs, data tables, comboboxes) — restyle via
+tokens to match this system. It is NOT yet installed: simple form
+fields (the unit converter's inputs/selects) use native,
+token-styled controls, which is preferred when a plain `<input>`/
+`<select>` does the job (fewer deps, and shadcn init won't touch
+the token-defined `globals.css`). Add shadcn when the first richer
+primitive is actually needed (likely the database page). Marketing
+components (hero, marquee, project rows, cursor) are custom, built
+in `src/components/shared/` or feature folders. Never hand-edit
+`components/ui/*`.
 
 ## Layout Patterns
 
 - Content max-width: `max-w-[1800px]` marketing,
   `max-w-6xl` utility pages. Padding `px-4 md:px-6`.
 - Section headers: title + mono metadata right-aligned, bottom
-  hairline border (`border-b border-black/10 pb-6`).
+  hairline border (`border-b border-black/10 pb-6`). The metadata
+  must state something true (live/planned counts, "Computed in
+  SI", a method credit) — not a decorative `01 —` index.
 - Landing flow: hero → marquee → entry points (portfolio /
   toolkit / database) → background &amp; experience →
   contact/footer.

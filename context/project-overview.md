@@ -37,7 +37,9 @@ across bookmarks, USB drives, and vendor catalogs.
 
 ### Portfolio
 
-- About/profile section with resume download
+- About/profile section
+  (a resume download was planned but dropped on 2026-06-14 at the
+  owner's request — see progress-tracker.md)
 - Project cards with detail pages
   (an in-browser 3D model viewer was tried and removed on
   2026-06-14 — see progress-tracker.md)

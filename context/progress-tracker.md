@@ -6,10 +6,80 @@ Update this file after every meaningful implementation change.
 
 - Phase 1 — Foundation & landing page: COMPLETE (deployed,
   verified live at https://engineering-portfolio-svy8.vercel.app)
-- Phase 2 — Portfolio: IN PROGRESS (units 1 & 2 done; unit 3
-  deferred; unit 4 — the 3D viewer — was built then REMOVED on
-  2026-06-14 because it never rendered reliably for imported CAD
-  GLBs, see Session Notes)
+- Phase 2 — Portfolio: COMPLETE (units 1 & 2 done; unit 3 —
+  resume download — DROPPED on 2026-06-14 at the owner's request
+  ["I don't think we need to add resume"]; unit 4 — the 3D viewer
+  — was built then REMOVED on 2026-06-14 because it never rendered
+  reliably for imported CAD GLBs, see Session Notes)
+- Phase 3 — Toolkit: IN PROGRESS (unit converter DONE; motor-sizing
+  calculator slices 1–4 — engine + all five mechanisms (direct,
+  lead/ball screw, belt/conveyor, rack & pinion, index table) +
+  servo / stepper / AC-induction acceptance — DONE & verified
+  2026-06-15; only slice 5 extras remain; pneumatic-cylinder
+  calculator still needs its spec section; CAD VIEWER re-added to the
+  Toolkit 2026-06-15 — see Session Notes)
+
+## Session Notes (most recent first)
+
+- 2026-06-15: CAD Viewer — RE-ADDED ALL FUNCTIONS on the white
+  background (owner: "re-adding all functions we have, but temporary
+  still keep the white background"). Restored the full multi-module
+  engine (scene-manager, model-loader, component-list, interaction,
+  controls, context-menu, history-manager, measure, view-cube via
+  three.js ViewHelper, viewer-core). Kept the approved real-colour
+  material handling (RoomEnvironment + NeutralToneMapping + light-touch
+  sanitise — NO clay override) and WHITE scene background. Floating
+  chrome is dark (reads over white, survives a later dark-bg flip);
+  empty/loading/error overlays are light. Confirmed the original
+  "invisible model" was just a grey machine on a near-black viewport —
+  the engine was fine. lint + build pass; `/tools/cad-viewer`
+  prerenders. NOT committed/pushed.
+
+- 2026-06-15: CAD Viewer now shows REAL component colours (owner: grey
+  clay worked, wants real colours). Dropped the clay override; keep the
+  file's own materials, lit by a neutral `RoomEnvironment` map under
+  `NeutralToneMapping` (preserves authored colour). Materials only
+  sanitised for invisible-import causes (near-zero opacity → opaque,
+  broken texture maps stripped, DoubleSide, envMapIntensity=1); normals
+  recomputed, frustumCulled off, recenter + fit unchanged. White
+  background kept. lint + build pass. NOT committed/pushed.
+
+- 2026-06-15: CAD Viewer STRIPPED TO MINIMAL after the owner still
+  couldn't see imported models ("we fix this many time but it dont
+  work. start from zero, remove all function, just the model window and
+  import, white background"). Deleted the 10-module engine; replaced
+  with one ~250-line `viewer-core.js`. Now: WHITE 3D background, import
+  (picker + drag-drop) + orbit only — no tree/toolbar/measure/isolate/
+  view-cube. Key visibility fix beyond the white bg: every mesh is
+  reassigned ONE grey clay `MeshStandardMaterial` (DoubleSide) on load,
+  normals recomputed, frustumCulled off, recentred to origin, camera
+  fit — i.e. the file's own (often broken/black/transparent) materials
+  are discarded entirely. Lifecycle hardening kept (single context,
+  dispose+forceContextLoss, capped DPR, visibility-pause). lint + build
+  pass. NOT yet committed/pushed.
+
+- 2026-06-15: Toolkit UI refine pass (frontend-design +
+  ui-ux-pro-max skills) — tabular figures everywhere, aligned
+  conversion table, instrument-readout treatment for governing
+  results, truthful header metadata, PASS/UNDERSIZED verdict banner.
+  See ui-context.md (Typography + Layout updates). lint/build/21 tests
+  pass. Not yet committed at time of writing.
+- 2026-06-15: RE-ADDED the 3D viewer as a Toolkit tool at
+  `/tools/cad-viewer` (the Portfolio version was removed 2026-06-14
+  for instability; this is a clean rebuild from the owner's vanilla-JS
+  modules). Engine in `src/features/toolkit/viewer/lib/*.js` (plain JS,
+  excluded from tsconfig, typed via `viewer-core.d.ts`), wrapped by
+  `viewer/components/cad-viewer.tsx`. Upload/drop a GLB/GLTF (read
+  locally). Features: orbit/zoom, searchable component tree,
+  hover-highlight, isolate/show-all, right-click context menu, measure
+  (2-point), undo/redo, edges/grid/axes toggles, view-cube (three.js
+  `ViewHelper`). ALL the hardening from the failed Portfolio attempt is
+  carried forward: single WebGL context + full dispose/forceContextLoss,
+  capped DPR (1.5), visibility-pause, model recentre-to-origin, helpers
+  scaled to model, RoomEnvironment IBL, materials forced opaque/
+  double-sided + broken textures stripped + frustumCulled off, DRACO +
+  KTX2 + meshopt decoders. `three@0.184.0` reinstalled (no @types/three).
+  lint + build pass; `/tools/cad-viewer` prerenders. Not yet committed.
 
 ## Phase Plan
 
@@ -22,9 +92,11 @@ Update this file after every meaningful implementation change.
       projects, same bracketed-placeholder pattern as the
       landing page's Background section)
    2. Project detail page route (`/portfolio/[slug]`)
-   3. Resume download link/section
+   3. Resume download link/section — DROPPED 2026-06-14 (owner
+      decided a resume download isn't needed)
    4. Three.js (react-three-fiber) GLB viewer embed on project
-      detail pages
+      detail pages — REMOVED 2026-06-14 (see Architecture
+      Decisions)
 3. **Phase 3** — Toolkit: unit converter → pneumatic cylinder
    calculator → motor sizing calculator
 4. **Phase 4** — Database: Supabase setup, schema + RLS,
@@ -34,9 +106,15 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Phase 2, unit 3 (resume download): DEFERRED at owner's request.
-  Now the next portfolio item, since the 3D viewer (unit 4) was
-  removed.
+- Phase 2 is COMPLETE. Unit 3 (resume download) was DROPPED on
+  2026-06-14 — the owner decided a resume download isn't needed.
+  Unit 4 (3D viewer) was removed earlier the same day.
+- Phase 3 unit converter is DONE (built & verified 2026-06-14
+  against the approved NIST-sourced spec). Next Toolkit items are
+  the pneumatic-cylinder calculator, then motor sizing — both
+  BLOCKED until the owner fills in their sections of
+  `calculator-specs.md`. AI must not invent engineering math
+  beyond what the spec defines.
 - The 3D viewer is shelved (removed 2026-06-14). Only revisit if
   the owner explicitly wants to try a different approach (e.g.
   Google `<model-viewer>` web component) — the bespoke Three.js
@@ -319,21 +397,147 @@ Update this file after every meaningful implementation change.
     `view-cube.js` (the latter was not in the files the owner
     supplied)
 
+- Phase 3 unit 1: unit converter (length, force, pressure, torque,
+  power, flow) — 2026-06-14:
+  - Pure logic in `src/features/toolkit/lib/units.ts`: `CategoryId`
+    type, `Unit`/`Category` interfaces, the six SI-based factor
+    tables (factors copied verbatim from `calculator-specs.md`,
+    exact ratios written as divisions), and pure functions
+    `convert`, `convertById`, `parseInput`, `formatResult`
+    (6-sig-fig default, trailing zeros stripped, exponential for
+    very large/small). No UI in this file (testable in isolation).
+  - Tests in `units.test.ts` run via `node --test` (Node 26 strips
+    TS types natively — no test framework added). Covers the
+    spec's 12 hand-check cases, an A→B→A round-trip over every unit
+    pair, a base-unit sanity check, and formatter/parser edge
+    cases. `npm test` script added (glob `src/**/*.test.ts`).
+  - UI: `src/features/toolkit/components/unit-converter.tsx`
+    (`"use client"`) — calm utility surface per ui-context Page
+    Modes (no cursor/marquee/magnetic effects). Category pills →
+    From input + unit select / Swap button / To result + unit
+    select → footer with live `1 x = y` equivalence and a
+    precision selector (4/6/8/10 sig figs). `/tools` page now
+    renders it (was a placeholder). Inline validation shows "Enter
+    a valid number" on bad input.
+  - DECISION: used native, token-styled `<input>`/`<select>`
+    instead of setting up shadcn/ui for this first calculator —
+    simpler, no new deps, and it avoids the shadcn init touching
+    the token-defined `globals.css`. shadcn stays the plan for
+    richer primitives (dialog/table/combobox), likely the database
+    page. ui-context.md updated to record this.
+  - Build note: added `"allowImportingTsExtensions": true` to
+    tsconfig so the `./units.ts` import the Node test runner
+    requires also type-checks under `next build`.
+  - Verified: `npm test` (5/5), `npm run lint` clean, `npm run
+    build` clean (all routes prerender, `/tools` static). The
+    prerendered `/tools` HTML contains the converter and the
+    correct default result (100 mm → 3.93701 in).
+
+- Phase 3 unit 3 (slice 1): motor-sizing calculator — engine +
+  direct drive + lead/ball screw + servo acceptance — 2026-06-14:
+  - Pure logic in `src/features/toolkit/lib/motor-sizing.ts`
+    (coherent SI): inertia helpers (solid/hollow cylinder, parallel
+    axis, gear reflection), force assembly (horizontal/vertical/
+    incline), motion profile (triangular↔trapezoidal), RMS torque,
+    core `evaluateDrive`, mechanisms `sizeDirectDrive` +
+    `sizeLeadScrew`, and `evaluateServo` (peak ≤ motor peak, RMS ≤
+    rated, speed ≤ rated, inertia ratio ≤ 10 / ideal ≤ 5).
+  - IMPORTANT modeling detail (Repanich, verified): the driven
+    load's reflected inertia is divided by efficiency in the accel
+    torque (`J_load/η`); transmission + motor inertia are not; the
+    inertia ratio uses total reflected load inertia WITHOUT `/η`.
+    Spec §3.1/§3.6 updated to match.
+  - Tests `motor-sizing.test.ts` (node --test) reproduce Repanich
+    Ex.1 (direct, `Ta=0.0056`, `P=0.93 W`, ratio 3.6), Ex.3 (lead
+    screw, `Ta=34.69 oz·in`, `Tpeak=60.08`, ratio 2.48), Problem #1
+    (~20 N·m @ 0.56 rev/s), plus force/profile/RMS/servo units —
+    12/12 pass with the converter tests.
+  - UI: `motor-sizing-calculator.tsx` (client) at a new route
+    `/tools/motor-sizing` — calm: mechanism tabs (lead screw /
+    direct), grouped input fieldsets (mechanism, motion, drive,
+    optional candidate servo motor), live results panel (peak speed,
+    accel/load/peak/required/RMS torque, power, load inertia,
+    inertia ratio) + servo pass/over checks. Inputs in friendly
+    units, converted to SI before calling the lib. Defaults per
+    mechanism reproduce the worked examples (lead-screw default →
+    1500 rpm, peak 0.5209 N·m, ratio 2.48, verified in the
+    prerendered HTML).
+  - `/tools` overview: "Motor Sizing Calculator" now Available and
+    links to the route (ArrowUpRight). `npm test` 12/12, lint clean,
+    build clean (`/tools/motor-sizing` prerenders static).
+
+- Phase 3 unit 3 (slice 3): motor-sizing mechanisms — belt/
+  conveyor, rack & pinion, rotary index table — 2026-06-14:
+  - Added to `motor-sizing.ts`: a shared `sizeLinearDrive` core
+    (tangential: J=m·R², T=F·R/η, ω=v/R) feeding `sizeBeltPulley`
+    (load + belt mass driven; drive/idler pulleys as ½m R²
+    transmission) and `sizeRackPinion` (load driven; pinion ½m R²).
+    `sizeIndexTable` composes disc (½M R²) + workpieces (point
+    masses m·d², parallel axis) + fixtures and delegates to
+    `sizeDirectDrive`. Formulas cross-checked: Oriental Motor (belt
+    & rack both T=F·r, J=m·r²) + Repanich tangential — agree.
+  - Tests: hand-derived first-principles cases for belt (incl.
+    vertical holding torque = mgR/η), rack, and index table —
+    `npm test` now 16/16.
+  - UI: `motor-sizing-calculator.tsx` extended to five mechanism
+    tabs with per-mechanism input fieldsets (belt: pulley radius +
+    drive/idler/belt masses + friction + orientation; rack: pinion
+    radius/mass; index: table mass/radius + workpiece mass/count/
+    radius + fixture inertia + friction/process torque + index
+    angle). Linear vs rotary move + max-speed units switch
+    automatically; shared orientation/incline/force block factored
+    out. Prerendered HTML shows all five tabs.
+  - `npm test` 16/16, lint clean, build clean
+    (`/tools/motor-sizing` prerenders static).
+
+- Phase 3 unit 3 (slice 4): motor-sizing acceptance — stepper &
+  AC induction (servo prioritised earlier) — 2026-06-15:
+  - Refactored `motor-sizing.ts` to a typed motor union
+    `MotorCandidate = ServoSpec | StepperSpec | ACSpec` (discriminated
+    by `type`). Added `evaluateStepper` (required ≤ pull-out torque
+    at speed; inertia ratio ≤ limit, default 10 / up to 30; running
+    duty cycle < 50 %) and `evaluateAC` (required ≤ starting torque;
+    running load torque ≤ rated; speed ≤ rated; reflected inertia ≤
+    gearhead permissible). `SizingResult` now carries `runningTime`,
+    `dutyCycle`, and a discriminated `acceptance` union (was `servo`).
+  - Criteria sourced from Oriental Motor Tech Ref (F-4/F-5: stepper
+    duty <50 %, inertia ratio αstep 30 / RK 10, Sf 1.5–2; AC: size
+    by starting torque + permissible inertia, Sf ~2).
+  - Tests: added `evaluateStepper`, `evaluateAC`, and a duty-cycle
+    case; updated servo objects to `type:"servo"`. 21/21 pass
+    (incl. the Repanich + Oriental Motor cross-checks).
+  - UI: motor section is now a type selector (None / Servo / Stepper
+    / AC Induction) with per-type input fields and a per-type
+    acceptance read-out; results panel gained a Duty-cycle row.
+    Picking stepper/AC sets the safety factor to 2, servo to 1.5.
+  - `npm test` 21/21, lint clean, build clean; prerendered
+    `/tools/motor-sizing` shows all motor-type tabs + checks.
+
 ## In Progress
 
 - None.
 
 ## Next Up
 
-- Phase 2 unit 3: resume download link/section (deferred) — now the
-  next portfolio task
+- Phase 3 (Toolkit): unit converter DONE; motor-sizing slices 1–4
+  DONE (all five mechanisms + servo / stepper / AC acceptance).
+  Motor-sizing remaining (slice 5, OPTIONAL): vertical hoist,
+  ball-screw preload term, multi-segment duty cycles for RMS.
+  Pneumatic cylinder calculator still BLOCKED until the owner fills
+  in §2 of `calculator-specs.md`. Follow the established shape: pure
+  logic + `node --test` tests in `src/features/toolkit/lib/`, calm
+  UI in `src/features/toolkit/components/`.
+- shadcn/ui still NOT set up: the unit converter used native,
+  token-styled controls instead (simpler, no deps). Introduce
+  shadcn when a richer primitive is actually needed (dialog, data
+  table, combobox) — most likely the database page (Phase 4).
+- Resume download: DROPPED 2026-06-14 (owner decided it isn't
+  needed). Re-add only if the owner changes their mind.
 - 3D viewer: shelved (removed 2026-06-14). Not on the roadmap unless
-  the owner revisits it with a different approach
+  the owner revisits it with a different approach.
 - Owner to provide real content for Background/Experience,
   Socials, Location, and portfolio project write-ups to replace
-  placeholders (see Open Questions)
-- shadcn/ui setup deferred until first utility page (Phase 3)
-  needs form primitives — nothing on the landing page uses it
+  placeholders (see Open Questions).
 
 ## Open Questions
 
@@ -355,9 +559,12 @@ Update this file after every meaningful implementation change.
   currently loads a TEMPORARY public demo GLB (modelviewer.dev
   Astronaut) purely so the viewer is testable — replace with a
   real model under `/public/models/` (set `project.model`)
-- Phase 3 prerequisite: owner writes `calculator-specs.md`
-  (formulas, input ranges, units, defaults) before each
-  calculator is built — AI must not invent engineering math
+- Phase 3 prerequisite: `calculator-specs.md` exists. The unit-
+  converter section is AI-drafted from NIST SP 811 and awaits the
+  owner's approval; the pneumatic & motor sections are still
+  stubs the owner must fill in (formulas, assumptions, input
+  ranges, defaults) before those calculators are built — AI must
+  not invent engineering math
 
 ## Pre-Flight Checklist (before first build session)
 
@@ -365,8 +572,8 @@ Update this file after every meaningful implementation change.
 - [x] GitHub repo created (huyvu9688-sketch/engineering-portfolio)
 - [x] Vercel account linked to GitHub
 - [ ] Claude Code installed in VS Code
-- [ ] Content gathering started: resume PDF, 2-3 project
-      writeups, photos, shareable GLB exports
+- [ ] Content gathering started: 2-3 project writeups, photos
+      (resume PDF no longer needed — download dropped 2026-06-14)
 
 ## Architecture Decisions
 
@@ -393,7 +600,10 @@ Update this file after every meaningful implementation change.
 - Calculator math isolated as pure functions so logic can be
   tested and reused independently of UI (decided 2026-06-12)
 - Internal units are SI; display conversion at UI layer only
-  (decided 2026-06-12)
+  (decided 2026-06-12). REFINED 2026-06-14: the internal base is
+  *coherent* SI (m, N, Pa, N·m, W, m³/s) — not mm/bar — so
+  engineering formulas need no correction factors. The unit
+  converter and all calculators share this base.
 
 ## Session Notes
 
@@ -593,3 +803,168 @@ Update this file after every meaningful implementation change.
   viewer is ever revisited (a Google `<model-viewer>` web component
   would be the simpler next attempt). `npm run lint` + `npm run
   build` pass clean.
+- 2026-06-14 (later): Owner decided NOT to add a resume download
+  (Phase 2 unit 3) — "I don't think we need to add resume." Unit 3
+  is DROPPED, not deferred. That closes out Phase 2 (units 1 & 2
+  shipped; units 3 & 4 dropped/removed). No resume code ever
+  existed (it had only been deferred), so nothing to delete;
+  project-overview.md updated to drop the "resume download"
+  mention from the Portfolio feature list. Next: Phase 3
+  (Toolkit), gated on the owner supplying calculator-specs.md.
+- 2026-06-14 (later): Drafted `context/calculator-specs.md` for the
+  unit converter at the owner's request (option 1 — AI drafts, owner
+  approves). Researched conversion factors from NIST SP 811
+  Appendix B.8 and derived full double-precision values from the
+  exact base definitions (international yard & pound, g₀ = 9.80665,
+  IT calorie). Six categories: length, force, pressure, torque,
+  power, volumetric flow — each with a coherent-SI base unit, a
+  factor table (with an exact/ratio/def. exactness column),
+  defaults, and 13 hand-checkable test cases. All test-case results
+  re-verified numerically with Node. Deliberately scoped OUT:
+  temperature (affine), mass flow, and normal/standard "free air"
+  flow (Nl/min, scfm — moved to the pneumatic calculator's spec).
+  Pneumatic & motor sections left as owner stubs. Awaiting owner
+  approval before building the converter.
+- 2026-06-14 (later): Owner trimmed the unit list (dropped yd, ozf,
+  lbf, atm, at, mmHg, Torr, inHg, kgf·cm, ozf·in, lbf·in, lbf·ft,
+  ft·lbf/s, BTU/h, kcal/h, PS, CFM/CFH, GPM US/UK) and confirmed the
+  converter should pivot on the coherent SI unit per category, with
+  the calculators using the SAME SI base internally so converted
+  values flow straight into formulas. calculator-specs.md updated
+  (tables, notes, defaults, and test cases all reconciled).
+  RESOLVED: owner chose coherent SI (m, N, Pa, N·m, W, m³/s) as the
+  internal base for BOTH the converter and the calculators (over the
+  mm-N-MPa alternative). code-standards.md updated accordingly
+  (superseding the old "mm, N, bar, Nm" wording); the converter spec
+  already pivots on these SI units, so no spec change was needed.
+- 2026-06-14 (later): Dropped electric horsepower (746 W) from the
+  converter — owner keeps a single `hp` (mechanical, 745.6999 W).
+  Clarified (per owner's question) that electric hp is NOT a motor-
+  sizing safety factor — it's the same unit rounded by 0.04%. The
+  motor-sizing spec stub (Section 3) now spells out the real margin
+  policy: service factor (NEMA ~1.15) vs. design/sizing safety
+  factor (~1.15–1.5), both owner-defined when that calculator is
+  specced.
+- 2026-06-14 (later): Built Phase 3 unit 1 — the unit converter
+  (see Completed for detail). Owner approved the spec ("yes go
+  ahead"). Established the Toolkit's build pattern: pure logic +
+  co-located `*.test.ts` run by `node --test` (no test framework
+  — Node 26 strips TS types), a calm client UI, native styled form
+  controls (shadcn deferred again). All checks green; NOT pushed
+  (batching per the Git & Deploy workflow — owner says when to
+  deploy).
+- 2026-06-14 (later): Layout change at owner's request — the
+  converter now lives in a STICKY control-panel card pinned to the
+  right of `/tools` (stays in view while scrolling). `/tools` is now
+  a two-column grid (`lg:grid-cols-[1fr_minmax(360px,400px)]`):
+  toolkit overview on the left (intro + a status list: Unit
+  Converter = Available, Pneumatic = Coming next, Motor Sizing =
+  Planned), converter panel on the right
+  (`lg:order-2 lg:sticky lg:top-28 lg:self-start`); on mobile the
+  panel stacks first. The converter's internal layout was reflowed
+  from a 3-column row to a VERTICAL stack so it reads well in the
+  narrow panel. Logic untouched (tests still green); lint + build
+  clean. ui-context.md updated.
+- 2026-06-14 (later): Owner wanted the converter docked at the FAR
+  right and visible across the WHOLE page (all sections), not just
+  one block. Widened `/tools` to `max-w-[1800px]` with
+  `lg:grid-cols-[1fr_380px]`; ALL sections live in the left column
+  so the sticky panel (now `lg:max-h-[calc(100vh-8rem)]
+  lg:overflow-y-auto`) stays pinned through every section, releasing
+  only at the page bottom. Added a static "Common Conversions"
+  quick-reference grid to the left column (real values from
+  calculator-specs.md) — useful, and gives the page enough height to
+  show the pinning now. Intentional deviation from the utility-page
+  `max-w-6xl` convention (documented in ui-context). Lint + build
+  clean. Still NOT pushed.
+- 2026-06-14 (later): Tightened the converter panel — renamed the
+  eyebrow "Control Panel" → "Unit Conversion", narrowed the column
+  (`380px` → `320px`), and reduced internal sizing (card `p-4`,
+  field padding `py-2`, result text `text-base`, smaller gaps) to
+  cut the excess whitespace the owner flagged. Lint + build clean.
+- 2026-06-14 (later): Owner reprioritised to the MOTOR-SIZING
+  calculator (Phase 3 unit 3) ahead of the pneumatic one, supplying
+  the Repanich CSU-Chico "Introduction to Motor Sizing" PDF + the
+  Oriental Motor sizing page and asking for AC/stepper/servo
+  coverage and mechanism cases (belt conveyor, rack & pinion, index
+  table, …). Researched (Oriental Motor Technical Reference + blog,
+  servo inertia-ratio / safety-factor guidance) and DRAFTED a full
+  motor-sizing spec into `calculator-specs.md` §3: coherent-SI
+  method, motion profile, inertia building blocks, force/orientation,
+  five mechanism modules (direct, lead/ball screw, belt/conveyor,
+  rack & pinion, rotary index table; optional vertical hoist),
+  torque/RMS/power, and AC/stepper/servo acceptance + margin policy.
+  Re-derived Repanich Examples #1 and #3 by hand — formulas
+  reproduce them exactly (e.g. Ta=0.0056 N·m, P=0.93 W; J_load=0.81
+  oz·in²) — and captured them plus an Oriental Motor RMS example as
+  the §3.9 test cases. Spec proposes a 5-slice build order (3.10).
+  AWAITING owner approval + which slice to build first. NOTE:
+  pneumatic-cylinder spec (§2) still a stub; phase order deviated at
+  owner's choice. Nothing built yet for motor sizing.
+- 2026-06-14 (later): Owner approved "core + direct + lead screw
+  first" and prioritised SERVO. Built motor-sizing slice 1 (see
+  Completed): engine + direct drive + lead/ball screw + servo
+  acceptance, tests reproducing the Repanich worked examples
+  (12/12), and a calm UI at `/tools/motor-sizing` linked from the
+  toolkit overview. Surfaced + fixed a modeling detail (driven-load
+  inertia is divided by efficiency in the accel torque — Repanich
+  convention; spec updated). Lint + build clean. Still NOT pushed.
+- 2026-06-14 (later): Before extending, re-verified all motor-sizing
+  formulas at the owner's request (reproduce two independent
+  Repanich worked examples to <0.2% + first-principles re-derivation
+  + cross-check vs Oriental Motor). Then built slice 3 (belt/
+  conveyor, rack & pinion, rotary index table) — see Completed.
+  16/16 tests, lint + build clean. Still NOT pushed.
+- 2026-06-15: Owner supplied more references (Oriental Motor Tech
+  Ref TecMtrSiz.pdf with worked examples, Parker linear-motor,
+  FAULHABER DC) and asked to double-check our formulas. Did a full
+  cross-check — ALL formulas confirmed: cylinder inertia (½mR² =
+  (π/32)ρLD⁴), linear-mass inertia (m·(A/2π)² → pulley m·R²),
+  parallel axis, belt/rack load torque (F·R/η), power (T·N/9.5493),
+  inertia ratio (J/(J0·i²)), trapezoidal profile (OM/Parker 25%
+  accel ⇔ Vmax=1.33·Vavg is the special case of our t_a=t_m−X/V).
+  Added 2 OM worked-example cross-check tests (belt conveyor 320
+  oz·in; ball screw 0.4775 lb·in) — both reproduce exactly → 18/18.
+  ONE intentional modeling difference confirmed & documented: OM's
+  examples do NOT divide reflected load inertia by η in the accel
+  torque; WE DO (Repanich) — it is the physically rigorous +
+  conservative choice (proved by derivation). Also documented:
+  η = TOTAL drivetrain efficiency (gear treated as ideal kinematic
+  ratio i; fold gearhead loss into η); index-table workpieces are
+  point masses (omit own J_cg, ~1% — add via fixture inertia if
+  large). Spec §3 updated; no code formula changes needed. Lint +
+  build clean. Still NOT pushed.
+- 2026-06-15 (later): Built motor-sizing slice 4 — stepper & AC
+  acceptance (see Completed). Refactored the motor layer to a typed
+  union and a discriminated `acceptance` result; added
+  `evaluateStepper`/`evaluateAC` + duty cycle; UI gained a
+  motor-type selector (None/Servo/Stepper/AC) with per-type fields
+  and checks. 21/21 tests, lint + build clean. ui-context.md gained
+  a motor-sizing calculator entry. Still NOT pushed. Motor sizing is
+  now feature-complete except optional slice 5.
+- 2026-06-15 (later): UX polish on the motor-sizing tool at owner's
+  request — replaced the text mechanism pills with an ICON CARD GRID
+  (new `mechanism-icons.tsx`: custom line-art SVG schematics for
+  ball screw, belt conveyor, rack & pinion, index table, direct
+  drive, in the project's lucide/Swiss line style). Selecting a card
+  now also REVEALS that mechanism's equations (reflected inertia /
+  load torque / motor speed + shared force/accel/required formulas)
+  in a calm `--canvas` panel. Lint + build clean; prerendered page
+  shows all five cards (with `<svg>`) + the formula panel.
+  ui-context.md updated. Still NOT pushed.
+- 2026-06-15 (later): More motor-sizing UX per owner — cards now
+  display LINE-ART ILLUSTRATION IMAGES (owner-supplied) from
+  `/public/mechanisms/*.png` at ~96 px, with `MechanismVisual`
+  falling back to the built-in SVG line icon (`onError`) if a file
+  is absent. Added `public/mechanisms/README.md` listing the exact
+  filenames the owner must drop in (ball-screw / belt-conveyor /
+  rack-pinion / index-table / direct-drive .png) — the AI can't
+  write binary PNGs from chat, so the owner saves them there.
+  Behaviour change: the tool now opens with NO inputs — only the
+  mechanism cards + a hint; selecting a card reveals the formula
+  panel, input fieldsets, and results (`mechanism` state is now
+  `Mechanism | null`, initial null). Also fixed a stray backtick
+  that had been left at the top of `unit-converter.tsx` (`` `"use
+  client" ``) which broke the build. Lint + build clean;
+  prerendered page confirms cards + hint with inputs hidden.
+  ui-context.md updated. Still NOT pushed.

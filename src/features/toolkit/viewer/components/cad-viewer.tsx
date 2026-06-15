@@ -246,7 +246,7 @@ export function CadViewer() {
       >
         <div className="flex items-center gap-3">
           <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark">
-            Click two points to measure · Esc to exit
+            Click two points · snaps to X / Y / Z · Esc to exit
           </span>
           <button
             type="button"

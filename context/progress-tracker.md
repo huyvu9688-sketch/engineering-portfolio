@@ -21,6 +21,14 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes (most recent first)
 
+- 2026-06-15: CAD Viewer — re-added the COMPONENT TREE (first feature
+  back after the minimal reset). New `component-list.js` (pure DOM,
+  searchable, collapsible); engine builds the hierarchy on load, a
+  top-right toggle shows/hides the dark panel, clicking a part frames it
+  + applies an accent emissive glow. Dark background kept. Still no
+  toolbar/measure/isolate/view-cube (adding one at a time; view-cube
+  last, with the autoClear fix). lint + build pass; pushed (deploy).
+
 - 2026-06-15: CAD Viewer REVERTED to minimal (white bg, import + orbit,
   real colours; no tree/toolbar/measure/isolate/view-cube). ROOT CAUSE
   of the black background found: three.js `ViewHelper.render()` re-clears

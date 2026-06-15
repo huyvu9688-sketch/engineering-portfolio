@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from "react";
-import { Box, LoaderCircle, TriangleAlert, Upload } from "lucide-react";
+import { Box, ListTree, LoaderCircle, TriangleAlert, Upload, X } from "lucide-react";
 
 /** Minimal view of the JS engine class we drive from React. */
 interface ViewerCoreInstance {
@@ -127,6 +127,45 @@ export function CadViewer() {
           Import
         </button>
       )}
+
+      {/* Component-list toggle (always in the DOM so the engine can bind it) */}
+      <button
+        type="button"
+        id="toggle-list"
+        className={`absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-hairline-dark bg-surface-dark/80 text-on-dark-muted backdrop-blur transition-all hover:bg-white/10 hover:text-on-dark ${
+          status === "ready" ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        title="Toggle component list"
+        aria-label="Toggle component list"
+      >
+        <ListTree className="h-4 w-4 stroke-[1.5]" />
+      </button>
+
+      {/* Component-list panel — overlay, revealed by the engine after load */}
+      <div
+        id="component-list-container"
+        className="absolute bottom-3 right-3 top-16 z-20 hidden w-64"
+      >
+        <div className="flex h-full flex-col overflow-hidden rounded-lg border border-hairline-dark bg-surface-dark/90 backdrop-blur">
+          <div className="flex items-center justify-between border-b border-hairline-dark px-3 py-2.5">
+            <span
+              id="component-list-header"
+              className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted"
+            >
+              Components
+            </span>
+            <button
+              type="button"
+              id="close-list"
+              className="text-on-dark-muted transition-colors hover:text-accent"
+              aria-label="Close component list"
+            >
+              <X className="h-4 w-4 stroke-[1.5]" />
+            </button>
+          </div>
+          <div id="component-list" className="min-h-0 flex-1 overflow-y-auto overscroll-contain" />
+        </div>
+      </div>
 
       {/* Empty / upload state */}
       {status === "empty" && (

@@ -142,9 +142,12 @@ Type rules from the template:
   toggle → `component-list.js`; click a part to frame + accent-glow it),
   **isolate** (toolbar button isolates the selected tree part, or enters
   a click-to-pick mode; show-all / Esc to exit; banner shows the
-  isolated part), and **measure** (`measure.js`; click two points → snaps
-  to the dominant X/Y/Z axis and reports that axis distance as `mm (in)`
-  bottom-centre; Esc to exit. GLB has no unit, so `unitToMm` is
+  isolated part), and **measure** (`measure.js`; click a point on two
+  component faces → both ends stay on real surfaces, line drawn directly
+  between them; reports the straight-line distance + per-axis ΔX/ΔY/ΔZ as
+  `mm (in)` bottom-centre; Esc to exit. NOTE: an axis-snapped variant was
+  tried but its projected endpoint floated in space — face-to-face point
+  distance is what the owner wanted. GLB has no unit, so `unitToMm` is
   auto-detected from the model span: < 10 units across → metre export
   ×1000, else mm ×1). No view-cube
   (the one thing that blanked the canvas — see warning below). **Real

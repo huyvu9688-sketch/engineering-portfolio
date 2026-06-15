@@ -21,6 +21,14 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes (most recent first)
 
+- 2026-06-15: CAD Viewer measure — switched from axis-snapped to
+  FACE-TO-FACE point distance (owner: "measure from component face to
+  component face, not a random position in 3D"). The axis-snap projected
+  the 2nd point to a floating spot in space — that was the "random
+  position". Now both endpoints stay on the raycast surface hits, line
+  drawn directly between; read-out shows straight distance + ΔX/ΔY/ΔZ
+  (mm/in). lint/build pass; pushed.
+
 - 2026-06-15: CAD Viewer measure — now AXIS-ALIGNED (owner picked
   "measure along one axis"): two clicks → dominant X/Y/Z axis, reports
   that axis distance. Units shown as `mm (in)` with `unitToMm`

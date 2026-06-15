@@ -18,7 +18,7 @@ type Status = "empty" | "loading" | "ready" | "error";
 const ACCEPT = ".glb,.gltf,model/gltf-binary,model/gltf+json";
 
 /**
- * Minimal model viewer: a white 3D window plus import. All WebGL work happens in
+ * Minimal model viewer: a dark 3D window plus import. All WebGL work happens in
  * the effect (client only); one context per mount, fully disposed on unmount.
  */
 export function CadViewer() {
@@ -94,7 +94,7 @@ export function CadViewer() {
 
   return (
     <div
-      className="relative h-[75vh] min-h-130 w-full overflow-hidden rounded-lg border border-hairline bg-surface"
+      className="relative h-[75vh] min-h-130 w-full overflow-hidden rounded-lg border border-hairline bg-surface-dark"
       onDragOver={(e) => {
         e.preventDefault();
         if (!dragging) setDragging(true);
@@ -104,7 +104,7 @@ export function CadViewer() {
       }}
       onDrop={handleDrop}
     >
-      {/* Renderer canvas mounts here (white scene) */}
+      {/* Renderer canvas mounts here (dark scene) */}
       <div ref={canvasRef} className="absolute inset-0" />
 
       {/* Hidden file picker */}
@@ -121,7 +121,7 @@ export function CadViewer() {
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="absolute left-3 top-3 z-20 inline-flex items-center gap-2 rounded-full border border-hairline bg-surface/90 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-ink-muted backdrop-blur transition-colors hover:text-accent"
+          className="absolute left-3 top-3 z-20 inline-flex items-center gap-2 rounded-full border border-hairline-dark bg-surface-dark/80 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-on-dark-muted backdrop-blur transition-colors hover:text-accent"
         >
           <Upload className="h-3.5 w-3.5 stroke-[1.5]" />
           Import
@@ -130,26 +130,26 @@ export function CadViewer() {
 
       {/* Empty / upload state */}
       {status === "empty" && (
-        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-surface px-6 text-center">
+        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-surface-dark px-6 text-center">
           <div
             className={`flex h-16 w-16 items-center justify-center rounded-lg border transition-colors ${
-              dragging ? "border-accent bg-accent/5" : "border-hairline"
+              dragging ? "border-accent bg-accent/10" : "border-hairline-dark"
             }`}
           >
-            <Box className="h-7 w-7 stroke-[1.25] text-ink-faint" />
+            <Box className="h-7 w-7 stroke-[1.25] text-on-dark-muted" />
           </div>
           <div className="space-y-1.5">
-            <p className="font-mono text-xs uppercase tracking-widest text-ink">
+            <p className="font-mono text-xs uppercase tracking-widest text-on-dark">
               {dragging ? "Drop to load" : "Drop a 3D model here"}
             </p>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-ink-faint">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">
               GLB or GLTF · read in your browser, never uploaded
             </p>
           </div>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="rounded-full bg-ink px-5 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-on-dark transition-colors hover:bg-accent"
+            className="rounded-full bg-on-dark px-5 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-surface-dark transition-colors hover:bg-accent hover:text-on-dark"
           >
             Choose file
           </button>
@@ -158,9 +158,9 @@ export function CadViewer() {
 
       {/* Loading overlay */}
       {status === "loading" && (
-        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 bg-surface">
-          <LoaderCircle className="h-6 w-6 animate-spin stroke-[1.5] text-ink-faint" />
-          <span className="font-mono text-[10px] uppercase tracking-widest text-ink-muted">
+        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 bg-surface-dark">
+          <LoaderCircle className="h-6 w-6 animate-spin stroke-[1.5] text-on-dark-muted" />
+          <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">
             Loading {fileName}
           </span>
         </div>
@@ -168,15 +168,15 @@ export function CadViewer() {
 
       {/* Error overlay */}
       {status === "error" && (
-        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 bg-surface px-6 text-center">
+        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 bg-surface-dark px-6 text-center">
           <TriangleAlert className="h-6 w-6 stroke-[1.5] text-accent" />
-          <span className="font-mono text-[10px] uppercase tracking-widest text-ink-muted">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">
             {errorMessage || "Failed to load model"}
           </span>
           <button
             type="button"
             onClick={() => setStatus("empty")}
-            className="rounded-full border border-hairline px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest text-ink-muted transition-colors hover:text-accent"
+            className="rounded-full border border-hairline-dark px-4 py-1.5 font-mono text-[10px] uppercase tracking-widest text-on-dark-muted transition-colors hover:text-accent"
           >
             Try another file
           </button>

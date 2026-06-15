@@ -1,4 +1,4 @@
-// Minimal GLB/GLTF viewer — white environment, real model colours, orbit only.
+// Minimal GLB/GLTF viewer — dark environment, real model colours, orbit only.
 //
 // Deliberately bare: no component tree, measure, isolate, view-cube, etc. The
 // one job is "drop a model, see it in its real colours". (A view cube was tried
@@ -42,7 +42,7 @@ export class ViewerCore {
 
     init() {
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0xffffff); // white environment
+        this.scene.background = new THREE.Color(0x111111); // dark viewport
 
         const aspect = this.mount.clientWidth / this.mount.clientHeight;
         this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);

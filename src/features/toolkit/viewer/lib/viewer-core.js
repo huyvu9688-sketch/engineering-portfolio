@@ -1,18 +1,19 @@
-// Minimal GLB/GLTF viewer — dark environment, real model colours, orbit only.
+// Minimal GLB/GLTF viewer — dark environment, real model colours, orbit, and a
+// searchable component tree.
 //
-// Deliberately bare: no component tree, measure, isolate, view-cube, etc. The
-// one job is "drop a model, see it in its real colours". (A view cube was tried
-// but three's ViewHelper.render re-clears the canvas each frame, which wiped the
-// white background to black — so it's intentionally left out here.)
+// (A view cube was tried but three's ViewHelper.render re-clears the canvas
+// each frame, which blanked the viewport — so it's intentionally left out.)
 
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { ComponentList } from "./component-list.js";
 
 const DRACO_DECODER_PATH = "https://www.gstatic.com/draco/versioned/decoders/1.5.6/";
 const TEXTURE_SLOTS = ["map", "emissiveMap", "metalnessMap", "roughnessMap", "aoMap", "normalMap"];
+const SELECT_COLOR = 0xeb3a14; // accent glow on the focused part
 
 export class ViewerCore {
     /** @param {HTMLElement} mount element the renderer canvas mounts into */
@@ -27,6 +28,10 @@ export class ViewerCore {
         this.environmentTexture = null;
         this.animationId = null;
         this.running = false;
+
+        this.componentList = new ComponentList();
+        this.selectedObject = null;
+        this.boundListeners = [];
 
         // Fallback only for meshes that somehow ship with no material at all.
         this.defaultMaterial = new THREE.MeshStandardMaterial({
@@ -72,6 +77,7 @@ export class ViewerCore {
         this.controls.dampingFactor = 0.05;
 
         this.setupLighting();
+        this.attachUiListeners();
 
         window.addEventListener("resize", this.onResize);
         document.addEventListener("visibilitychange", this.onVisibility);
@@ -80,8 +86,6 @@ export class ViewerCore {
     }
 
     setupLighting() {
-        // Env map carries most of the ambient fill; a key + fill directional add
-        // shape and keep colours lively on the white background.
         this.scene.add(new THREE.AmbientLight(0xffffff, 0.25));
 
         const key = new THREE.DirectionalLight(0xffffff, 1.4);
@@ -91,6 +95,25 @@ export class ViewerCore {
         const fill = new THREE.DirectionalLight(0xffffff, 0.5);
         fill.position.set(-6, -2, -7.5);
         this.scene.add(fill);
+    }
+
+    bind(id, event, handler) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener(event, handler);
+        this.boundListeners.push({ el, event, handler });
+    }
+
+    attachUiListeners() {
+        this.bind("toggle-list", "click", () => this.toggleList());
+        this.bind("close-list", "click", () => this.toggleList(false));
+    }
+
+    toggleList(force) {
+        const container = document.getElementById("component-list-container");
+        if (!container) return;
+        const next = force ?? container.classList.contains("hidden");
+        container.classList.toggle("hidden", !next);
     }
 
     /**
@@ -146,7 +169,51 @@ export class ViewerCore {
 
         this.scene.add(this.model);
         this.recenter();
-        this.fitCamera();
+        this.fitToObject(this.model);
+
+        // Build + show the component tree.
+        const hierarchy = this.componentList.extractHierarchy(this.model);
+        if (hierarchy.length > 0) {
+            this.componentList.display((component, element) =>
+                this.handleComponentClick(component, element),
+            );
+            this.toggleList(true);
+        }
+    }
+
+    handleComponentClick(component, element) {
+        document.querySelectorAll(".component-item").forEach((el) => {
+            el.classList.remove("bg-accent/15");
+        });
+        if (element) element.classList.add("bg-accent/15");
+        if (component.object) this.focusOnPart(component.object);
+    }
+
+    focusOnPart(object) {
+        this.selectPart(object);
+        this.fitToObject(object);
+    }
+
+    // Persistent accent glow on the focused part, clearing the previous one.
+    selectPart(object) {
+        if (this.selectedObject && this.selectedObject !== object) {
+            this.setEmissive(this.selectedObject, 0x000000, 0);
+        }
+        this.selectedObject = object;
+        this.setEmissive(object, SELECT_COLOR, 0.5);
+    }
+
+    setEmissive(node, hex, intensity) {
+        node.traverse((child) => {
+            if (child.isMesh && child.material) {
+                const mats = Array.isArray(child.material) ? child.material : [child.material];
+                mats.forEach((mat) => {
+                    if (!mat.emissive) return;
+                    mat.emissive.setHex(hex);
+                    mat.emissiveIntensity = intensity;
+                });
+            }
+        });
     }
 
     // Keep the material's real colour/metalness/roughness; only neutralise the
@@ -178,19 +245,25 @@ export class ViewerCore {
         this.model.updateMatrixWorld(true);
     }
 
-    fitCamera() {
-        const box = new THREE.Box3().setFromObject(this.model);
+    // Frame any object (whole model or a single part). Clip planes + zoom limits
+    // adapt to the model's overall scale so framing a part never clips.
+    fitToObject(object) {
+        const box = new THREE.Box3().setFromObject(object);
         if (box.isEmpty()) return;
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         if (!Number.isFinite(maxDim) || maxDim <= 0) return;
 
+        const modelDim = this.model
+            ? Math.max(...new THREE.Box3().setFromObject(this.model).getSize(new THREE.Vector3()).toArray())
+            : maxDim;
+
         const fov = this.camera.fov * (Math.PI / 180);
         const dist = Math.abs(maxDim / 2 / Math.tan(fov / 2)) * 2.2;
 
-        this.camera.near = Math.max(maxDim / 1000, 0.01);
-        this.camera.far = Math.max(maxDim * 100, 1000);
+        this.camera.near = Math.max(modelDim / 1000, 0.01);
+        this.camera.far = Math.max(modelDim * 100, 1000);
         this.camera.updateProjectionMatrix();
 
         this.camera.position.set(
@@ -201,12 +274,13 @@ export class ViewerCore {
         this.camera.lookAt(center);
 
         this.controls.target.copy(center);
-        this.controls.minDistance = maxDim * 0.02;
-        this.controls.maxDistance = maxDim * 12;
+        this.controls.minDistance = modelDim * 0.02;
+        this.controls.maxDistance = modelDim * 12;
         this.controls.update();
     }
 
     clearModel() {
+        this.selectedObject = null;
         if (!this.model) return;
         this.model.traverse((child) => {
             if (!child.isMesh) return;
@@ -262,6 +336,10 @@ export class ViewerCore {
         this.stop();
         window.removeEventListener("resize", this.onResize);
         document.removeEventListener("visibilitychange", this.onVisibility);
+        this.boundListeners.forEach(({ el, event, handler }) => {
+            el.removeEventListener(event, handler);
+        });
+        this.boundListeners = [];
 
         this.clearModel();
         if (this.controls) this.controls.dispose();

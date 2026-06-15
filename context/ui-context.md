@@ -137,9 +137,11 @@ Type rules from the template:
   excluded from tsconfig, typed via `viewer-core.d.ts`) wrapped by
   `viewer/components/cad-viewer.tsx`. **Dark 3D environment**
   (`0x111111`, the `--surface-dark` token); dark overlays/landing to
-  match. Only controls: **import** (file picker +
-  drag-drop, read locally) and orbit/zoom/pan. No tree, toolbar,
-  measure, isolate, or view-cube. **Real component colours**: the
+  match. Controls: **import** (file picker + drag-drop, read locally),
+  orbit/zoom/pan, and a searchable **component tree** (top-right toggle
+  → `component-list.js`; click a part to frame it + accent-glow it,
+  collapse/expand groups). No toolbar, measure, isolate, or view-cube
+  yet (being re-added one at a time). **Real component colours**: the
   file's own materials are KEPT and lit by a neutral `RoomEnvironment`
   map under `NeutralToneMapping`; only sanitised for invisible-import
   causes (near-zero opacity → opaque, broken texture maps stripped,

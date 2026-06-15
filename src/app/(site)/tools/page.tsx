@@ -34,7 +34,7 @@ const TOOLS: {
     status: "Live",
     available: true,
     href: "/tools/cad-viewer",
-    desc: "Drop a GLB or GLTF model to inspect an assembly in 3D: orbit, walk the component tree, isolate, hide, and measure parts. Read locally — nothing is uploaded.",
+    desc: "Drop a GLB or GLTF model to view it in 3D — orbit, zoom, and pan. Read locally in your browser; nothing is uploaded.",
   },
   {
     name: "Pneumatic Cylinder Calculator",

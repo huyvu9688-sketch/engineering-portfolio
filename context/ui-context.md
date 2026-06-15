@@ -132,33 +132,29 @@ Type rules from the template:
   grayscale → color on hover with slight scale; mono accent
   eyebrow with icon; tech chips as bordered white pills;
   "View Project ↗" mono link.
-- **CAD Viewer** (utility, `/tools/cad-viewer`): full-featured GLB/GLTF
-  inspector. A multi-module vanilla Three.js engine
-  (`viewer/lib/*.js` — scene-manager, model-loader, component-list,
-  interaction, controls, context-menu, history-manager, measure,
-  viewer-core; excluded from tsconfig, typed via `viewer-core.d.ts`)
-  wrapped by one typed React client component (`cad-viewer.tsx`).
-  **White 3D environment** (TEMPORARY per owner, 2026-06-15) — NOT the
-  dark palette — because a grey CAD model on a near-black viewport was
-  the real reason it "didn't show"; the model was always rendering. The
-  floating chrome is DARK (toolbar/panel/banners/read-outs) so it reads
-  over white and still works if the background goes back to dark; the
-  empty/loading/error overlays are LIGHT to match the white viewport.
-  Import via file picker + drag-drop (read locally, never uploaded).
-  Features: top-left pill **toolbar** (reset view, isolate, show-all,
-  measure, edges/grid/axes, undo/redo, load-another), top-right
-  searchable **component-tree** overlay (click→focus, right-click→
-  isolate/hide/show-all), top-centre mode **banners** (isolate /
-  isolated / measure, each with Esc), bottom-left **view-cube**
-  (three.js `ViewHelper`), bottom read-outs (hovered part, measured
-  distance). **Real component colours**: the file's own materials are
-  KEPT and lit by a neutral `RoomEnvironment` map under
-  `NeutralToneMapping`; only *sanitised* for invisible-import causes
-  (near-zero opacity → opaque, broken texture maps stripped,
+- **CAD Viewer** (utility, `/tools/cad-viewer`): intentionally MINIMAL.
+  One vanilla Three.js engine file (`viewer/lib/viewer-core.js`,
+  excluded from tsconfig, typed via `viewer-core.d.ts`) wrapped by
+  `viewer/components/cad-viewer.tsx`. **White 3D environment**; light
+  overlays/landing to match. Only controls: **import** (file picker +
+  drag-drop, read locally) and orbit/zoom/pan. No tree, toolbar,
+  measure, isolate, or view-cube. **Real component colours**: the
+  file's own materials are KEPT and lit by a neutral `RoomEnvironment`
+  map under `NeutralToneMapping`; only sanitised for invisible-import
+  causes (near-zero opacity → opaque, broken texture maps stripped,
   `DoubleSide`, `envMapIntensity = 1`); normals recomputed,
-  `frustumCulled` off, model recentred to origin, helpers + camera fit
-  to scale. Lifecycle hardened: one WebGL context per mount, full
-  `dispose()` + `forceContextLoss()`, capped DPR (1.5), visibility-pause.
+  `frustumCulled` off, model recentred to origin, camera fit to scale.
+  Lifecycle hardened: one WebGL context per mount, `dispose()` +
+  `forceContextLoss()`, capped DPR (1.5), visibility-pause.
+  - ⚠️ TWO things to know before re-adding features:
+    (1) The "invisible model" was never a render bug — it was a grey
+    machine on the old near-black viewport (white bg fixed it).
+    (2) three.js `ViewHelper.render()` re-clears the canvas every frame;
+    with the default `renderer.autoClear = true` it wiped the white bg
+    (+ model) to black, leaving only the gizmo. If a view-cube is
+    re-added, set `renderer.autoClear = false` and clear manually
+    (`renderer.clear()` → render scene → `viewHelper.render()`), or it
+    will black out a light background.
 - **Chips/tags**: white pill, hairline border, mono uppercase
   `text-[10px]`–`text-xs`, `--ink-muted`.
 - **Buttons**: pill, mono uppercase bold; primary = `--ink` bg

@@ -26,6 +26,9 @@ export class ViewerCore {
         this.controls = null;
         this.model = null;
         this.allParts = [];
+        // GLB has no unit. Auto-detected on load: a metre-scale model → units
+        // are metres (×1000 = mm); an already-large model → units are mm (×1).
+        this.unitToMm = 1;
         this.dracoLoader = null;
         this.environmentTexture = null;
         this.animationId = null;
@@ -215,6 +218,13 @@ export class ViewerCore {
         this.scene.add(this.model);
         this.recenter();
         this.fitToObject(this.model);
+
+        // Guess the unit from the model's overall size so measurements can show
+        // mm. < 10 units across → metre-scale export (×1000); otherwise the
+        // units are already mm-scale (×1).
+        const span = new THREE.Box3().setFromObject(this.model).getSize(new THREE.Vector3());
+        const maxDim = Math.max(span.x, span.y, span.z) || 1;
+        this.unitToMm = maxDim < 10 ? 1000 : 1;
 
         // Reset interaction state from any prior model.
         this.isolatedObject = null;

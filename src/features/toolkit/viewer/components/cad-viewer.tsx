@@ -266,7 +266,6 @@ export function CadViewer() {
       >
         <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">Distance </span>
         <span id="measure-value" className="font-mono text-[10px] tabular-nums text-accent" />
-        <span className="font-mono text-[10px] text-on-dark-muted"> units</span>
       </div>
 
       {/* Empty / upload state */}

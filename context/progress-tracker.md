@@ -21,6 +21,14 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes (most recent first)
 
+- 2026-06-15: CAD Viewer — added ISOLATE + MEASURE. Toolbar (top-left):
+  reset view, isolate, show-all, measure, import. Isolate = toolbar
+  button isolates the selected tree part, else click-to-pick; show-all
+  or Esc to exit; banner shows the isolated part. Measure = new
+  `measure.js`, click two points → distance (bottom-centre read-out);
+  Esc exits. Engine tracks `allParts` for visibility/raycast. Still no
+  view cube (kept out — it blanks the canvas). lint + build pass; pushed.
+
 - 2026-06-15: CAD Viewer — re-added the COMPONENT TREE (first feature
   back after the minimal reset). New `component-list.js` (pure DOM,
   searchable, collapsible); engine builds the hierarchy on load, a

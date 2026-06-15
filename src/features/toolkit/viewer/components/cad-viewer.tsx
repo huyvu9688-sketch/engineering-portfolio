@@ -1,7 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from "react";
-import { Box, ListTree, LoaderCircle, TriangleAlert, Upload, X } from "lucide-react";
+import {
+  Box,
+  Crosshair,
+  Eye,
+  ListTree,
+  LoaderCircle,
+  RotateCcw,
+  Ruler,
+  TriangleAlert,
+  Upload,
+  X,
+} from "lucide-react";
 
 /** Minimal view of the JS engine class we drive from React. */
 interface ViewerCoreInstance {
@@ -17,9 +28,13 @@ type Status = "empty" | "loading" | "ready" | "error";
 
 const ACCEPT = ".glb,.gltf,model/gltf-binary,model/gltf+json";
 
+const TOOL_BTN =
+  "flex h-8 w-8 items-center justify-center rounded-full text-on-dark-muted transition-colors hover:bg-white/10 hover:text-on-dark";
+
 /**
- * Minimal model viewer: a dark 3D window plus import. All WebGL work happens in
- * the effect (client only); one context per mount, fully disposed on unmount.
+ * Minimal model viewer: a dark 3D window, import, a component tree, isolate, and
+ * measure. All WebGL work happens in the effect; one context per mount, fully
+ * disposed on unmount.
  */
 export function CadViewer() {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -92,6 +107,8 @@ export function CadViewer() {
     if (file) loadFile(file);
   }
 
+  const chromeReady = status === "ready" ? "opacity-100" : "pointer-events-none opacity-0";
+
   return (
     <div
       className="relative h-[75vh] min-h-130 w-full overflow-hidden rounded-lg border border-hairline bg-surface-dark"
@@ -116,25 +133,39 @@ export function CadViewer() {
         className="hidden"
       />
 
-      {/* Import — available once a model is shown, to load another */}
-      {status === "ready" && (
+      {/* Toolbar (always in the DOM so the engine can bind its controls) */}
+      <div
+        className={`absolute left-3 top-3 z-20 flex items-center gap-0.5 rounded-full border border-hairline-dark bg-surface-dark/80 p-1 backdrop-blur transition-opacity ${chromeReady}`}
+      >
+        <button type="button" id="reset-camera" className={TOOL_BTN} title="Reset view" aria-label="Reset view">
+          <RotateCcw className="h-4 w-4 stroke-[1.5]" />
+        </button>
+        <button type="button" id="isolate-mode" className={TOOL_BTN} title="Isolate a part" aria-label="Isolate a part">
+          <Crosshair className="h-4 w-4 stroke-[1.5]" />
+        </button>
+        <button type="button" id="show-all-parts" className={TOOL_BTN} title="Show all parts" aria-label="Show all parts">
+          <Eye className="h-4 w-4 stroke-[1.5]" />
+        </button>
+        <button type="button" id="measure-mode" className={TOOL_BTN} title="Measure distance" aria-label="Measure">
+          <Ruler className="h-4 w-4 stroke-[1.5]" />
+        </button>
+        <span className="mx-0.5 h-5 w-px bg-hairline-dark" />
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="absolute left-3 top-3 z-20 inline-flex items-center gap-2 rounded-full border border-hairline-dark bg-surface-dark/80 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-on-dark-muted backdrop-blur transition-colors hover:text-accent"
+          className={TOOL_BTN}
+          title="Load a different model"
+          aria-label="Load a different model"
         >
-          <Upload className="h-3.5 w-3.5 stroke-[1.5]" />
-          Import
+          <Upload className="h-4 w-4 stroke-[1.5]" />
         </button>
-      )}
+      </div>
 
-      {/* Component-list toggle (always in the DOM so the engine can bind it) */}
+      {/* Component-list toggle */}
       <button
         type="button"
         id="toggle-list"
-        className={`absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-hairline-dark bg-surface-dark/80 text-on-dark-muted backdrop-blur transition-all hover:bg-white/10 hover:text-on-dark ${
-          status === "ready" ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
+        className={`absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-hairline-dark bg-surface-dark/80 text-on-dark-muted backdrop-blur transition-all hover:bg-white/10 hover:text-on-dark ${chromeReady}`}
         title="Toggle component list"
         aria-label="Toggle component list"
       >
@@ -165,6 +196,77 @@ export function CadViewer() {
           </div>
           <div id="component-list" className="min-h-0 flex-1 overflow-y-auto overscroll-contain" />
         </div>
+      </div>
+
+      {/* Isolate pick-mode banner */}
+      <div
+        id="isolate-banner"
+        style={{ display: "none" }}
+        className="absolute left-1/2 top-3 z-30 -translate-x-1/2 rounded-full border border-hairline-dark bg-surface-dark/90 px-4 py-2 backdrop-blur"
+      >
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark">
+            Click a part to isolate · Esc to cancel
+          </span>
+          <button
+            type="button"
+            id="exit-isolate-mode"
+            className="rounded-full border border-hairline-dark px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-on-dark-muted transition-colors hover:text-accent"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      {/* Isolated-state banner */}
+      <div
+        id="isolated-banner"
+        style={{ display: "none" }}
+        className="absolute left-1/2 top-3 z-30 -translate-x-1/2 rounded-full border border-accent/40 bg-surface-dark/90 px-4 py-2 backdrop-blur"
+      >
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">
+            Isolated <span id="isolated-banner-name" className="text-accent" />
+          </span>
+          <button
+            type="button"
+            id="exit-isolate"
+            className="rounded-full border border-hairline-dark px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-on-dark-muted transition-colors hover:text-accent"
+          >
+            Exit · Esc
+          </button>
+        </div>
+      </div>
+
+      {/* Measure-mode banner */}
+      <div
+        id="measure-banner"
+        style={{ display: "none" }}
+        className="absolute left-1/2 top-3 z-30 -translate-x-1/2 rounded-full border border-hairline-dark bg-surface-dark/90 px-4 py-2 backdrop-blur"
+      >
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark">
+            Click two points to measure · Esc to exit
+          </span>
+          <button
+            type="button"
+            id="exit-measure"
+            className="rounded-full border border-hairline-dark px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-on-dark-muted transition-colors hover:text-accent"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      {/* Measure result */}
+      <div
+        id="measure-result"
+        style={{ display: "none" }}
+        className="pointer-events-none absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-accent/40 bg-surface-dark/85 px-3 py-1.5 backdrop-blur"
+      >
+        <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">Distance </span>
+        <span id="measure-value" className="font-mono text-[10px] tabular-nums text-accent" />
+        <span className="font-mono text-[10px] text-on-dark-muted"> units</span>
       </div>
 
       {/* Empty / upload state */}

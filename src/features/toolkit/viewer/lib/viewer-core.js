@@ -1,5 +1,5 @@
-// Minimal GLB/GLTF viewer — dark environment, real model colours, orbit, and a
-// searchable component tree.
+// Minimal GLB/GLTF viewer — dark environment, real model colours, orbit, a
+// searchable component tree, isolate, and measure.
 //
 // (A view cube was tried but three's ViewHelper.render re-clears the canvas
 // each frame, which blanked the viewport — so it's intentionally left out.)
@@ -10,6 +10,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { ComponentList } from "./component-list.js";
+import { MeasureTool } from "./measure.js";
 
 const DRACO_DECODER_PATH = "https://www.gstatic.com/draco/versioned/decoders/1.5.6/";
 const TEXTURE_SLOTS = ["map", "emissiveMap", "metalnessMap", "roughnessMap", "aoMap", "normalMap"];
@@ -24,14 +25,20 @@ export class ViewerCore {
         this.renderer = null;
         this.controls = null;
         this.model = null;
+        this.allParts = [];
         this.dracoLoader = null;
         this.environmentTexture = null;
         this.animationId = null;
         this.running = false;
 
         this.componentList = new ComponentList();
+        this.measureTool = new MeasureTool(this);
         this.selectedObject = null;
+        this.isolatedObject = null;
+        this.isolateMode = false;
         this.boundListeners = [];
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
 
         // Fallback only for meshes that somehow ship with no material at all.
         this.defaultMaterial = new THREE.MeshStandardMaterial({
@@ -43,6 +50,8 @@ export class ViewerCore {
 
         this.onResize = () => this.onWindowResize();
         this.onVisibility = () => this.handleVisibility();
+        this.onIsolatePickBound = (e) => this.onIsolatePick(e);
+        this.onKeyDown = (e) => this.handleKeyDown(e);
     }
 
     init() {
@@ -80,6 +89,7 @@ export class ViewerCore {
         this.attachUiListeners();
 
         window.addEventListener("resize", this.onResize);
+        window.addEventListener("keydown", this.onKeyDown);
         document.addEventListener("visibilitychange", this.onVisibility);
 
         this.start();
@@ -104,9 +114,43 @@ export class ViewerCore {
         this.boundListeners.push({ el, event, handler });
     }
 
+    setToolActive(target, active) {
+        if (!target) return;
+        target.classList.toggle("text-accent", active);
+        target.classList.toggle("bg-white/10", active);
+    }
+
     attachUiListeners() {
         this.bind("toggle-list", "click", () => this.toggleList());
         this.bind("close-list", "click", () => this.toggleList(false));
+        this.bind("reset-camera", "click", () => this.resetCamera());
+        this.bind("show-all-parts", "click", () => this.showAll());
+
+        this.bind("isolate-mode", "click", (e) => {
+            if (!this.model) return;
+            this.exitMeasureMode();
+            // A part chosen in the tree? Isolate it straight away.
+            if (this.selectedObject) {
+                this.isolatePart(this.selectedObject);
+                return;
+            }
+            this.enableIsolateMode();
+            this.setToolActive(e.currentTarget, true);
+        });
+        this.bind("exit-isolate-mode", "click", () => this.disableIsolateMode());
+        this.bind("exit-isolate", "click", () => this.showAll());
+
+        this.bind("measure-mode", "click", (e) => {
+            if (!this.model) return;
+            if (this.measureTool.active) {
+                this.exitMeasureMode();
+                return;
+            }
+            this.disableIsolateMode();
+            this.measureTool.enable();
+            this.setToolActive(e.currentTarget, true);
+        });
+        this.bind("exit-measure", "click", () => this.exitMeasureMode());
     }
 
     toggleList(force) {
@@ -158,6 +202,7 @@ export class ViewerCore {
             }
             // Bad CAD bounding spheres can frustum-cull a visible mesh.
             child.frustumCulled = false;
+            this.allParts.push(child);
 
             if (!child.material) {
                 child.material = this.defaultMaterial;
@@ -170,6 +215,11 @@ export class ViewerCore {
         this.scene.add(this.model);
         this.recenter();
         this.fitToObject(this.model);
+
+        // Reset interaction state from any prior model.
+        this.isolatedObject = null;
+        const isoBanner = document.getElementById("isolated-banner");
+        if (isoBanner) isoBanner.style.display = "none";
 
         // Build + show the component tree.
         const hierarchy = this.componentList.extractHierarchy(this.model);
@@ -216,8 +266,116 @@ export class ViewerCore {
         });
     }
 
-    // Keep the material's real colour/metalness/roughness; only neutralise the
-    // things that render a part invisible or black.
+    // ----- Isolate -------------------------------------------------------
+
+    enableIsolateMode() {
+        this.isolateMode = true;
+        const banner = document.getElementById("isolate-banner");
+        if (banner) banner.style.display = "block";
+        const dom = this.renderer?.domElement;
+        if (dom) {
+            dom.style.cursor = "crosshair";
+            dom.addEventListener("click", this.onIsolatePickBound);
+        }
+    }
+
+    disableIsolateMode() {
+        this.isolateMode = false;
+        const banner = document.getElementById("isolate-banner");
+        if (banner) banner.style.display = "none";
+        this.setToolActive(document.getElementById("isolate-mode"), false);
+        const dom = this.renderer?.domElement;
+        if (dom) {
+            dom.style.cursor = "auto";
+            dom.removeEventListener("click", this.onIsolatePickBound);
+        }
+    }
+
+    onIsolatePick(event) {
+        if (!this.isolateMode || !this.model) return;
+        event.stopPropagation();
+        event.preventDefault();
+
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        const visibleParts = this.allParts.filter((p) => p.visible);
+        const intersects = this.raycaster.intersectObjects(visibleParts, false);
+
+        if (intersects.length > 0) {
+            this.isolatePart(this.resolvePartNode(intersects[0].object));
+            this.disableIsolateMode();
+        }
+    }
+
+    // Walk up from a clicked mesh to the nearest named group, so isolating a
+    // face isolates the whole part rather than one triangle.
+    resolvePartNode(mesh) {
+        let node = mesh.parent;
+        while (node && node !== this.model) {
+            const isNamedGroup =
+                (node.isGroup || node.type === "Group") && node.name && node.name.trim() !== "";
+            if (isNamedGroup) return node;
+            node = node.parent;
+        }
+        return mesh;
+    }
+
+    isolatePart(object) {
+        const targets = new Set();
+        if (object.isMesh) {
+            targets.add(object.uuid);
+        } else {
+            object.traverse((child) => {
+                if (child.isMesh) targets.add(child.uuid);
+            });
+        }
+        this.allParts.forEach((p) => {
+            p.visible = targets.has(p.uuid);
+        });
+
+        this.isolatedObject = object;
+        const banner = document.getElementById("isolated-banner");
+        const name = document.getElementById("isolated-banner-name");
+        if (banner) banner.style.display = "block";
+        if (name) name.textContent = object.name || "part";
+
+        this.fitToObject(object);
+    }
+
+    showAll() {
+        this.allParts.forEach((p) => {
+            p.visible = true;
+        });
+        this.isolatedObject = null;
+        const banner = document.getElementById("isolated-banner");
+        if (banner) banner.style.display = "none";
+        if (this.model) this.fitToObject(this.model);
+    }
+
+    // ----- Measure -------------------------------------------------------
+
+    exitMeasureMode() {
+        if (!this.measureTool.active) return;
+        this.measureTool.disable();
+        this.setToolActive(document.getElementById("measure-mode"), false);
+    }
+
+    resetCamera() {
+        if (this.model) this.fitToObject(this.model);
+    }
+
+    handleKeyDown(e) {
+        if (!this.model) return;
+        if (e.key !== "Escape") return;
+        if (this.measureTool.active) this.exitMeasureMode();
+        else if (this.isolateMode) this.disableIsolateMode();
+        else if (this.isolatedObject) this.showAll();
+    }
+
+    // ----- Materials / framing ------------------------------------------
+
     sanitizeMaterial(mat) {
         mat.side = THREE.DoubleSide;
 
@@ -256,7 +414,9 @@ export class ViewerCore {
         if (!Number.isFinite(maxDim) || maxDim <= 0) return;
 
         const modelDim = this.model
-            ? Math.max(...new THREE.Box3().setFromObject(this.model).getSize(new THREE.Vector3()).toArray())
+            ? Math.max(
+                  ...new THREE.Box3().setFromObject(this.model).getSize(new THREE.Vector3()).toArray(),
+              )
             : maxDim;
 
         const fov = this.camera.fov * (Math.PI / 180);
@@ -281,6 +441,8 @@ export class ViewerCore {
 
     clearModel() {
         this.selectedObject = null;
+        this.isolatedObject = null;
+        this.allParts = [];
         if (!this.model) return;
         this.model.traverse((child) => {
             if (!child.isMesh) return;
@@ -335,12 +497,15 @@ export class ViewerCore {
     dispose() {
         this.stop();
         window.removeEventListener("resize", this.onResize);
+        window.removeEventListener("keydown", this.onKeyDown);
         document.removeEventListener("visibilitychange", this.onVisibility);
         this.boundListeners.forEach(({ el, event, handler }) => {
             el.removeEventListener(event, handler);
         });
         this.boundListeners = [];
 
+        this.disableIsolateMode();
+        this.measureTool.dispose();
         this.clearModel();
         if (this.controls) this.controls.dispose();
         if (this.dracoLoader) {

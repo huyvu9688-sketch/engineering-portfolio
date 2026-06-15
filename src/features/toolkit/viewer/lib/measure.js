@@ -100,11 +100,13 @@ export class MeasureTool {
     }
 
     showDistance() {
-        const distance = this.points[0].distanceTo(this.points[1]);
+        const raw = this.points[0].distanceTo(this.points[1]);
+        const mm = raw * (this.core.unitToMm || 1);
+        const inches = mm / 25.4;
         const result = document.getElementById("measure-result");
         const value = document.getElementById("measure-value");
         if (result) result.style.display = "block";
-        if (value) value.textContent = distance.toFixed(2);
+        if (value) value.textContent = `${mm.toFixed(1)} mm (${inches.toFixed(2)} in)`;
     }
 
     clear() {

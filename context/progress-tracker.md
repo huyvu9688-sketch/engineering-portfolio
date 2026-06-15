@@ -21,6 +21,17 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes (most recent first)
 
+- 2026-06-15: CAD Viewer REVERTED to minimal (white bg, import + orbit,
+  real colours; no tree/toolbar/measure/isolate/view-cube). ROOT CAUSE
+  of the black background found: three.js `ViewHelper.render()` re-clears
+  the canvas each frame; with `renderer.autoClear = true` (default) it
+  wiped the white background + model to black, leaving only the gizmo —
+  matched the screenshots exactly (black, no model, gizmo visible). It
+  was masked on the old dark viewport. The earlier "stale build" theory
+  was WRONG; the deployed full build showed it too. To re-add a view
+  cube later: `renderer.autoClear = false` + manual clear. Committed +
+  pushed (deploy).
+
 - 2026-06-15: CAD Viewer — RE-ADDED ALL FUNCTIONS on the white
   background (owner: "re-adding all functions we have, but temporary
   still keep the white background"). Restored the full multi-module

@@ -7,16 +7,6 @@ export const metadata: Metadata = {
   title: "CAD Viewer — Joseph Vu",
 };
 
-// What the viewer does — each line maps to a real control, not filler.
-const CAPABILITIES: [string, string][] = [
-  ["Orbit · zoom · pan", "Drag to rotate, scroll to zoom, right-drag to pan."],
-  ["Component tree", "Every part and sub-assembly, searchable; click to focus."],
-  ["Isolate · hide", "Right-click a part to isolate, hide, or focus it."],
-  ["Measure", "Click two points for a straight-line distance."],
-  ["View cube", "Snap to a standard view from the corner gizmo."],
-  ["Edges · grid · axes", "Toggle wireframe edges and the reference grid."],
-];
-
 export default function CadViewerPage() {
   return (
     <section className="mx-auto max-w-6xl px-4 pb-24 pt-40 md:px-6">
@@ -38,36 +28,17 @@ export default function CadViewerPage() {
       </div>
 
       <p className="mt-8 max-w-2xl text-base leading-relaxed text-ink-muted md:text-lg">
-        Drop a GLB or GLTF model to inspect an assembly in 3D — orbit it, walk
-        the component tree, isolate and measure parts. The file is read locally
-        in your browser; nothing is uploaded or stored.
+        Drop a GLB or GLTF model to view it in 3D. The file is read locally in
+        your browser — nothing is uploaded or stored.
       </p>
 
       <div className="mt-12">
         <CadViewer />
       </div>
 
-      {/* Capabilities — a legend for the controls, set as a quiet spec list */}
-      <div className="mt-12">
-        <div className="flex items-end justify-between border-b border-hairline pb-4">
-          <h2 className="text-2xl font-semibold uppercase tracking-tighter md:text-3xl">
-            What it does
-          </h2>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-ink-faint">
-            Controls
-          </p>
-        </div>
-        <dl className="mt-8 grid gap-x-12 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-          {CAPABILITIES.map(([term, desc]) => (
-            <div key={term}>
-              <dt className="font-mono text-[10px] uppercase tracking-widest text-accent">
-                {term}
-              </dt>
-              <dd className="mt-2 text-sm leading-relaxed text-ink-muted">{desc}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
+      <p className="mt-4 font-mono text-[10px] uppercase tracking-widest text-ink-faint">
+        Drag to orbit · Scroll to zoom · Right-drag to pan
+      </p>
     </section>
   );
 }

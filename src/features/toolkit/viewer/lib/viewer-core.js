@@ -1,220 +1,291 @@
-// Orchestrator: wires the engine modules together and exposes a small
-// imperative API (init / loadModel / dispose) for the React component.
+// Minimal GLB/GLTF viewer — white environment, real model colours, orbit only.
+//
+// Deliberately bare: no component tree, measure, isolate, view-cube, etc. The
+// one job is "drop a model, see it in its real colours". (A view cube was tried
+// but three's ViewHelper.render re-clears the canvas each frame, which wiped the
+// white background to black — so it's intentionally left out here.)
 
-import { SceneManager } from "./scene-manager.js";
-import { ModelLoader } from "./model-loader.js";
-import { ComponentList } from "./component-list.js";
-import { InteractionManager } from "./interaction.js";
-import { ContextMenu } from "./context-menu.js";
-import { ViewerControls } from "./controls.js";
-import { HistoryManager } from "./history-manager.js";
-import { MeasureTool } from "./measure.js";
-import { fitCameraToModel } from "./utils.js";
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+
+const DRACO_DECODER_PATH = "https://www.gstatic.com/draco/versioned/decoders/1.5.6/";
+const TEXTURE_SLOTS = ["map", "emissiveMap", "metalnessMap", "roughnessMap", "aoMap", "normalMap"];
 
 export class ViewerCore {
-    /** @param {HTMLElement} canvasMount element the renderer canvas mounts into */
-    constructor(canvasMount) {
-        this.canvasMount = canvasMount;
+    /** @param {HTMLElement} mount element the renderer canvas mounts into */
+    constructor(mount) {
+        this.mount = mount;
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.controls = null;
+        this.model = null;
+        this.dracoLoader = null;
+        this.environmentTexture = null;
+        this.animationId = null;
+        this.running = false;
 
-        this.sceneManager = new SceneManager(canvasMount);
-        this.modelLoader = new ModelLoader(this.sceneManager);
-        this.componentList = new ComponentList();
-        this.interactionManager = new InteractionManager(this.sceneManager, this.modelLoader);
-        this.historyManager = new HistoryManager(this.modelLoader, this.componentList, null);
-        this.viewerControls = new ViewerControls(
-            this.sceneManager,
-            this.modelLoader,
-            this.componentList,
-            this.historyManager,
-        );
-        this.historyManager.viewerControls = this.viewerControls;
-        this.contextMenu = new ContextMenu(
-            this.viewerControls,
-            this.componentList,
-            this.historyManager,
-        );
-        this.measureTool = new MeasureTool(this.sceneManager, this.modelLoader);
+        // Fallback only for meshes that somehow ship with no material at all.
+        this.defaultMaterial = new THREE.MeshStandardMaterial({
+            color: 0x9a9a9a,
+            metalness: 0.0,
+            roughness: 0.6,
+            side: THREE.DoubleSide,
+        });
 
-        this.boundListeners = [];
-        this.onKeyDown = (e) => this.handleKeyDown(e);
-        this.onCanvasContextMenu = (e) => this.handleCanvasContextMenu(e);
+        this.onResize = () => this.onWindowResize();
+        this.onVisibility = () => this.handleVisibility();
     }
 
     init() {
-        this.sceneManager.init();
-        this.interactionManager.init();
-        this.sceneManager.start();
-        this.attachEventListeners();
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0xffffff); // white environment
+
+        const aspect = this.mount.clientWidth / this.mount.clientHeight;
+        this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
+        this.camera.position.set(5, 5, 5);
+
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setSize(this.mount.clientWidth, this.mount.clientHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+        // "PBR Neutral" preserves authored material colour (vs ACES, which
+        // shifts it) — the right choice for showing real component colour.
+        this.renderer.toneMapping = THREE.NeutralToneMapping;
+        this.renderer.toneMappingExposure = 1.0;
+
+        this.mount.innerHTML = "";
+        this.mount.appendChild(this.renderer.domElement);
+
+        // Neutral image-based lighting so metallic/PBR materials reflect a soft
+        // room (and show their colour) instead of rendering black.
+        const pmrem = new THREE.PMREMGenerator(this.renderer);
+        this.environmentTexture = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+        this.scene.environment = this.environmentTexture;
+        pmrem.dispose();
+
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
+
+        this.setupLighting();
+
+        window.addEventListener("resize", this.onResize);
+        document.addEventListener("visibilitychange", this.onVisibility);
+
+        this.start();
+    }
+
+    setupLighting() {
+        // Env map carries most of the ambient fill; a key + fill directional add
+        // shape and keep colours lively on the white background.
+        this.scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+
+        const key = new THREE.DirectionalLight(0xffffff, 1.4);
+        key.position.set(5, 10, 7.5);
+        this.scene.add(key);
+
+        const fill = new THREE.DirectionalLight(0xffffff, 0.5);
+        fill.position.set(-6, -2, -7.5);
+        this.scene.add(fill);
     }
 
     /**
      * @param {File} file
-     * @param {{ onProgress?: (pct: number) => void, onLoaded?: () => void, onError?: (err: Error) => void }} [callbacks]
+     * @param {{ onLoaded?: () => void, onError?: (err: Error) => void }} [callbacks]
      */
     loadModel(file, callbacks = {}) {
-        this.historyManager.clear();
+        this.clearModel();
+        const url = URL.createObjectURL(file);
 
-        this.modelLoader.loadModel(
-            file,
-            (pct) => callbacks.onProgress?.(pct),
-            (model) => {
-                fitCameraToModel(model, this.sceneManager.camera, this.sceneManager.controls);
-                this.sceneManager.fitHelpersToModel(model);
+        const loader = new GLTFLoader();
+        this.dracoLoader = new DRACOLoader();
+        this.dracoLoader.setDecoderPath(DRACO_DECODER_PATH);
+        loader.setDRACOLoader(this.dracoLoader);
 
-                const hierarchy = this.componentList.extractHierarchy(model);
-                if (hierarchy.length > 0) {
-                    this.componentList.display(
-                        (component, element) => this.handleComponentClick(component, element),
-                        (event, object) =>
-                            this.contextMenu.show(event.clientX, event.clientY, object),
-                        () => {},
-                    );
-                    this.componentList.expandAllArrows();
-                    this.toggleList(true);
+        loader.load(
+            url,
+            (gltf) => {
+                URL.revokeObjectURL(url);
+                try {
+                    this.addModel(gltf.scene);
+                    callbacks.onLoaded?.();
+                } catch (err) {
+                    callbacks.onError?.(err);
                 }
-
-                this.exitMeasureMode();
-                this.viewerControls.isolatedPart = null;
-                this.viewerControls.selectedPart = null;
-                const isoBanner = document.getElementById("isolated-banner");
-                if (isoBanner) isoBanner.style.display = "none";
-
-                callbacks.onLoaded?.();
             },
-            (err) => callbacks.onError?.(err),
+            undefined,
+            (err) => {
+                URL.revokeObjectURL(url);
+                callbacks.onError?.(err);
+            },
         );
     }
 
-    handleComponentClick(component, element) {
-        document.querySelectorAll(".component-item").forEach((el) => {
-            el.classList.remove("bg-accent/15");
-        });
-        if (element) element.classList.add("bg-accent/15");
-        if (component.object) this.viewerControls.focusOnPart(component.object);
-    }
+    addModel(scene) {
+        this.model = scene;
 
-    bind(id, event, handler) {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.addEventListener(event, handler);
-        this.boundListeners.push({ el, event, handler });
-    }
+        this.model.traverse((child) => {
+            if (!child.isMesh) return;
+            if (child.geometry && !child.geometry.attributes.normal) {
+                child.geometry.computeVertexNormals();
+            }
+            // Bad CAD bounding spheres can frustum-cull a visible mesh.
+            child.frustumCulled = false;
 
-    setToolActive(target, active) {
-        target.classList.toggle("text-accent", active);
-        target.classList.toggle("bg-white/10", active);
-    }
-
-    attachEventListeners() {
-        const dom = this.sceneManager.renderer?.domElement;
-        if (dom) dom.addEventListener("contextmenu", this.onCanvasContextMenu);
-
-        this.bind("undo-action", "click", () => this.historyManager.undo());
-        this.bind("redo-action", "click", () => this.historyManager.redo());
-        this.bind("reset-camera", "click", () => this.viewerControls.resetCamera());
-        this.bind("show-all-parts", "click", () => this.viewerControls.showAllParts());
-
-        this.bind("toggle-edges", "click", (e) => {
-            if (!this.modelLoader.model) return;
-            this.setToolActive(e.currentTarget, this.modelLoader.toggleEdges());
-        });
-        this.bind("toggle-grid", "click", (e) => {
-            this.setToolActive(e.currentTarget, this.sceneManager.toggleGrid());
-        });
-        this.bind("toggle-axes", "click", (e) => {
-            this.setToolActive(e.currentTarget, this.sceneManager.toggleAxes());
-        });
-
-        this.bind("isolate-mode", "click", (e) => {
-            if (!this.modelLoader.model) return;
-            if (this.viewerControls.selectedPart) {
-                this.exitMeasureMode();
-                this.viewerControls.isolatePart(this.viewerControls.selectedPart);
+            if (!child.material) {
+                child.material = this.defaultMaterial;
                 return;
             }
-            this.exitMeasureMode();
-            this.viewerControls.enableIsolateMode();
-            this.setToolActive(e.currentTarget, true);
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            mats.forEach((mat) => this.sanitizeMaterial(mat));
         });
-        this.bind("exit-isolate-mode", "click", () => this.viewerControls.disableIsolateMode());
-        this.bind("exit-isolate", "click", () => this.viewerControls.showAllParts());
 
-        this.bind("measure-mode", "click", (e) => {
-            if (!this.modelLoader.model) return;
-            if (this.measureTool.active) {
-                this.exitMeasureMode();
-                return;
-            }
-            this.viewerControls.disableIsolateMode();
-            this.measureTool.enable();
-            this.setToolActive(e.currentTarget, true);
-        });
-        this.bind("exit-measure", "click", () => this.exitMeasureMode());
-
-        this.bind("toggle-list", "click", () => this.toggleList());
-        this.bind("close-list", "click", () => this.toggleList(false));
-
-        window.addEventListener("keydown", this.onKeyDown);
-        this.historyManager.updateUI();
+        this.scene.add(this.model);
+        this.recenter();
+        this.fitCamera();
     }
 
-    toggleList(force) {
-        const container = document.getElementById("component-list-container");
-        if (!container) return;
-        const next = force ?? container.classList.contains("hidden");
-        this.componentList.listVisible = next;
-        container.classList.toggle("hidden", !next);
-    }
+    // Keep the material's real colour/metalness/roughness; only neutralise the
+    // things that render a part invisible or black.
+    sanitizeMaterial(mat) {
+        mat.side = THREE.DoubleSide;
 
-    exitMeasureMode() {
-        if (!this.measureTool.active) return;
-        this.measureTool.disable();
-        const btn = document.getElementById("measure-mode");
-        if (btn) this.setToolActive(btn, false);
-    }
-
-    handleCanvasContextMenu(e) {
-        e.preventDefault();
-        if (!this.modelLoader.model) return;
-        const intersection = this.interactionManager.getIntersection(e);
-        if (intersection) this.contextMenu.show(e.clientX, e.clientY, intersection.part);
-    }
-
-    handleKeyDown(e) {
-        if (!this.modelLoader.model) return;
-
-        if (e.key === "Escape") {
-            if (this.measureTool.active) this.exitMeasureMode();
-            else if (this.viewerControls.isolateMode) this.viewerControls.disableIsolateMode();
-            else if (this.viewerControls.isolatedPart) this.viewerControls.showAllParts();
-            return;
+        if (mat.opacity === undefined || mat.opacity < 0.2) {
+            mat.opacity = 1;
+            mat.transparent = false;
         }
 
-        const mod = e.ctrlKey || e.metaKey;
-        if (mod && e.key === "z" && !e.shiftKey) {
-            e.preventDefault();
-            this.historyManager.undo();
-        } else if (mod && ((e.key === "z" && e.shiftKey) || e.key === "y")) {
-            e.preventDefault();
-            this.historyManager.redo();
+        TEXTURE_SLOTS.forEach((slot) => {
+            if (mat[slot] && !mat[slot].image) mat[slot] = null;
+        });
+
+        if ("envMapIntensity" in mat) mat.envMapIntensity = 1;
+
+        mat.needsUpdate = true;
+    }
+
+    recenter() {
+        this.model.updateWorldMatrix(true, true);
+        const box = new THREE.Box3().setFromObject(this.model);
+        if (box.isEmpty()) return;
+        const center = box.getCenter(new THREE.Vector3());
+        if (![center.x, center.y, center.z].every(Number.isFinite)) return;
+        this.model.position.sub(center);
+        this.model.updateMatrixWorld(true);
+    }
+
+    fitCamera() {
+        const box = new THREE.Box3().setFromObject(this.model);
+        if (box.isEmpty()) return;
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        if (!Number.isFinite(maxDim) || maxDim <= 0) return;
+
+        const fov = this.camera.fov * (Math.PI / 180);
+        const dist = Math.abs(maxDim / 2 / Math.tan(fov / 2)) * 2.2;
+
+        this.camera.near = Math.max(maxDim / 1000, 0.01);
+        this.camera.far = Math.max(maxDim * 100, 1000);
+        this.camera.updateProjectionMatrix();
+
+        this.camera.position.set(
+            center.x + dist * 0.7,
+            center.y + dist * 0.5,
+            center.z + dist * 0.7,
+        );
+        this.camera.lookAt(center);
+
+        this.controls.target.copy(center);
+        this.controls.minDistance = maxDim * 0.02;
+        this.controls.maxDistance = maxDim * 12;
+        this.controls.update();
+    }
+
+    clearModel() {
+        if (!this.model) return;
+        this.model.traverse((child) => {
+            if (!child.isMesh) return;
+            if (child.geometry) child.geometry.dispose();
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            mats.forEach((m) => {
+                if (m && m !== this.defaultMaterial) m.dispose();
+            });
+        });
+        this.scene.remove(this.model);
+        this.model = null;
+    }
+
+    start() {
+        if (this.running) return;
+        this.running = true;
+        this.loop();
+    }
+
+    loop() {
+        if (!this.running) return;
+        this.animationId = requestAnimationFrame(() => this.loop());
+        if (this.controls) this.controls.update();
+        if (this.renderer && this.scene && this.camera) {
+            this.renderer.render(this.scene, this.camera);
         }
+    }
+
+    stop() {
+        this.running = false;
+        if (this.animationId !== null) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
+    }
+
+    handleVisibility() {
+        if (document.hidden) this.stop();
+        else this.start();
+    }
+
+    onWindowResize() {
+        if (!this.camera || !this.renderer) return;
+        const w = this.mount.clientWidth;
+        const h = this.mount.clientHeight;
+        if (w === 0 || h === 0) return;
+        this.camera.aspect = w / h;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(w, h);
     }
 
     dispose() {
-        window.removeEventListener("keydown", this.onKeyDown);
-        const dom = this.sceneManager.renderer?.domElement;
-        if (dom) dom.removeEventListener("contextmenu", this.onCanvasContextMenu);
+        this.stop();
+        window.removeEventListener("resize", this.onResize);
+        document.removeEventListener("visibilitychange", this.onVisibility);
 
-        this.boundListeners.forEach(({ el, event, handler }) => {
-            el.removeEventListener(event, handler);
-        });
-        this.boundListeners = [];
+        this.clearModel();
+        if (this.controls) this.controls.dispose();
+        if (this.dracoLoader) {
+            this.dracoLoader.dispose();
+            this.dracoLoader = null;
+        }
+        if (this.environmentTexture) {
+            this.environmentTexture.dispose();
+            this.environmentTexture = null;
+        }
+        if (this.scene) this.scene.environment = null;
+        if (this.defaultMaterial) this.defaultMaterial.dispose();
 
-        this.contextMenu.remove();
-        this.viewerControls.disableIsolateMode();
-        this.measureTool.dispose();
-        this.interactionManager.dispose();
-        this.modelLoader.dispose();
-        this.sceneManager.dispose();
+        if (this.renderer) {
+            this.renderer.dispose();
+            this.renderer.forceContextLoss();
+            const el = this.renderer.domElement;
+            if (el && el.parentNode) el.parentNode.removeChild(el);
+        }
+
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.controls = null;
     }
 }

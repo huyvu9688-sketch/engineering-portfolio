@@ -1,58 +1,31 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from "react";
-import {
-  Axis3d,
-  Box,
-  Crosshair,
-  Eye,
-  Frame,
-  Grid3x3,
-  ListTree,
-  LoaderCircle,
-  Redo2,
-  RotateCcw,
-  Ruler,
-  TriangleAlert,
-  Undo2,
-  Upload,
-  X,
-} from "lucide-react";
+import { Box, LoaderCircle, TriangleAlert, Upload } from "lucide-react";
 
 /** Minimal view of the JS engine class we drive from React. */
 interface ViewerCoreInstance {
   init(): void;
   loadModel(
     file: File,
-    callbacks?: {
-      onProgress?: (pct: number) => void;
-      onLoaded?: () => void;
-      onError?: (err: Error) => void;
-    },
+    callbacks?: { onLoaded?: () => void; onError?: (err: Error) => void },
   ): void;
   dispose(): void;
 }
 
 type Status = "empty" | "loading" | "ready" | "error";
 
-// Floating HUD controls — dark so they read over the white viewport (and still
-// work if the background goes dark later).
-const TOOL_BTN =
-  "flex h-8 w-8 items-center justify-center rounded-full text-on-dark-muted transition-colors hover:bg-white/10 hover:text-on-dark";
-
 const ACCEPT = ".glb,.gltf,model/gltf-binary,model/gltf+json";
 
 /**
- * Embeds the imperative Three.js CAD-viewer engine inside React. One WebGL
- * context per mount, fully disposed on unmount. The 3D environment is white;
- * the floating control chrome is dark for contrast.
+ * Minimal model viewer: a white 3D window plus import. All WebGL work happens in
+ * the effect (client only); one context per mount, fully disposed on unmount.
  */
 export function CadViewer() {
   const canvasRef = useRef<HTMLDivElement>(null);
   const coreRef = useRef<ViewerCoreInstance | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<Status>("empty");
-  const [progress, setProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [fileName, setFileName] = useState("");
   const [dragging, setDragging] = useState(false);
@@ -97,9 +70,7 @@ export function CadViewer() {
     if (!coreRef.current) return;
     setFileName(file.name);
     setStatus("loading");
-    setProgress(0);
     coreRef.current.loadModel(file, {
-      onProgress: (pct) => setProgress(pct),
       onLoaded: () => setStatus("ready"),
       onError: (err) => {
         setErrorMessage(err?.message ?? "Failed to load model");
@@ -120,8 +91,6 @@ export function CadViewer() {
     const file = e.dataTransfer.files?.[0];
     if (file) loadFile(file);
   }
-
-  const chromeReady = status === "ready" ? "opacity-100" : "pointer-events-none opacity-0";
 
   return (
     <div
@@ -147,170 +116,19 @@ export function CadViewer() {
         className="hidden"
       />
 
-      {/* Toolbar */}
-      <div
-        className={`absolute left-3 top-3 z-20 flex items-center gap-0.5 rounded-full border border-hairline-dark bg-surface-dark/80 p-1 backdrop-blur transition-opacity ${chromeReady}`}
-      >
-        <button type="button" id="reset-camera" className={TOOL_BTN} title="Reset view" aria-label="Reset view">
-          <RotateCcw className="h-4 w-4 stroke-[1.5]" />
-        </button>
-        <button type="button" id="isolate-mode" className={TOOL_BTN} title="Isolate a part" aria-label="Isolate a part">
-          <Crosshair className="h-4 w-4 stroke-[1.5]" />
-        </button>
-        <button type="button" id="show-all-parts" className={TOOL_BTN} title="Show all parts" aria-label="Show all parts">
-          <Eye className="h-4 w-4 stroke-[1.5]" />
-        </button>
-        <button type="button" id="measure-mode" className={TOOL_BTN} title="Measure distance" aria-label="Measure">
-          <Ruler className="h-4 w-4 stroke-[1.5]" />
-        </button>
-        <span className="mx-0.5 h-5 w-px bg-hairline-dark" />
-        <button type="button" id="toggle-edges" className={TOOL_BTN} title="Toggle edges" aria-label="Toggle edges">
-          <Frame className="h-4 w-4 stroke-[1.5]" />
-        </button>
-        <button type="button" id="toggle-grid" className={TOOL_BTN} title="Toggle grid" aria-label="Toggle grid">
-          <Grid3x3 className="h-4 w-4 stroke-[1.5]" />
-        </button>
-        <button type="button" id="toggle-axes" className={TOOL_BTN} title="Toggle axes" aria-label="Toggle axes">
-          <Axis3d className="h-4 w-4 stroke-[1.5]" />
-        </button>
-        <span className="mx-0.5 h-5 w-px bg-hairline-dark" />
-        <button type="button" id="undo-action" className={TOOL_BTN} title="Undo" aria-label="Undo">
-          <Undo2 className="h-4 w-4 stroke-[1.5]" />
-        </button>
-        <button type="button" id="redo-action" className={TOOL_BTN} title="Redo" aria-label="Redo">
-          <Redo2 className="h-4 w-4 stroke-[1.5]" />
-        </button>
-        <span className="mx-0.5 h-5 w-px bg-hairline-dark" />
+      {/* Import — available once a model is shown, to load another */}
+      {status === "ready" && (
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className={TOOL_BTN}
-          title="Load a different model"
-          aria-label="Load a different model"
+          className="absolute left-3 top-3 z-20 inline-flex items-center gap-2 rounded-full border border-hairline bg-surface/90 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-ink-muted backdrop-blur transition-colors hover:text-accent"
         >
-          <Upload className="h-4 w-4 stroke-[1.5]" />
+          <Upload className="h-3.5 w-3.5 stroke-[1.5]" />
+          Import
         </button>
-      </div>
+      )}
 
-      {/* Component list toggle */}
-      <button
-        type="button"
-        id="toggle-list"
-        className={`absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-hairline-dark bg-surface-dark/80 text-on-dark-muted backdrop-blur transition-all hover:bg-white/10 hover:text-on-dark ${chromeReady}`}
-        title="Toggle component list"
-        aria-label="Toggle component list"
-      >
-        <ListTree className="h-4 w-4 stroke-[1.5]" />
-      </button>
-
-      {/* Component list panel — overlay, revealed by the engine after load */}
-      <div
-        id="component-list-container"
-        className="absolute bottom-3 right-3 top-16 z-20 hidden w-64"
-      >
-        <div className="flex h-full flex-col overflow-hidden rounded-lg border border-hairline-dark bg-surface-dark/90 backdrop-blur">
-          <div className="flex items-center justify-between border-b border-hairline-dark px-3 py-2.5">
-            <span
-              id="component-list-header"
-              className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted"
-            >
-              Components
-            </span>
-            <button
-              type="button"
-              id="close-list"
-              className="text-on-dark-muted transition-colors hover:text-accent"
-              aria-label="Close component list"
-            >
-              <X className="h-4 w-4 stroke-[1.5]" />
-            </button>
-          </div>
-          <div id="component-list" className="min-h-0 flex-1 overflow-y-auto overscroll-contain" />
-        </div>
-      </div>
-
-      {/* Isolate pick-mode banner */}
-      <div
-        id="isolate-banner"
-        style={{ display: "none" }}
-        className="absolute left-1/2 top-3 z-30 -translate-x-1/2 rounded-full border border-hairline-dark bg-surface-dark/90 px-4 py-2 backdrop-blur"
-      >
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark">
-            Click a part to isolate · Esc to cancel
-          </span>
-          <button
-            type="button"
-            id="exit-isolate-mode"
-            className="rounded-full border border-hairline-dark px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-on-dark-muted transition-colors hover:text-accent"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-
-      {/* Isolated-state banner */}
-      <div
-        id="isolated-banner"
-        style={{ display: "none" }}
-        className="absolute left-1/2 top-3 z-30 -translate-x-1/2 rounded-full border border-accent/40 bg-surface-dark/90 px-4 py-2 backdrop-blur"
-      >
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">
-            Isolated <span id="isolated-banner-name" className="text-accent" />
-          </span>
-          <button
-            type="button"
-            id="exit-isolate"
-            className="rounded-full border border-hairline-dark px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-on-dark-muted transition-colors hover:text-accent"
-          >
-            Exit · Esc
-          </button>
-        </div>
-      </div>
-
-      {/* Measure-mode banner */}
-      <div
-        id="measure-banner"
-        style={{ display: "none" }}
-        className="absolute left-1/2 top-3 z-30 -translate-x-1/2 rounded-full border border-hairline-dark bg-surface-dark/90 px-4 py-2 backdrop-blur"
-      >
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark">
-            Click two points to measure · Esc to exit
-          </span>
-          <button
-            type="button"
-            id="exit-measure"
-            className="rounded-full border border-hairline-dark px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-on-dark-muted transition-colors hover:text-accent"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-
-      {/* Hover read-out — offset right of the bottom-left view-cube gizmo */}
-      <div
-        id="hover-info"
-        style={{ display: "none" }}
-        className="pointer-events-none absolute bottom-3 left-40 z-20 rounded-full border border-hairline-dark bg-surface-dark/85 px-3 py-1.5 backdrop-blur"
-      >
-        <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">Part </span>
-        <span id="hover-part-name" className="font-mono text-[10px] text-on-dark" />
-      </div>
-
-      {/* Measure result */}
-      <div
-        id="measure-result"
-        style={{ display: "none" }}
-        className="pointer-events-none absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-accent/40 bg-surface-dark/85 px-3 py-1.5 backdrop-blur"
-      >
-        <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">Distance </span>
-        <span id="measure-value" className="font-mono text-[10px] tabular-nums text-accent" />
-        <span className="font-mono text-[10px] text-on-dark-muted"> units</span>
-      </div>
-
-      {/* Empty / upload state (light, matches the white viewport) */}
+      {/* Empty / upload state */}
       {status === "empty" && (
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-5 bg-surface px-6 text-center">
           <div
@@ -343,7 +161,7 @@ export function CadViewer() {
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 bg-surface">
           <LoaderCircle className="h-6 w-6 animate-spin stroke-[1.5] text-ink-faint" />
           <span className="font-mono text-[10px] uppercase tracking-widest text-ink-muted">
-            Loading {fileName} {progress > 0 ? `${progress}%` : ""}
+            Loading {fileName}
           </span>
         </div>
       )}

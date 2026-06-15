@@ -135,8 +135,9 @@ Type rules from the template:
 - **CAD Viewer** (utility, `/tools/cad-viewer`): intentionally MINIMAL.
   One vanilla Three.js engine file (`viewer/lib/viewer-core.js`,
   excluded from tsconfig, typed via `viewer-core.d.ts`) wrapped by
-  `viewer/components/cad-viewer.tsx`. **White 3D environment**; light
-  overlays/landing to match. Only controls: **import** (file picker +
+  `viewer/components/cad-viewer.tsx`. **Dark 3D environment**
+  (`0x111111`, the `--surface-dark` token); dark overlays/landing to
+  match. Only controls: **import** (file picker +
   drag-drop, read locally) and orbit/zoom/pan. No tree, toolbar,
   measure, isolate, or view-cube. **Real component colours**: the
   file's own materials are KEPT and lit by a neutral `RoomEnvironment`

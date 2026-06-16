@@ -15,6 +15,8 @@ import { MeasureTool } from "./measure.js";
 const DRACO_DECODER_PATH = "https://www.gstatic.com/draco/versioned/decoders/1.5.6/";
 const TEXTURE_SLOTS = ["map", "emissiveMap", "metalnessMap", "roughnessMap", "aoMap", "normalMap"];
 const SELECT_COLOR = 0xeb3a14; // accent glow on the focused part
+const HOVER_COLOR = 0x4488ff; // soft blue glow under the cursor
+const HOVER_INTENSITY = 0.25; // "glow up a little"
 
 export class ViewerCore {
     /** @param {HTMLElement} mount element the renderer canvas mounts into */
@@ -42,6 +44,9 @@ export class ViewerCore {
         this.boundListeners = [];
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
+        this.hoveredMesh = null;
+        this.hoverSaved = [];
+        this.lastHoverTime = 0;
 
         // Fallback only for meshes that somehow ship with no material at all.
         this.defaultMaterial = new THREE.MeshStandardMaterial({
@@ -55,6 +60,7 @@ export class ViewerCore {
         this.onVisibility = () => this.handleVisibility();
         this.onIsolatePickBound = (e) => this.onIsolatePick(e);
         this.onKeyDown = (e) => this.handleKeyDown(e);
+        this.onMouseMoveBound = (e) => this.onMouseMove(e);
     }
 
     init() {
@@ -91,6 +97,7 @@ export class ViewerCore {
         this.setupLighting();
         this.attachUiListeners();
 
+        this.renderer.domElement.addEventListener("mousemove", this.onMouseMoveBound);
         window.addEventListener("resize", this.onResize);
         window.addEventListener("keydown", this.onKeyDown);
         document.addEventListener("visibilitychange", this.onVisibility);
@@ -254,8 +261,52 @@ export class ViewerCore {
         this.fitToObject(object);
     }
 
+    // ----- Hover glow ----------------------------------------------------
+
+    onMouseMove(event) {
+        if (!this.model) return;
+        const now = performance.now();
+        if (now - this.lastHoverTime < 33) return; // ~30fps
+        this.lastHoverTime = now;
+
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        const visibleParts = this.allParts.filter((p) => p.visible);
+        const intersects = this.raycaster.intersectObjects(visibleParts, false);
+        this.setHover(intersects.length ? intersects[0].object : null);
+    }
+
+    // Soft glow on the mesh under the cursor. Non-destructive: it saves the
+    // mesh's current emissive (so a selected part keeps its accent on un-hover).
+    setHover(mesh) {
+        if (this.hoveredMesh === mesh) return;
+        this.clearHover();
+        if (!mesh || !mesh.isMesh) return;
+        this.hoveredMesh = mesh;
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        mats.forEach((m) => {
+            if (!m || !m.emissive) return;
+            this.hoverSaved.push({ mat: m, hex: m.emissive.getHex(), intensity: m.emissiveIntensity });
+            m.emissive.setHex(HOVER_COLOR);
+            m.emissiveIntensity = Math.max(m.emissiveIntensity, HOVER_INTENSITY);
+        });
+    }
+
+    clearHover() {
+        if (!this.hoveredMesh) return;
+        this.hoverSaved.forEach(({ mat, hex, intensity }) => {
+            mat.emissive.setHex(hex);
+            mat.emissiveIntensity = intensity;
+        });
+        this.hoverSaved = [];
+        this.hoveredMesh = null;
+    }
+
     // Persistent accent glow on the focused part, clearing the previous one.
     selectPart(object) {
+        this.clearHover();
         if (this.selectedObject && this.selectedObject !== object) {
             this.setEmissive(this.selectedObject, 0x000000, 0);
         }
@@ -450,6 +501,7 @@ export class ViewerCore {
     }
 
     clearModel() {
+        this.clearHover();
         this.selectedObject = null;
         this.isolatedObject = null;
         this.allParts = [];
@@ -506,6 +558,10 @@ export class ViewerCore {
 
     dispose() {
         this.stop();
+        if (this.renderer?.domElement) {
+            this.renderer.domElement.removeEventListener("mousemove", this.onMouseMoveBound);
+        }
+        this.clearHover();
         window.removeEventListener("resize", this.onResize);
         window.removeEventListener("keydown", this.onKeyDown);
         document.removeEventListener("visibilitychange", this.onVisibility);

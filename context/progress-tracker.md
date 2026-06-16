@@ -21,6 +21,15 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes (most recent first)
 
+- 2026-06-15: CAD Viewer — added HOVER GLOW (soft blue emissive on the
+  mesh under the cursor, throttled ~30fps, non-destructive save/restore
+  so a selected part keeps its accent), and made MEASURE axis-aligned
+  again but face-anchored: both clicked points stay as markers on the
+  surfaces, the dimension line is drawn parallel to the dominant X/Y/Z
+  axis, and a faint connector ties the axis line back to the 2nd face so
+  the endpoint no longer floats. Read-out: axis distance `· X` + ΔX/ΔY/ΔZ
+  (mm/in). lint/build pass; pushed.
+
 - 2026-06-15: CAD Viewer measure — switched from axis-snapped to
   FACE-TO-FACE point distance (owner: "measure from component face to
   component face, not a random position in 3D"). The axis-snap projected

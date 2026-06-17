@@ -3,12 +3,16 @@
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import {
   Box,
+  Boxes,
   Crosshair,
   Eye,
+  Frame,
   ListTree,
   LoaderCircle,
+  PackageOpen,
   RotateCcw,
   Ruler,
+  Scissors,
   TriangleAlert,
   Upload,
   X,
@@ -30,6 +34,9 @@ const ACCEPT = ".glb,.gltf,model/gltf-binary,model/gltf+json";
 
 const TOOL_BTN =
   "flex h-8 w-8 items-center justify-center rounded-full text-on-dark-muted transition-colors hover:bg-white/10 hover:text-on-dark";
+
+const SECTION_BTN =
+  "rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-on-dark-muted transition-colors hover:text-on-dark";
 
 /**
  * Minimal model viewer: a dark 3D window, import, a component tree, isolate, and
@@ -111,7 +118,8 @@ export function CadViewer() {
 
   return (
     <div
-      className="relative h-[75vh] min-h-130 w-full overflow-hidden rounded-lg border border-hairline bg-surface-dark"
+      id="viewer-root"
+      className="relative h-full w-full overflow-hidden bg-surface-dark"
       onDragOver={(e) => {
         e.preventDefault();
         if (!dragging) setDragging(true);
@@ -148,6 +156,18 @@ export function CadViewer() {
         </button>
         <button type="button" id="measure-mode" className={TOOL_BTN} title="Measure distance" aria-label="Measure">
           <Ruler className="h-4 w-4 stroke-[1.5]" />
+        </button>
+        <button type="button" id="toggle-edges" className={TOOL_BTN} title="Toggle edges" aria-label="Toggle edges">
+          <Frame className="h-4 w-4 stroke-[1.5]" />
+        </button>
+        <button type="button" id="compute-volume" className={TOOL_BTN} title="Calculate volume" aria-label="Calculate volume">
+          <Boxes className="h-4 w-4 stroke-[1.5]" />
+        </button>
+        <button type="button" id="toggle-explode" className={TOOL_BTN} title="Explode view" aria-label="Explode view">
+          <PackageOpen className="h-4 w-4 stroke-[1.5]" />
+        </button>
+        <button type="button" id="toggle-section" className={TOOL_BTN} title="Section view" aria-label="Section view">
+          <Scissors className="h-4 w-4 stroke-[1.5]" />
         </button>
         <span className="mx-0.5 h-5 w-px bg-hairline-dark" />
         <button
@@ -198,6 +218,87 @@ export function CadViewer() {
         </div>
       </div>
 
+      {/* Properties card (top-left, under the toolbar) */}
+      <div
+        id="properties-card"
+        style={{ display: "none" }}
+        className="absolute left-3 top-16 z-20 w-60 rounded-lg border border-hairline-dark bg-surface-dark/90 p-3 backdrop-blur"
+      >
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">
+            Properties
+          </span>
+          <button
+            type="button"
+            id="properties-close"
+            className="text-on-dark-muted transition-colors hover:text-accent"
+            aria-label="Close properties"
+          >
+            <X className="h-3.5 w-3.5 stroke-[1.5]" />
+          </button>
+        </div>
+        <div className="mt-2.5 space-y-2">
+          <div>
+            <div className="font-mono text-[9px] uppercase tracking-widest text-on-dark-muted">
+              Component
+            </div>
+            <div id="prop-name" className="truncate font-mono text-xs text-on-dark">
+              —
+            </div>
+          </div>
+          <div>
+            <div className="font-mono text-[9px] uppercase tracking-widest text-on-dark-muted">
+              Material
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span
+                id="prop-material-swatch"
+                className="h-3 w-3 shrink-0 rounded-sm border border-white/20"
+              />
+              <span id="prop-material" className="truncate font-mono text-xs text-on-dark">
+                —
+              </span>
+            </div>
+          </div>
+          <div className="flex items-end justify-between gap-3 border-t border-hairline-dark pt-2">
+            <div>
+              <div className="font-mono text-[9px] uppercase tracking-widest text-on-dark-muted">
+                Volume
+              </div>
+              <div id="prop-volume" className="font-mono text-xs tabular-nums text-on-dark">
+                —
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="font-mono text-[9px] uppercase tracking-widest text-on-dark-muted">
+                Weight
+              </div>
+              <div id="prop-weight" className="font-mono text-xs tabular-nums text-accent">
+                —
+              </div>
+            </div>
+          </div>
+          <div id="prop-density" className="font-mono text-[9px] tabular-nums text-on-dark-muted">
+            —
+          </div>
+          <div id="prop-face" style={{ display: "none" }} className="border-t border-hairline-dark pt-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-mono text-[9px] uppercase tracking-widest text-on-dark-muted">
+                  Face area
+                </div>
+                <div id="prop-face-area" className="font-mono text-xs tabular-nums text-on-dark">
+                  —
+                </div>
+              </div>
+              <span id="prop-face-axis" className="font-mono text-[10px] tabular-nums text-on-dark-muted">
+                —
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Isolate pick-mode banner */}
       <div
         id="isolate-banner"
@@ -244,9 +345,24 @@ export function CadViewer() {
         style={{ display: "none" }}
         className="absolute left-1/2 top-3 z-30 -translate-x-1/2 rounded-full border border-hairline-dark bg-surface-dark/90 px-4 py-2 backdrop-blur"
       >
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark">
-            Click two faces · snaps to X / Y / Z · Esc to exit
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0.5">
+            <button type="button" id="measure-mode-distance" className={SECTION_BTN}>
+              Dist
+            </button>
+            <button type="button" id="measure-mode-circle" className={SECTION_BTN}>
+              Ø
+            </button>
+            <button type="button" id="measure-mode-centers" className={SECTION_BTN}>
+              C-C
+            </button>
+          </div>
+          <span className="h-4 w-px bg-hairline-dark" />
+          <span
+            id="measure-instruction"
+            className="font-mono text-[10px] uppercase tracking-widest text-on-dark"
+          >
+            Click the first point · Esc to exit
           </span>
           <button
             type="button"
@@ -265,10 +381,145 @@ export function CadViewer() {
         className="pointer-events-none absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-lg border border-accent/40 bg-surface-dark/85 px-3 py-2 text-center backdrop-blur"
       >
         <div>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">Distance </span>
+          <span id="measure-label" className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">
+            Distance{" "}
+          </span>
           <span id="measure-value" className="font-mono text-[10px] tabular-nums text-accent" />
         </div>
         <div id="measure-deltas" className="mt-0.5 font-mono text-[9px] tabular-nums text-on-dark-muted" />
+      </div>
+
+      {/* Section-view banner */}
+      <div
+        id="section-banner"
+        style={{ display: "none" }}
+        className="absolute left-1/2 top-3 z-30 -translate-x-1/2 rounded-full border border-hairline-dark bg-surface-dark/90 px-4 py-2 backdrop-blur"
+      >
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">
+            Section
+          </span>
+          <div className="flex items-center gap-0.5">
+            <button type="button" id="section-axis-x" className={SECTION_BTN}>
+              X
+            </button>
+            <button type="button" id="section-axis-y" className={SECTION_BTN}>
+              Y
+            </button>
+            <button type="button" id="section-axis-z" className={SECTION_BTN}>
+              Z
+            </button>
+          </div>
+          <input
+            id="section-slider"
+            type="range"
+            min="0"
+            max="100"
+            defaultValue="50"
+            className="h-1 w-32 cursor-pointer accent-accent"
+            aria-label="Section position"
+          />
+          <button type="button" id="section-flip" className={SECTION_BTN}>
+            Flip
+          </button>
+          <button type="button" id="section-face" className={SECTION_BTN}>
+            Face
+          </button>
+          <button
+            type="button"
+            id="exit-section"
+            className="rounded-full border border-hairline-dark px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-on-dark-muted transition-colors hover:text-accent"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+
+      {/* Explode-mode banner with amount slider */}
+      <div
+        id="explode-banner"
+        style={{ display: "none" }}
+        className="absolute bottom-16 left-1/2 z-30 -translate-x-1/2 rounded-full border border-hairline-dark bg-surface-dark/90 px-4 py-2 backdrop-blur"
+      >
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">
+            Explode
+          </span>
+          <input
+            id="explode-slider"
+            type="range"
+            min="0"
+            max="100"
+            defaultValue="0"
+            className="h-1 w-40 cursor-pointer accent-accent"
+            aria-label="Explode amount"
+          />
+          <button
+            type="button"
+            id="exit-explode"
+            className="rounded-full border border-hairline-dark px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-on-dark-muted transition-colors hover:text-accent"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+
+      {/* Volume read-out */}
+      <div
+        id="volume-result"
+        style={{ display: "none" }}
+        className="absolute bottom-3 left-28 z-20 rounded-lg border border-accent/40 bg-surface-dark/85 px-3 py-2 backdrop-blur"
+      >
+        <div className="flex items-start gap-2">
+          <div>
+            <div>
+              <span className="font-mono text-[10px] uppercase tracking-widest text-on-dark-muted">Volume </span>
+              <span id="volume-value" className="font-mono text-[10px] tabular-nums text-accent" />
+            </div>
+            <div id="volume-extra" className="mt-0.5 font-mono text-[9px] tabular-nums text-on-dark-muted" />
+          </div>
+          <button
+            type="button"
+            id="volume-dismiss"
+            className="text-on-dark-muted transition-colors hover:text-accent"
+            aria-label="Dismiss volume"
+          >
+            <X className="h-3.5 w-3.5 stroke-[1.5]" />
+          </button>
+        </div>
+      </div>
+
+      {/* View-cube click target — overlays the WebGL cube the engine draws in
+          the corner (so picking never fights the camera controls) */}
+      <div
+        id="view-cube-hit"
+        style={{ display: "none" }}
+        className="absolute bottom-3 left-3 z-10 h-24 w-24 cursor-pointer"
+        title="Click a face for a standard view"
+      />
+
+      {/* Right-click context menu (positioned by the engine) */}
+      <div
+        id="viewer-context-menu"
+        style={{ display: "none" }}
+        className="absolute z-40 min-w-36 overflow-hidden rounded-lg border border-hairline-dark bg-surface-dark/95 py-1 shadow-lg backdrop-blur"
+      >
+        <button
+          type="button"
+          id="ctx-isolate"
+          className="flex w-full items-center gap-2 px-3 py-1.5 text-left font-mono text-[10px] uppercase tracking-widest text-on-dark-muted transition-colors hover:bg-white/10 hover:text-on-dark"
+        >
+          <Crosshair className="h-3.5 w-3.5 stroke-[1.5]" />
+          Isolate
+        </button>
+        <button
+          type="button"
+          id="ctx-show-all"
+          className="flex w-full items-center gap-2 px-3 py-1.5 text-left font-mono text-[10px] uppercase tracking-widest text-on-dark-muted transition-colors hover:bg-white/10 hover:text-on-dark"
+        >
+          <Eye className="h-3.5 w-3.5 stroke-[1.5]" />
+          Show all
+        </button>
       </div>
 
       {/* Empty / upload state */}

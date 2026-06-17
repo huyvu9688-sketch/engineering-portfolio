@@ -1,28 +1,67 @@
-// Axis-aligned face-to-face distance measurement on the loaded model.
+// Measurement tool with three modes:
+//   • Distance        — 2 picks → axis-aligned face-to-face gap (X/Y/Z).
+//   • Circle (Ø/R)    — 3 picks on a round edge → fitted circle, diameter+radius.
+//   • Center-to-center — two circles (3 picks each) → distance between centres.
 //
-// Click a point on one component face, then a point on another. Both clicked
-// points are kept as markers on the real surfaces; the measurement line is
-// drawn PARALLEL to the dominant X/Y/Z axis (for an accurate axis gap), and a
-// faint connector ties the axis line back to the second face so nothing floats.
-// Reports the axis distance + per-axis ΔX/ΔY/ΔZ, all in mm (in).
+// Picks use press/release with a small drag threshold, so dragging to orbit
+// never drops a point. Click empty space to start over.
 
 import * as THREE from "three";
 
 const MEASURE_COLOR = 0xeb3a14; // accent
+const CENTER_COLOR = 0x4488ff; // fitted circle centres
+const DRAG_THRESHOLD = 5;
+
+const MODES = {
+    distance: { picks: 2, label: "Distance" },
+    circle: { picks: 3, label: "Diameter" },
+    centers: { picks: 6, label: "Center-to-center" },
+};
+
+function dominantAxis(v) {
+    const ax = Math.abs(v.x);
+    const ay = Math.abs(v.y);
+    const az = Math.abs(v.z);
+    if (ax >= ay && ax >= az) return "X";
+    return ay >= az ? "Y" : "Z";
+}
+
+// Circle through 3 points in 3D (circumcentre) → { center, radius, normal }.
+function fitCircle(p1, p2, p3) {
+    const v1 = new THREE.Vector3().subVectors(p2, p1);
+    const v2 = new THREE.Vector3().subVectors(p3, p1);
+    const cross = new THREE.Vector3().crossVectors(v1, v2);
+    const crossLenSq = cross.lengthSq();
+    if (crossLenSq < 1e-12) return null; // (near-)collinear points
+
+    const term1 = new THREE.Vector3().crossVectors(cross, v1).multiplyScalar(v2.lengthSq());
+    const term2 = new THREE.Vector3().crossVectors(v2, cross).multiplyScalar(v1.lengthSq());
+    const toCenter = term1.add(term2).divideScalar(2 * crossLenSq);
+    return {
+        center: new THREE.Vector3().addVectors(p1, toCenter),
+        radius: toCenter.length(),
+        normal: cross.normalize(),
+    };
+}
 
 export class MeasureTool {
     constructor(core) {
-        this.core = core; // the ViewerCore (scene, camera, renderer, allParts, model)
+        this.core = core;
         this.active = false;
-        this.points = [];
+        this.mode = "distance";
+        this.picks = []; // [{ point, axis }]
+        this.firstCircle = null; // fitted circle 1 in centers mode
         this.markers = [];
-        this.lines = [];
+        this.lines = []; // straight lines + fitted circles
+        this.helpers = []; // normal arrows
         this.markerRadius = 0.05;
         this.group = new THREE.Group();
         this.group.name = "__measure__";
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
-        this.onClickBound = (e) => this.onClick(e);
+        this.down = { x: 0, y: 0, valid: false };
+        this.onPointerDownBound = (e) => this.onPointerDown(e);
+        this.onPointerUpBound = (e) => this.onPointerUp(e);
     }
 
     get dom() {
@@ -42,9 +81,12 @@ export class MeasureTool {
         const dom = this.dom;
         if (dom) {
             dom.style.cursor = "crosshair";
-            dom.addEventListener("click", this.onClickBound);
+            dom.addEventListener("pointerdown", this.onPointerDownBound);
+            dom.addEventListener("pointerup", this.onPointerUpBound);
         }
         this.showBanner(true);
+        this.highlightMode();
+        this.setInstruction(this.instructionFor());
     }
 
     disable() {
@@ -53,62 +95,185 @@ export class MeasureTool {
         const dom = this.dom;
         if (dom) {
             dom.style.cursor = "auto";
-            dom.removeEventListener("click", this.onClickBound);
+            dom.removeEventListener("pointerdown", this.onPointerDownBound);
+            dom.removeEventListener("pointerup", this.onPointerUpBound);
         }
         this.clear();
         this.core.scene.remove(this.group);
         this.showBanner(false);
     }
 
-    onClick(event) {
+    setMode(mode) {
+        if (!MODES[mode] || this.mode === mode) {
+            if (MODES[mode]) this.highlightMode();
+            return;
+        }
+        this.mode = mode;
+        this.clear();
+        this.highlightMode();
+        this.setInstruction(this.instructionFor());
+    }
+
+    onPointerDown(event) {
+        if (event.button !== 0) return;
+        this.down.x = event.clientX;
+        this.down.y = event.clientY;
+        this.down.valid = true;
+    }
+
+    onPointerUp(event) {
+        if (event.button !== 0 || !this.down.valid) return;
+        this.down.valid = false;
+        const moved = Math.hypot(event.clientX - this.down.x, event.clientY - this.down.y);
+        if (moved <= DRAG_THRESHOLD) this.pick(event);
+    }
+
+    pick(event) {
         if (!this.active || !this.core.model) return;
 
         const rect = this.dom.getBoundingClientRect();
         this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
         this.raycaster.setFromCamera(this.mouse, this.core.camera);
         const visibleParts = this.core.allParts.filter((p) => p.visible);
         const intersects = this.raycaster.intersectObjects(visibleParts, false);
-        if (intersects.length === 0) return;
 
-        if (this.points.length >= 2) this.clear();
+        if (intersects.length === 0) {
+            // Empty background — reset to start a fresh measurement.
+            if (this.picks.length > 0 || this.lines.length > 0) {
+                this.clear();
+                this.setInstruction(this.instructionFor());
+            }
+            return;
+        }
 
-        // Snap the point to the exact surface hit so both ends are on faces.
-        const point = intersects[0].point.clone();
-        this.addMarker(point);
-        this.points.push(point);
+        const max = MODES[this.mode].picks;
+        if (this.picks.length >= max) this.clear(); // a fresh pick starts over
 
-        if (this.points.length === 2) this.complete();
+        const hit = intersects[0];
+        const point = hit.point.clone();
+
+        let normal = null;
+        let axis = null;
+        if (hit.face) {
+            const normalMatrix = new THREE.Matrix3().getNormalMatrix(hit.object.matrixWorld);
+            normal = hit.face.normal.clone().applyNormalMatrix(normalMatrix);
+            axis = dominantAxis(normal);
+        }
+
+        // Normal arrow only helps in face-to-face distance mode.
+        this.addMarker(point, this.mode === "distance" ? normal : null);
+        this.picks.push({ point, axis });
+
+        // Centers mode: lock in the first circle once its 3 points are down.
+        if (this.mode === "centers" && this.picks.length === 3) this.drawFirstCircle();
+
+        if (this.picks.length === MODES[this.mode].picks) this.complete();
+        else this.setInstruction(this.instructionFor());
     }
 
     complete() {
-        const [p1, p2] = this.points;
-        const dx = Math.abs(p2.x - p1.x);
-        const dy = Math.abs(p2.y - p1.y);
-        const dz = Math.abs(p2.z - p1.z);
-        const maxDelta = Math.max(dx, dy, dz);
-
-        // Axis-parallel endpoint: p1's coords with the dominant axis taken from p2.
-        const aligned = p1.clone();
-        let axis;
-        if (maxDelta === dx) {
-            aligned.x = p2.x;
-            axis = "X";
-        } else if (maxDelta === dy) {
-            aligned.y = p2.y;
-            axis = "Y";
-        } else {
-            aligned.z = p2.z;
-            axis = "Z";
-        }
-
-        this.addLine(p1, aligned, false); // main axis-parallel dimension line
-        this.addLine(aligned, p2, true); // faint connector back to the 2nd face
-        this.showDistance(maxDelta, axis, dx, dy, dz);
+        if (this.mode === "distance") this.completeDistance();
+        else if (this.mode === "circle") this.completeCircle();
+        else this.completeCenters();
+        this.setInstruction(this.instructionFor());
     }
 
-    addMarker(point) {
+    completeDistance() {
+        const [a, b] = this.picks;
+        let axis;
+        const parallel = !!(a.axis && b.axis && a.axis === b.axis);
+        if (a.axis) axis = a.axis;
+        else if (b.axis) axis = b.axis;
+        else {
+            const dx = Math.abs(b.point.x - a.point.x);
+            const dy = Math.abs(b.point.y - a.point.y);
+            const dz = Math.abs(b.point.z - a.point.z);
+            const m = Math.max(dx, dy, dz);
+            axis = m === dx ? "X" : m === dy ? "Y" : "Z";
+        }
+        const key = axis.toLowerCase();
+        const gap = Math.abs(b.point[key] - a.point[key]);
+        const aligned = a.point.clone();
+        aligned[key] = b.point[key];
+        this.addLine(a.point, aligned);
+
+        const mm = gap * this.scale;
+        this.showResult(
+            "Distance",
+            `${mm.toFixed(1)} mm (${(mm / 25.4).toFixed(2)} in) · ${axis}`,
+            parallel ? `Parallel faces · gap along ${axis}` : `${axis}-axis gap`,
+        );
+    }
+
+    completeCircle() {
+        const [a, b, c] = this.picks.map((p) => p.point);
+        const fit = fitCircle(a, b, c);
+        if (!fit) {
+            this.clear();
+            this.setInstruction("Points are in a line — pick 3 spread points · Esc to exit");
+            return;
+        }
+        this.addCenterMarker(fit.center);
+        this.drawCircle(fit.center, fit.radius, fit.normal);
+
+        const r = fit.radius * this.scale;
+        const d = 2 * r;
+        this.showResult(
+            "Diameter",
+            `${d.toFixed(2)} mm (${(d / 25.4).toFixed(3)} in)`,
+            `Radius ${r.toFixed(2)} mm (${(r / 25.4).toFixed(3)} in)`,
+        );
+    }
+
+    drawFirstCircle() {
+        const [a, b, c] = this.picks.map((p) => p.point);
+        this.firstCircle = fitCircle(a, b, c);
+        if (this.firstCircle) {
+            this.addCenterMarker(this.firstCircle.center);
+            this.drawCircle(this.firstCircle.center, this.firstCircle.radius, this.firstCircle.normal);
+        }
+    }
+
+    completeCenters() {
+        const p = this.picks.map((x) => x.point);
+        const fit2 = fitCircle(p[3], p[4], p[5]);
+        if (!this.firstCircle || !fit2) {
+            this.clear();
+            this.setInstruction("Points are in a line — pick 3 spread points · Esc to exit");
+            return;
+        }
+        this.addCenterMarker(fit2.center);
+        this.drawCircle(fit2.center, fit2.radius, fit2.normal);
+        this.addLine(this.firstCircle.center, fit2.center);
+
+        const dist = this.firstCircle.center.distanceTo(fit2.center) * this.scale;
+        this.showResult(
+            "Center-to-center",
+            `${dist.toFixed(2)} mm (${(dist / 25.4).toFixed(3)} in)`,
+            "Between the two circle centres",
+        );
+    }
+
+    get scale() {
+        return this.core.unitToMm || 1;
+    }
+
+    instructionFor() {
+        const n = this.picks.length % MODES[this.mode].picks; // 0 when empty or done
+        if (this.mode === "distance") {
+            return n === 0
+                ? "Click the first point · Esc to exit"
+                : "Click the second point · Esc to exit";
+        }
+        if (this.mode === "circle") {
+            return `Click 3 points around the round edge · ${n + 1}/3 · Esc to exit`;
+        }
+        const circle = n < 3 ? 1 : 2;
+        return `Circle ${circle} — point ${(n % 3) + 1}/3 · Esc to exit`;
+    }
+
+    addMarker(point, normal) {
         const geometry = new THREE.SphereGeometry(this.markerRadius, 16, 16);
         const material = new THREE.MeshBasicMaterial({ color: MEASURE_COLOR, depthTest: false });
         const marker = new THREE.Mesh(geometry, material);
@@ -116,37 +281,87 @@ export class MeasureTool {
         marker.renderOrder = 999;
         this.group.add(marker);
         this.markers.push(marker);
+
+        if (normal) {
+            const len = this.markerRadius * 6;
+            const arrow = new THREE.ArrowHelper(
+                normal.clone().normalize(),
+                point,
+                len,
+                MEASURE_COLOR,
+                len * 0.4,
+                len * 0.28,
+            );
+            arrow.line.material.depthTest = false;
+            arrow.cone.material.depthTest = false;
+            arrow.renderOrder = 999;
+            this.group.add(arrow);
+            this.helpers.push(arrow);
+        }
     }
 
-    addLine(a, b, faint) {
+    addCenterMarker(point) {
+        const geometry = new THREE.SphereGeometry(this.markerRadius * 1.1, 16, 16);
+        const material = new THREE.MeshBasicMaterial({ color: CENTER_COLOR, depthTest: false });
+        const marker = new THREE.Mesh(geometry, material);
+        marker.position.copy(point);
+        marker.renderOrder = 1000;
+        this.group.add(marker);
+        this.markers.push(marker);
+    }
+
+    addLine(a, b) {
         const geometry = new THREE.BufferGeometry().setFromPoints([a, b]);
-        const material = new THREE.LineBasicMaterial({
-            color: MEASURE_COLOR,
-            depthTest: false,
-            transparent: faint,
-            opacity: faint ? 0.4 : 1,
-        });
+        const material = new THREE.LineBasicMaterial({ color: MEASURE_COLOR, depthTest: false });
         const line = new THREE.Line(geometry, material);
         line.renderOrder = 999;
         this.group.add(line);
         this.lines.push(line);
     }
 
-    showDistance(rawDelta, axis, dx, dy, dz) {
-        const scale = this.core.unitToMm || 1;
-        const mm = rawDelta * scale;
-        const inches = mm / 25.4;
-        const result = document.getElementById("measure-result");
-        const value = document.getElementById("measure-value");
-        const deltas = document.getElementById("measure-deltas");
-        if (result) result.style.display = "block";
-        if (value) value.textContent = `${mm.toFixed(1)} mm (${inches.toFixed(2)} in) · ${axis}`;
-        if (deltas) {
-            deltas.textContent =
-                `ΔX ${(dx * scale).toFixed(1)} · ` +
-                `ΔY ${(dy * scale).toFixed(1)} · ` +
-                `ΔZ ${(dz * scale).toFixed(1)} mm`;
+    drawCircle(center, radius, normal) {
+        const arbitrary =
+            Math.abs(normal.z) < 0.9 ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(1, 0, 0);
+        const u = new THREE.Vector3().crossVectors(arbitrary, normal).normalize();
+        const v = new THREE.Vector3().crossVectors(normal, u).normalize();
+
+        const segments = 72;
+        const pts = [];
+        for (let i = 0; i <= segments; i++) {
+            const a = (i / segments) * Math.PI * 2;
+            pts.push(
+                new THREE.Vector3()
+                    .copy(center)
+                    .addScaledVector(u, radius * Math.cos(a))
+                    .addScaledVector(v, radius * Math.sin(a)),
+            );
         }
+        const geometry = new THREE.BufferGeometry().setFromPoints(pts);
+        const material = new THREE.LineBasicMaterial({ color: MEASURE_COLOR, depthTest: false });
+        const circle = new THREE.Line(geometry, material);
+        circle.renderOrder = 999;
+        this.group.add(circle);
+        this.lines.push(circle);
+    }
+
+    showResult(label, value, note) {
+        const panel = document.getElementById("measure-result");
+        const labelEl = document.getElementById("measure-label");
+        const valueEl = document.getElementById("measure-value");
+        const noteEl = document.getElementById("measure-deltas");
+        if (panel) panel.style.display = "block";
+        if (labelEl) labelEl.textContent = `${label} `;
+        if (valueEl) valueEl.textContent = value;
+        if (noteEl) noteEl.textContent = note;
+    }
+
+    highlightMode() {
+        Object.keys(MODES).forEach((m) => {
+            const btn = document.getElementById(`measure-mode-${m}`);
+            if (!btn) return;
+            btn.classList.toggle("text-accent", m === this.mode);
+            btn.classList.toggle("bg-white/10", m === this.mode);
+        });
     }
 
     clear() {
@@ -162,9 +377,20 @@ export class MeasureTool {
             this.group.remove(l);
         });
         this.lines = [];
-        this.points = [];
+        this.helpers.forEach((h) => {
+            this.group.remove(h);
+            h.dispose?.();
+        });
+        this.helpers = [];
+        this.picks = [];
+        this.firstCircle = null;
         const result = document.getElementById("measure-result");
         if (result) result.style.display = "none";
+    }
+
+    setInstruction(text) {
+        const el = document.getElementById("measure-instruction");
+        if (el) el.textContent = text;
     }
 
     showBanner(show) {

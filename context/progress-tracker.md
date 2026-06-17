@@ -21,6 +21,191 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes (most recent first)
 
+- 2026-06-17 (WRAP-UP): TITLE ANIMATION — three more attempts, all reported "still
+  doesn't work" by the owner, then REMOVED at the owner's request ("remove animations
+  in Hero section and in About text section, we'll skip this for now"). Sequence:
+  1. Hero headline: switched `SplitText` from the JS IntersectionObserver reveal to a
+     pure-CSS on-load variant (`trigger="load"` → `.split-text--load`, a plain keyframe
+     like the working marquee, no observer/class-toggle). Reported not working.
+  2. About title: built `scrub-title.tsx` to clone the reference's `animation-title`
+     scroll reveal (verified the exact reference logic in `../portfolio` minified bundle:
+     GSAP ScrollTrigger `fromTo(letters,{y:"-120%"},{y:0,ease:"power3.out",
+     stagger:{each:.05,from:"center"},scrollTrigger:{start:"top 100%",end:"bottom 30%",
+     scrub:1}})`; letters are NOT masked — they translate freely). First did it as a JS
+     scroll handler. Owner's screenshots PROVED the per-letter transforms were never
+     applied (letters sat at layout position when a working handler would have shoved
+     them ~450px up) → the React `useEffect` is not executing on the owner's machine.
+  3. Rewrote `scrub-title.tsx` as a PURE-CSS, no-JS server component: a scroll-driven
+     `view()` timeline on the title, per-letter stagger baked into each letter's inline
+     `animation-range` (server-rendered — confirmed 5 ranges, symmetric center-out, in
+     the static `/` HTML). Runs without hydration (Chromium 115+). Owner STILL reported
+     "doesn't work" → removed both sections' animations.
+  FINAL STATE: hero headline + "based in vietnam" + descriptor + portrait + the About
+  title are all PLAIN STATIC markup again (page.tsx + about-section.tsx). Other section
+  titles (Recent Works/Services/Credentials/form) still use `SplitText`; custom cursor +
+  marquee-pause are still JS. The `SplitText`/`ScrubTitle` component files + their CSS
+  were LEFT in place (unused) for easy revisit. Build + lint green throughout.
+  KEY UNRESOLVED FINDING (strong signal): the owner has now reported FOUR animation
+  attempts as non-working — including a pure-CSS on-load keyframe (#1) and a pure-CSS
+  scroll-timeline (#3), the SAME class of tech as the marquee, which DOES work for them.
+  That contradiction points hard at a STALE DEV SERVER: the owner's running server is
+  likely not serving the rebuilt output (memory: a lingering PID on :3000, my fresh
+  `next dev` fell back to :3001), so none of these changes — CSS or JS — ever reached
+  the browser. Alternatives (less likely): a browser without `animation-timeline: view()`
+  (Firefox/Safari) for #3 only, and/or React not hydrating (would also break the custom
+  cursor). NEXT TIME, before building any more animation: hard-confirm a FRESH `next dev`
+  (kill all node, verify the port the browser is on) and Ctrl+Shift+R, then check the
+  DevTools console for hydration errors and whether the custom cursor follows the mouse.
+  See memory [[home-text-animation-not-firing]] and [[dev-server-run-by-owner]].
+
+- 2026-06-17 (WRAP-UP): TEXT ANIMATION pass (continuation of the home clone).
+  Built `split-text.tsx` — a per-letter scroll reveal (the reference's signature
+  giant-title effect) — and wired it into the hero "DESIGN ENGINEER" headline
+  and the four giant titles (ABOUT / RECENT WORKS / CREDENTIALS / GREAT
+  MACHINES + SHARP ENGINEERING). Build green, lint clean.
+  KNOWN ISSUE — reveal does NOT visibly fire on the owner's machine ("static",
+  then "no animation"). Debugging established:
+  * NOT prefers-reduced-motion — the reference (olhalazarieva.com) animates in
+    the same browser, ours doesn't.
+  * Markup is correct (served HTML has `.split-letter` spans + `--d` stagger,
+    no premature `is-revealed`); CSS rules are in the served bundle; page is
+    styled (so CSS loads).
+  * A TEMP diagnostic (infinite `@keyframes` + `color:red !important` on
+    `.split-letter`) DID animate → CSS animation + the selector both work.
+    Therefore the break is the reveal MECHANISM, not CSS.
+  * v1 used a CSS *transition* toggled by an IntersectionObserver `is-revealed`
+    class → snapped with no motion (transition needs the hidden state painted
+    first). v2 (current) switched to a keyframe `split-rise` animation gated by
+    `is-prepared`(JS adds on mount to hide) + `is-revealed`(JS adds on scroll),
+    letters visible-by-default so they never get stuck hidden. Still reported as
+    no animation → strongly implies the JS observer/`useEffect` isn't toggling
+    the classes on the owner's running server.
+  LEADING SUSPECT for next session: a long-lived dev server on :3000 (saw PID
+  37696 holding the port; my fresh `next dev` fell back to :3001) that may not
+  be recompiling — i.e., the owner may be viewing output that never picked up
+  the JS changes. NEXT STEPS: (1) hard-confirm a FRESH `next dev` (kill all node,
+  verify port) before judging; (2) add a temp `console.log` in SplitText's
+  effect to confirm it runs + the observer fires; (3) if hydration is fine,
+  consider pure-CSS scroll-driven reveal via `animation-timeline: view()`
+  (no JS/observer dependency, Chromium 115+). Current state is SAFE: titles
+  render visible; animation is a non-firing enhancement, not a breakage.
+  Owner runs the dev server themselves — do NOT launch a server in the IDE.
+
+- 2026-06-17 (WRAP-UP): HOME PAGE 1:1 clone of the owner-supplied reference
+  (olhalazarieva.com, source in `../portfolio`). Direction shift: marketing
+  surfaces now target senior-front-end ambition (heavy animation, complex/
+  layered UI) — `ui-context.md` updated with a new "Design ambition" section.
+  - New home section order matches the reference exactly: hero → marquee →
+    about → recent works → services → credentials → contact form → footer.
+  - Built four new shared components: `projects-section.tsx` (dark snap-scroll
+    "Recent Works", grayscale→color cards, reference three.js slider recreated
+    in CSS), `awards-section.tsx` → "Credentials" (hover-preview list adapted
+    to engineering disciplines + counts), `form-section.tsx` (contact form,
+    "GREAT MACHINES / start with / SHARP ENGINEERING", project-type radios,
+    submits via mailto: — no backend), and a rebuilt `footer.tsx` (giant
+    "JOSEPH VU" wordmark, email, socials, pages/location).
+  - Replaced the old inline Contact section in `page.tsx`; removed unused
+    Mail/MagneticButton/ScrollToTopButton/TAGLINE.
+  - Services & About were reviewed and approved earlier in the session.
+  - All content is placeholder data (owner fills projects/credentials later);
+    focus was UI/layout/animation. `npm run build` passes; prod `npm start`
+    verified serving `/` 200. NOT pushed/deployed to Vercel.
+
+- 2026-06-16 (WRAP-UP): Attempted to fix ROUND/TUBE face selection, then REVERTED
+  at the owner's request ("remove all the fixes for the tube faces measuring …
+  we'll skip this for now"). The coplanar grouping in `face-select.js` only grabs
+  a thin coplanar strip on a curved surface (the original "single line on a round
+  face" complaint). Tried, in order: smooth-region flood-fill across shared edges;
+  robust vertex welding (27-cell, edge-relative tolerance) to bridge Draco-split
+  seams; proximity-based adjacency (centroid reach) to bridge non-coincident
+  seams; raising the feature angle 30°→40°; and switching the highlight overlay to
+  `depthTest:false` to rule out z-fighting on curves. Unit tests reproduced every
+  failure mode and passed, but on the owner's real model the highlight stayed a
+  thin strip through ALL attempts — byte-identical even after the render-level
+  change. Leading theory (unconfirmed): the viewer's `.js` libs weren't reloading
+  — Next.js fast-refresh keeps the running `CadViewer`/WebGL instance alive, so
+  editing the engine modules does nothing until a FULL page reload (the dynamic
+  `import()` only runs on a fresh mount). If revisited: hard-reload first to
+  confirm new code runs (add a temp `console` line in `computeFace`), then the
+  flood-fill + proximity approach is the right direction. `face-select.js` restored
+  to its session-start coplanar version; the added `face-select.test.ts` removed.
+  Curved-face selection remains a KNOWN LIMITATION (strip on round faces).
+
+- 2026-06-16 (WRAP-UP): Major CAD VIEWER expansion (one long session). Engine in
+  `src/features/toolkit/viewer/lib/*.js`, React shell `cad-viewer.tsx`. All of the
+  below: lint + build pass; `/tools/cad-viewer` prerenders; NOT pushed.
+  - FULL-SCREEN, chrome-free page: route moved to a new `(fullscreen)` route group
+    (no navbar/footer) with a "Back" pill → /tools; viewer fills the viewport.
+  - ROTATION: swapped OrbitControls → TrackballControls so the model tumbles a full
+    360° about any axis (OrbitControls clamps at the poles, which also made the
+    view-cube top/bottom snaps feel stuck). `handleResize` wired; framing resets up.
+  - VIEW CUBE (`view-cube.js`): drawn bottom-left via a scissored corner render
+    (autoClear=false + clearDepth) — deliberately NOT three's ViewHelper (its full
+    clear blanks the canvas — see 2026-06-15 root-cause). Click a face → snap to
+    that standard view; a transparent DOM hit-area captures clicks so picking never
+    fights the camera controls.
+  - RIGHT-CLICK CONTEXT MENU: isolate a part from the 3D view OR the tree;
+    isolate/show-all now keep the camera STABLE (removed the fitToObject re-frame).
+    Measure resets when you click empty space.
+  - EXPLODE: toolbar toggle + amount SLIDER (starts at 0). Groups meshes by named
+    part via resolvePartNode (falls back to per-mesh); pushes radially from centre.
+    KEY FIX: convert the world offset into each part's PARENT-LOCAL space, else a
+    CAD unit-scale on a parent node collapses the displacement to ~0 (the "nothing
+    explodes" bug).
+  - SECTION VIEW (`Scissors`): clipping-plane cutaway via PER-MATERIAL clippingPlanes
+    (so the cube/markers/measure aren't cut) + `renderer.localClippingEnabled`.
+    Banner: X/Y/Z axis, position slider, FLIP (negates normal AND constant → stays
+    in place, just swaps the kept side), FACE (align the cut to a clicked face).
+    Entering section starts the cut FROM the currently selected face (oriented
+    toward the model centre so the part stays visible — slide to cut inward).
+  - EDGES toggle (feature edges >30°, parented to each mesh, clipped under section)
+    and VOLUME read-out (closed-mesh signed-tetra volume of VISIBLE parts; cm³/in³/mm³).
+  - PROPERTIES CARD (top-left): component name, material + colour swatch (from the
+    GLB material), volume, and estimated WEIGHT = volume × density inferred from the
+    material name (table of common materials; assumed steel when unknown, flagged).
+  - FACE-LEVEL INTERACTION (`face-select.js`): hover/click highlights an individual
+    coplanar face (same normal + plane offset), not the whole part; click adds the
+    face's area + ⟂ axis to the properties card. Planar faces only — curved faces
+    highlight just the patch under the cursor (noted limit; needs adjacency flood-
+    fill for curves).
+  - COMPONENT TREE: hides BODY (mesh ingredient) + UNKNOWN rows; descends through
+    Unknown so real parts under a wrapper still show; a Part whose bodies are hidden
+    shows no expand arrow.
+  - MEASURE: now 3 modes (banner selector Dist · Ø · C-C) — Distance (axis gap),
+    Diameter/Radius (3-point circle fit), Center-to-center (two fitted circles).
+    `fitCircle` = 3D circumcentre (hand-verified). Read-out label updates per mode.
+  - Stack notes: TrackballControls + per-material clipping on `three@0.184`; new
+    engine modules `view-cube.js`, `face-select.js`; left-click now selects a face
+    (drag-threshold so it doesn't fire on orbit).
+
+- 2026-06-16: CAD Viewer page — stripped to a FULL-SCREEN viewer (owner:
+  "remove all context in this section, expand the 3D window to full
+  screen, only the screen"). `/tools/cad-viewer` page.tsx no longer has
+  the back link, title/"Runs in your browser" header, description, or the
+  drag/zoom hint — just `<CadViewer>` in a `h-screen` flex column with a
+  `h-20` spacer so the viewer toolbar clears the fixed navbar. The
+  `CadViewer` root went from `h-[75vh] min-h-130 … rounded-lg border` to
+  full-bleed `h-full w-full` (fills the parent, no frame). Navbar/footer
+  (shared site layout) are untouched. lint + build pass; prerenders. NOT
+  pushed.
+
+- 2026-06-16: CAD Viewer measure — reworked to FACE PICKING by click +
+  axis-from-face-normal (owner: "choose the component face by click, not
+  click-hold-drag taking the point where I let go; show the measure as X
+  or Y or Z which 2 faces are parallel, not 2 axis lines"). Three changes
+  in `measure.js`: (1) replaced the bare `click` listener (which fires
+  even after an orbit-drag, dropping a point on release) with
+  pointerdown→pointerup + a 5 px DRAG THRESHOLD, so dragging to rotate
+  never measures; (2) each pick now reads the hit face's world NORMAL and
+  derives its dominant axis, so the tool reports which axis the two
+  (parallel) faces are perpendicular to — gap measured along that axis;
+  (3) draws ONE dimension line only (removed the faint connector — the
+  "2 axis line"), plus a small normal arrow at each pick to show the
+  chosen face. Read-out: `mm (in) · axis` + a "two parallel faces / not
+  parallel" note. Added `id="measure-instruction"` to the measure banner
+  so the tool updates the prompt (first face → parallel face). lint +
+  build pass; `/tools/cad-viewer` prerenders. NOT pushed.
+
 - 2026-06-15: CAD Viewer — added HOVER GLOW (soft blue emissive on the
   mesh under the cursor, throttled ~30fps, non-destructive save/restore
   so a selected part keeps its accent), and made MEASURE axis-aligned
@@ -567,27 +752,75 @@ Update this file after every meaningful implementation change.
 
 - None.
 
+## Session Notes (2026-06-17 — Olha redesign session)
+
+- Hero redesign: replaced the old centered Inter/pill hero with a full Olha-clone
+  — Sofia Sans Condensed giant headline (`DESIGN ENGINEER`, `clamp(5rem,15.5vw,22rem)`),
+  per-letter staggered rise animation, mix-blend-difference navbar (`joseph vu` logo +
+  CSS-grid screen-centered bracket links + contact CTA), gray descriptor box with
+  portrait overlap, `BASED IN VIETNAM` label. Fonts loaded via `next/font/google`
+  (Sofia Sans Condensed + Spline Sans Mono); tokens added (`--transition-main`,
+  `--canvas #f7f7f7`, `--ink #101010`). `ArrowUpRight` shared SVG component added.
+
+- Portrait fix: `joe.png` loaded from `/public`. Container switched from constrained
+  `bottom-8` + fill/object-top (was ~108px tall) to `aspect-3/4` + `object-center`;
+  gray box given `minHeight: 380px`. Full portrait now visible.
+
+- ServicesSection (new `src/components/shared/services-section.tsx`): replaces the
+  placeholder ExploreShowcase. Dark `--surface-dark` zone, four Olha-style numbered
+  service rows (Automation Systems / Machine Design / Motor & Drive Sizing / Control
+  Engineering) with condensed display titles, hairline-dark dividers, hover accent +
+  arrow. "See my work" link-line CTA at bottom.
+
+- AboutSection rebuild (`about-section.tsx`): rewrote from light-surface to dark
+  `--surface-dark` zone matching ServicesSection. Condensed display type for role
+  titles; experience timeline uses `hairline-dark` borders and `on-dark` palette.
+  Education card restyled in dark. Bracket `/` list markers for experience points.
+
+- PageTransition (`src/components/shared/page-transition.tsx`): client component that
+  re-keys on `usePathname()` change, triggering `animation: page-enter` on every
+  route navigation. Wrapped around `{children}` in `(site)/layout.tsx`. CSS keyframe
+  added to `globals.css` (0.65s, `cubic-bezier(0.22,1,0.36,1)`, disabled under
+  `prefers-reduced-motion`).
+
+- All changes: `npm run build` clean (lint + static prerender pass).
+
 ## Next Up
 
-- Phase 3 (Toolkit): unit converter DONE; motor-sizing slices 1–4
-  DONE (all five mechanisms + servo / stepper / AC acceptance).
-  Motor-sizing remaining (slice 5, OPTIONAL): vertical hoist,
-  ball-screw preload term, multi-segment duty cycles for RMS.
-  Pneumatic cylinder calculator still BLOCKED until the owner fills
-  in §2 of `calculator-specs.md`. Follow the established shape: pure
-  logic + `node --test` tests in `src/features/toolkit/lib/`, calm
-  UI in `src/features/toolkit/components/`.
-- shadcn/ui still NOT set up: the unit converter used native,
-  token-styled controls instead (simpler, no deps). Introduce
-  shadcn when a richer primitive is actually needed (dialog, data
-  table, combobox) — most likely the database page (Phase 4).
-- Resume download: DROPPED 2026-06-14 (owner decided it isn't
-  needed). Re-add only if the owner changes their mind.
-- 3D viewer: shelved (removed 2026-06-14). Not on the roadmap unless
-  the owner revisits it with a different approach.
-- Owner to provide real content for Background/Experience,
-  Socials, Location, and portfolio project write-ups to replace
-  placeholders (see Open Questions).
+### Marketing surfaces (priority — Olha quality bar)
+
+- **GSAP + Lenis**: install `gsap` + `lenis` + `@gsap/react`. Wire
+  Lenis into the marketing layout root (sync to GSAP ticker). Replace
+  the `Reveal` IntersectionObserver component on marketing surfaces
+  with GSAP ScrollTrigger reveals. Per-letter stagger on section
+  titles (SplitText currently unused — revisit once GSAP is confirmed
+  running). Confirm on a FRESH dev server + hard reload before
+  judging animation. See [[home-text-animation-not-firing]] for
+  debugging context — stale dev server was the likely culprit.
+- **Portfolio inner pages**: listing + detail pages still use the old
+  design language. Apply full Olha treatment: clip-path image wipes
+  on project cards, hover previews, grayscale→color with GSAP, scroll
+  reveal on project rows.
+- **Content**: owner to provide real project write-ups, photos,
+  experience details to replace all bracketed placeholders.
+
+### Toolkit (Phase 3)
+
+- Motor-sizing slice 5 (OPTIONAL): vertical hoist, ball-screw
+  preload, multi-segment RMS.
+- Pneumatic cylinder calculator: BLOCKED until owner fills §2 of
+  `calculator-specs.md`.
+- Follow the established shape: pure logic + `node --test` tests in
+  `src/features/toolkit/lib/`, calm UI in
+  `src/features/toolkit/components/`.
+
+### Infra
+
+- shadcn/ui still NOT set up — defer until a richer primitive is
+  actually needed (dialog, data table) — most likely the database
+  page (Phase 4).
+- Phase 4 (Database): Supabase schema + RLS, admin auth, upload,
+  browse/filter, download. Still pending.
 
 ## Open Questions
 

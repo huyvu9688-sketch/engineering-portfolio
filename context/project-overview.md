@@ -1,57 +1,66 @@
-# EngiHub — Personal Engineering Platform
+# Joseph Vu — Creative Engineering Portfolio
 
-## Overview
+## Identity
 
-EngiHub is a personal portfolio and mechanical engineering web
-application built by Joe, an automation & production engineer.
-It showcases his profile and projects, hosts a downloadable
-technical database (3D models, PDFs), and provides interactive
-engineering calculators for daily design work. It solves two
-problems: a professional online presence, and a single place
-for the reference tools and files engineers normally scatter
-across bookmarks, USB drives, and vendor catalogs.
+This site is the **primary artifact of craft** for Joseph Vu — an
+automation & production engineer actively building toward senior
+creative front-end developer. The portfolio itself is the proof of
+skill: every section, animation, and interaction must read at the
+quality bar of senior creative developers (reference:
+olhalazarieva.com).
+
+The engineering toolkit and database are differentiators — they
+demonstrate real domain depth beyond pure aesthetics. But the
+marketing surfaces (home, portfolio) are the primary product. A
+visitor should feel the craft within seconds of landing.
 
 ## Goals
 
-1. A deployed, professional portfolio that a hiring manager or
-   colleague can browse in under 2 minutes
-2. At least 3 working engineering calculators used in real
-   design work (pneumatic, motor sizing, unit conversion)
-3. A searchable file database where 3D models and technical
-   PDFs can be uploaded (admin) and downloaded (visitors)
-4. A codebase a non-professional developer can maintain and
-   extend without rewrites
+1. A live creative portfolio that reads at senior front-end /
+   creative developer quality — heavy animation, intentional
+   motion, layered composition matching the olhalazarieva.com bar
+2. At least 3 working engineering calculators that demonstrate real
+   domain expertise (unit conversion DONE, motor sizing DONE,
+   pneumatic cylinder pending)
+3. A searchable file database where 3D models and technical PDFs can
+   be uploaded (admin) and downloaded (visitors)
+4. A codebase that grows with the developer — built to extend with
+   new pages, animation patterns, and features without rewrites
 
 ## Core User Flow
 
-1. Visitor lands on the homepage and sees three entry points:
-   Portfolio, Tools, Database
-2. Visitor browses portfolio projects
-3. Visitor opens a calculator, enters inputs, gets instant
-   results with units
-4. Visitor browses the file database by category and downloads
-   a STEP file or PDF
-5. Admin (Joe only) signs in to upload/manage files
+1. Visitor lands on the home page — experiences the design and
+   motion immediately; understands who Joe is within the first scroll
+2. Visitor browses the portfolio — project showcases with clip-path
+   image wipes, grayscale→color reveals, scroll-reactive layout
+3. Visitor optionally opens a calculator or browses the database to
+   see engineering depth
+4. Admin (Joe only) signs in to upload/manage files
 
 ## Features
 
-### Portfolio
+### Marketing Surfaces (primary craft surface)
 
-- About/profile section
-  (a resume download was planned but dropped on 2026-06-14 at the
-  owner's request — see progress-tracker.md)
-- Project cards with detail pages
-  (an in-browser 3D model viewer was tried and removed on
-  2026-06-14 — see progress-tracker.md)
+- **Home**: hero → marquee → about → recent works → services →
+  credentials → contact form → footer. Full Olha-clone design
+  language: per-letter reveals, clip-path image wipes, scroll-
+  reactive GSAP animation, Lenis smooth scroll, custom cursor,
+  magnetic buttons
+- **Portfolio listing**: project rows with grayscale→color hover,
+  clip-path image reveals, hover previews
+- **Project detail**: full-bleed hero, case-study layout, rich
+  overlapping typography
 
 ### Engineering Toolkit
 
-- Unit converter (length, force, pressure, torque, power, flow)
-- Pneumatic cylinder calculator (force, air consumption)
-- Motor sizing calculator (torque, inertia, gearbox ratio)
-- Formula quick-reference pages
-- (Later) ISO 286 tolerance/fit calculator
-- (Later) Standard parts lookup (cylinders, bearings, fasteners)
+- Unit converter (length, force, pressure, torque, power, flow) —
+  DONE
+- Motor sizing calculator (direct, lead screw, belt/conveyor,
+  rack & pinion, index table; servo/stepper/AC acceptance) — DONE
+- Pneumatic cylinder calculator — BLOCKED on spec
+- CAD viewer (fullscreen, GLB/GLTF, component tree, measure,
+  isolate, explode, section cut, face selection) — DONE
+- (Later) ISO 286 tolerance/fit calculator, formula reference pages
 
 ### Technical Database
 
@@ -75,11 +84,26 @@ across bookmarks, USB drives, and vendor catalogs.
 - Native mobile apps (responsive web only)
 - Real-time collaboration
 
+## Quality Bar
+
+Marketing surfaces must match the quality bar of olhalazarieva.com:
+- Per-letter / per-line staggered reveals driven by GSAP ScrollTrigger
+- Clip-path image wipes and expanding cards on hover
+- Scroll-reactive compositions with Lenis smooth scroll
+- Custom cursor with elastic trail and magnetic interactions
+- Layered, overlapping type and imagery — oversized condensed display
+  type that bleeds past image edges
+- Asymmetric indents, sticky/scroll-reactive compositions
+
+Utility surfaces (calculators, database, CAD viewer) stay calm and
+focused — same colors and typography, no heavy animation.
+
 ## Success Criteria
 
-1. Site is live on a public URL and loads in under 2 seconds
-2. Each calculator produces results matching hand calculation
-   for at least 3 verified test cases
+1. Marketing surfaces pass the "first impression" test: a new visitor
+   immediately reads the site as a senior creative developer's work
+2. Each calculator produces results matching hand calculation for at
+   least 3 verified test cases
 3. Admin can upload a STEP file and a visitor can download it
-4. A new feature (e.g. a 4th calculator) can be added without
-   touching unrelated code
+4. New marketing sections can be added by dropping a component into
+   the home page layout without touching unrelated code

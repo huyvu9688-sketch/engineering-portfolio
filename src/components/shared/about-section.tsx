@@ -1,10 +1,11 @@
+import Image from "next/image";
+import { ArrowUpRight } from "@/components/shared/arrow-up-right";
 import { Reveal } from "@/components/shared/reveal";
 
 interface ExperienceEntry {
   role: string;
   org: string;
   current?: boolean;
-  points: string[];
 }
 
 const EXPERIENCE: ExperienceEntry[] = [
@@ -12,85 +13,118 @@ const EXPERIENCE: ExperienceEntry[] = [
     role: "Automation & Production Engineer",
     org: "[Company Name] · [Start Year] – Present",
     current: true,
-    points: [
-      "[Describe your current responsibilities — e.g. line automation, process improvement, equipment design]",
-      "[Add a measurable result or project highlight]",
-    ],
   },
   {
     role: "[Previous Role Title]",
     org: "[Company Name] · [Start Year] – [End Year]",
-    points: ["[Describe a key responsibility or achievement from this role]"],
   },
+];
+
+// Large uppercase mono statement lines (mirrors the reference reveal lines).
+const STATEMENT = [
+  "I design and build automated machines —",
+  "and the software that runs them.",
+  "Pneumatics, motor sizing, SolidWorks,",
+  "and the controls that tie it together.",
 ];
 
 export function AboutSection() {
   return (
-    <section className="px-4 py-24 md:px-6">
-      <div className="mx-auto max-w-[1800px]">
+    <section className="bg-surface-dark py-24 text-on-dark md:py-40">
+      <div className="mx-auto max-w-[1600px] px-4 md:px-6">
+        {/* ── Giant title ────────────────────────────────────────── */}
+        <h2 className="block text-center font-display text-[clamp(6rem,28vw,22rem)] font-bold uppercase leading-[0.8] tracking-tighter">
+          About
+        </h2>
+
+        {/* ── Top row — name / descriptor / tagline ──────────────── */}
         <Reveal>
-          <div className="flex items-end justify-between border-b border-hairline pb-6">
-            <h2 className="text-4xl font-semibold uppercase tracking-tighter md:text-7xl">
-              Background
-            </h2>
-            <p className="font-mono text-xs uppercase tracking-widest text-ink-faint">
-              002 — Experience
+          <div className="mt-12 flex flex-col gap-6 border-t border-hairline-dark pt-10 md:mt-20 md:flex-row md:items-start md:justify-between md:gap-16">
+            <p className="font-display text-2xl font-bold uppercase leading-none tracking-tight md:text-4xl">
+              Joseph Vu
+            </p>
+            <p className="max-w-md font-mono text-sm uppercase leading-snug tracking-tight text-on-dark-muted md:text-base">
+              Automation &amp; production engineer — Vietnam
+            </p>
+            <p className="max-w-sm font-display text-lg font-bold uppercase leading-tight tracking-tight md:text-2xl">
+              Building machines that make things
             </p>
           </div>
         </Reveal>
 
-        <div className="mt-12 grid grid-cols-1 gap-12 md:grid-cols-2 md:gap-24">
-          <Reveal>
-            <div className="md:sticky md:top-32">
-              <div className="h-1 w-12 bg-accent md:w-16" />
-              <p className="mt-6 text-base leading-relaxed text-ink-muted md:text-lg">
-                Automation &amp; production engineer focused on practical
-                design work — pneumatic systems, motor sizing, and SolidWorks
-                modeling. EngiHub collects the projects, calculators, and
-                technical files from that work in one place.
+        {/* ── Statement reveal lines ─────────────────────────────── */}
+        <div className="mt-20 md:mt-40">
+          {STATEMENT.map((line, i) => (
+            <Reveal key={line} delayMs={i * 80}>
+              <p
+                className={`font-mono text-xl font-light uppercase leading-tight tracking-tight md:text-4xl ${
+                  i % 2 === 1 ? "text-right md:pr-[12vw]" : "md:pl-[18vw]"
+                }`}
+              >
+                {line}
               </p>
-              <div className="mt-8 rounded-lg border border-hairline bg-surface p-6">
-                <p className="font-mono text-[10px] uppercase tracking-widest text-accent">
-                  Education
-                </p>
-                <p className="mt-3 text-sm font-semibold md:text-base">
-                  [Degree / Program]
-                </p>
-                <p className="text-xs text-ink-muted md:text-sm">
-                  [Institution] · [Years]
-                </p>
-              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        {/* ── Portrait + experience ──────────────────────────────── */}
+        <div className="mt-24 grid grid-cols-1 gap-12 md:mt-40 md:grid-cols-[minmax(0,360px)_1fr] md:gap-24">
+          <Reveal>
+            <div className="relative aspect-3/4 w-full overflow-hidden bg-white/5">
+              <Image
+                src="/joe.png"
+                alt="Joseph Vu"
+                fill
+                className="object-cover object-center"
+                sizes="(max-width: 768px) 100vw, 360px"
+              />
             </div>
           </Reveal>
 
           <Reveal delayMs={100}>
-            <div className="space-y-12 border-l border-hairline pl-6 md:space-y-16 md:pl-12">
-              {EXPERIENCE.map((entry) => (
-                <div key={entry.role} className="group relative">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-on-dark-muted">
+                / Experience
+              </p>
+              <div className="mt-8 divide-y divide-hairline-dark border-t border-hairline-dark">
+                {EXPERIENCE.map((entry) => (
                   <div
-                    className={`absolute -left-[1.95rem] top-1.5 h-3 w-3 rounded-full border-2 bg-surface md:-left-[3.25rem] ${
-                      entry.current
-                        ? "border-accent"
-                        : "border-hairline group-hover:border-accent"
-                    } transition-colors duration-300`}
-                  />
-                  <h3 className="text-xl font-semibold tracking-tight md:text-2xl">
-                    {entry.role}
-                  </h3>
-                  <p
-                    className={`mb-3 mt-1 font-mono text-xs uppercase tracking-wider md:text-sm ${
-                      entry.current ? "text-accent" : "text-ink-muted"
-                    }`}
+                    key={entry.role}
+                    className="flex flex-col gap-1 py-6 md:flex-row md:items-baseline md:justify-between"
                   >
-                    {entry.org}
-                  </p>
-                  <ul className="list-disc space-y-2 pl-4 text-sm text-ink-muted marker:text-ink-faint md:text-base">
-                    {entry.points.map((point) => (
-                      <li key={point}>{point}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+                    <h3 className="font-display text-2xl font-bold uppercase leading-none tracking-tight md:text-3xl">
+                      {entry.role}
+                    </h3>
+                    <p
+                      className={`font-mono text-xs uppercase tracking-wider ${
+                        entry.current ? "text-accent" : "text-on-dark-muted"
+                      }`}
+                    >
+                      {entry.org}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-12 border border-hairline-dark p-6 md:max-w-md">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-accent">
+                  Education
+                </p>
+                <p className="mt-3 font-display text-xl font-bold uppercase tracking-tight md:text-2xl">
+                  [Degree / Program]
+                </p>
+                <p className="mt-1 font-mono text-xs text-on-dark-muted">
+                  [Institution] · [Years]
+                </p>
+              </div>
+
+              <a
+                href="mailto:huyvu9688@gmail.com"
+                className="link-line mt-12 inline-flex font-display text-2xl font-bold lowercase tracking-tight text-on-dark md:text-3xl"
+              >
+                huyvu9688@gmail.com
+                <ArrowUpRight className="ml-3 h-6 w-6" />
+              </a>
             </div>
           </Reveal>
         </div>

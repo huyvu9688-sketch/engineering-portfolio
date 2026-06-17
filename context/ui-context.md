@@ -1,292 +1,316 @@
 # UI Context
 
-## Theme
+## Design Identity
 
-Swiss-style developer/engineer portfolio: light neutral canvas,
-near-black ink, ONE red-orange accent. Oversized tight-tracked
-uppercase display type; small uppercase mono labels for all UI
-chrome (nav, tags, captions, metadata). Hairline `black/10`
-borders. Motion is reveal-based (fade/slide-in once), plus a few
-signature marketing-page effects — never scroll-jacked pinning.
+Swiss-style creative engineering portfolio. The reference is
+olhalazarieva.com — match that quality bar on all marketing
+surfaces. Light neutral canvas, near-black ink, ONE red-orange
+accent. Oversized condensed display type dominates; small uppercase
+mono labels for all UI chrome. Hairline borders everywhere.
 
-This file is the complete, self-contained component spec — built
-from an owner-supplied single-page HTML reference during Phase 1
-(content rewritten for this project; its imperative JS was
-rebuilt as React components per `code-standards.md`). No
-separate design-reference file is needed.
+## Page Modes — CRITICAL
 
-## Page Modes — IMPORTANT
-
-- **Marketing surfaces** (landing/home, portfolio, project
-  detail): full design language — hero effects, marquee,
-  magnetic buttons, custom cursor, reveal animations.
+- **Marketing surfaces** (home, portfolio, project detail): full
+  design language at senior creative-developer ambition — per-letter
+  scroll reveals, clip-path image wipes, expanding cards, hover
+  previews, marquee, magnetic buttons, custom cursor, Lenis smooth
+  scroll, GSAP ScrollTrigger. See "Design Ambition" below.
 - **Utility surfaces** (calculators, database, formula pages,
-  admin): same colors, typography, chips, and borders — but
-  CALM. No custom cursor, no marquee, no magnetic buttons, no
+  admin, CAD viewer): same colors, typography, chips, and borders —
+  but CALM. No custom cursor, no marquee, no magnetic buttons, no
   entrance animations beyond a simple fade. People come here to
   work, repeatedly.
 
+## Design Ambition (marketing surfaces)
+
+The bar is a senior front-end / creative-developer portfolio.
+Heavy, intentional animation and rich layered composition — not a
+template:
+
+- Section-scale motion: staggered per-letter / per-line scroll
+  reveals (GSAP + ScrollTrigger), clip-path image wipes, expanding
+  morphing cards, hover-driven previews, marquees, magnetic +
+  custom cursor
+- Layered overlapping layout: oversized display type that crosses
+  image and box edges, asymmetric indents, sticky/scroll-reactive
+  composition
+- Recreate reference sections 1:1 in spirit before adapting content;
+  match the reference's section order and rhythm
+- `--transition-main` on every hover/state transition for consistent
+  motion feel
+- Never scroll-jack in a way that traps the user; always honor
+  `prefers-reduced-motion` for scroll reveals (content visible
+  immediately; cursor and marquee are exempt — core brand effects)
+
 ## Colors
 
-Base remains Tailwind **neutral** for grays; template colors
-mapped to the nearest step. Accent comes from the template.
-All via tokens — no hardcoded values in components.
-
-| Role                    | CSS Variable        | Value     | Source            |
-| ----------------------- | ------------------- | --------- | ----------------- |
-| Canvas (page bg)        | `--canvas`          | `#f5f5f5` | template / n-100  |
-| Surface (cards, chips)  | `--surface`         | `#ffffff` | template          |
-| Ink (primary text)      | `--ink`             | `#111111` | template          |
-| Ink secondary           | `--ink-muted`       | `#555555` | template          |
-| Ink faint               | `--ink-faint`       | `#a3a3a3` | n-400             |
-| Dark band (marquee, footer) | `--surface-dark` | `#111111` | template          |
-| True dark (loader bg)   | `--surface-black`   | `#050505` | template          |
-| Text on dark            | `--on-dark`         | `#f5f5f5` | template          |
-| Muted on dark           | `--on-dark-muted`   | `#cccccc` | template          |
-| **Accent**              | `--accent`          | `#eb3a14` | template          |
-| Hairline border (light) | `--hairline`        | `rgba(0,0,0,0.10)` | template |
-| Hairline border (dark)  | `--hairline-dark`   | `rgba(255,255,255,0.10)` | template |
-| Error                   | `--state-error`     | `#dc2626` | validation only   |
-| Success                 | `--state-success`   | `#16a34a` | validation only   |
+| Role                     | CSS Variable        | Value                   |
+| ------------------------ | ------------------- | ----------------------- |
+| Canvas (page bg)         | `--canvas`          | `#f7f7f7`               |
+| Surface (cards, chips)   | `--surface`         | `#ffffff`               |
+| Ink (primary text)       | `--ink`             | `#101010`               |
+| Ink secondary            | `--ink-muted`       | `#555555`               |
+| Ink faint                | `--ink-faint`       | `#a3a3a3`               |
+| Dark band (about, footer)| `--surface-dark`    | `#111111`               |
+| True dark (loader bg)    | `--surface-black`   | `#050505`               |
+| Text on dark             | `--on-dark`         | `#f5f5f5`               |
+| Muted on dark            | `--on-dark-muted`   | `#cccccc`               |
+| **Accent**               | `--accent`          | `#eb3a14`               |
+| Hairline border (light)  | `--hairline`        | `rgba(0,0,0,0.10)`      |
+| Hairline border (dark)   | `--hairline-dark`   | `rgba(255,255,255,0.10)`|
+| Error                    | `--state-error`     | `#dc2626`               |
+| Success                  | `--state-success`   | `#16a34a`               |
 
 Accent rules:
-- `--accent` is the ONLY color. Used for: hover states on links
-  and buttons, the active label/eyebrow, marquee separators,
-  selection highlight, small status indicators.
+- `--accent` is the ONLY non-neutral color. Used for: hover states,
+  active labels/eyebrows, marquee separators, selection highlights,
+  small status indicators, service-row hover arrows.
 - Never use accent for body text or large surfaces.
 - Error/success appear only in form/calculator validation.
 
 ## Typography
 
-| Role                          | Font stack                            | Variable      |
-| ----------------------------- | ------------------------------------- | ------------- |
-| Display + body                | `Inter, ui-sans-serif, system-ui, sans-serif` | `--font-sans` |
-| UI chrome / labels / numbers  | `ui-monospace, "SF Mono", Menlo, monospace`   | `--font-mono` |
+Three fonts — each with a specific role. Never mix roles.
 
-Type rules from the template:
-- Display headlines: uppercase, `font-semibold` (600),
-  `tracking-tighter`, oversized (viewport-scaled on hero,
-  `text-4xl`–`text-7xl` on section titles).
-- ALL chrome text — nav links, eyebrows, chips, captions,
-  metadata, buttons — is mono, uppercase, `text-xs`,
-  `tracking-widest`.
-- Body: Inter 400, `text-base`–`text-lg`, relaxed leading,
-  `--ink-muted`.
-- Calculator results, units, part numbers, file sizes: mono.
-- Numeric data — calculator results, reference tables, input
-  fields — use `tabular-nums` so digits align in columns and the
-  layout never jitters as values change (an engineering-data
-  detail; added 2026-06-15 in the Toolkit refine pass).
-- **Instrument readout**: a calculator's single governing result
-  is rendered large in tabular mono with the accent and set off by
-  a hairline rule (converter "To" output `text-2xl`; motor-sizing
-  "Required torque (×SF)" `text-3xl`). It is the one loud element;
-  supporting values stay as quiet label→value rows.
+| Role                          | Font                        | CSS Variable      |
+| ----------------------------- | --------------------------- | ----------------- |
+| Display (hero, section titles)| Sofia Sans Condensed        | `--font-display`  |
+| Body text                     | Inter, ui-sans-serif        | `--font-sans`     |
+| UI chrome (labels, nav, mono) | Spline Sans Mono            | `--font-mono`     |
+
+Both display fonts are loaded via `next/font/google`:
+```ts
+Sofia_Sans_Condensed({ subsets: ["latin"], weight: ["400","700","900"] })
+Spline_Sans_Mono({ subsets: ["latin"], weight: ["400","500"] })
+```
+
+Type rules:
+- **Display** (`--font-display`): uppercase only, tight tracking
+  (`tracking-tighter`), weight 700–900. Viewport-scaled on hero
+  (`clamp(5rem,15.5vw,22rem)`), `text-5xl`–`text-8xl` on section
+  titles. This is the dominant visual element on every marketing page.
+- **Mono chrome** (`--font-mono`): ALL nav links, eyebrows, chips,
+  captions, metadata, buttons, labels — always uppercase,
+  `text-[10px]`–`text-xs`, `tracking-widest`.
+- **Body** (`--font-sans`): Inter 400, `text-base`–`text-lg`,
+  relaxed leading, `--ink-muted`. Paragraphs, descriptions, long
+  copy only.
+- Calculator results, units, part numbers, file sizes: `--font-mono`.
+- Numeric data: `tabular-nums` so digits align and layout never
+  jitters as values change.
+- **Instrument readout**: a calculator's governing result renders
+  large in tabular mono with accent color, set off by a hairline
+  rule. One loud element; supporting values stay as quiet label→value
+  rows.
 
 ## Border Radius
 
-| Context                          | Class          |
-| -------------------------------- | -------------- |
-| Images / media frames            | `rounded-sm`   |
+| Context                             | Class          |
+| ----------------------------------- | -------------- |
+| Images / media frames               | `rounded-sm`   |
 | Pills (buttons, chips, nav, search) | `rounded-full` |
-| Cards / panels (utility pages)   | `rounded-lg`   |
-| Full-bleed bands (marquee, footer) | `rounded-none` |
+| Cards / panels (utility pages)      | `rounded-lg`   |
+| Full-bleed bands (marquee, footer)  | `rounded-none` |
 
 ## Signature Components
 
-- **Nav**: fixed top, `mix-blend-difference` white text; center
-  links in a `bg-white/10 backdrop-blur` pill; solid white pill
-  CTA. Site name in mono uppercase, two lines.
-- **Hero**: centered, viewport-scaled uppercase title
-  (`text-[13vw] md:text-[10vw]`) with per-line overflow-hidden
-  blur+rise reveal; soft radial accent glow (8% opacity,
-  blurred) behind; status badge pill with animated accent bars;
-  centered subtitle (`max-w-xl mx-auto`); two pill CTAs plus a
-  circular icon button (external profile link), all centered
-  and magnetic.
-- **Status badge**: glass pill (`bg-surface/40 backdrop-blur-md
-  border-hairline shadow-sm`); three accent bars of varying
-  height (`h-full`, `h-2/3`, `h-full`) pulse opacity on
-  independent timers; label in `text-ink font-medium`.
-- **Background/Experience section**: two-column layout
-  (`md:grid-cols-2`). Left column sticky — accent underline bar,
-  intro paragraph, education card (`rounded-lg border-hairline`
-  panel). Right column — vertical timeline (`border-l
-  border-hairline`), circular markers (accent border for
-  current role, hairline for past), role title + mono
-  org/dates line (accent for current, muted for past), bullet
-  list of points.
-- **Contact section**: centered, `max-w-[1200px]`, top hairline
-  border. Small accent eyebrow (`Status: ...`,
-  `tracking-[0.3em]`); giant centered two-line heading
-  (`text-5xl md:text-9xl`); centered email link with icon,
-  hairline underline that turns accent on hover. Below a
-  top-hairline divider, a 4-column info grid (2 cols mobile):
-  Socials, Location, Focus, and a scroll-to-top button in the
-  last cell.
-- **Marquee band**: dark `--surface-dark` strip, mono uppercase
-  items separated by accent dots, slow infinite scroll. Content
-  for this project: engineering skills/tools (SolidWorks,
-  Automation, Pneumatics, Three.js, ...).
-- **Project rows**: alternating 7/5 column grid; image
-  grayscale → color on hover with slight scale; mono accent
-  eyebrow with icon; tech chips as bordered white pills;
-  "View Project ↗" mono link.
-- **CAD Viewer** (utility, `/tools/cad-viewer`): intentionally MINIMAL.
-  One vanilla Three.js engine file (`viewer/lib/viewer-core.js`,
-  excluded from tsconfig, typed via `viewer-core.d.ts`) wrapped by
-  `viewer/components/cad-viewer.tsx`. **Dark 3D environment**
-  (`0x111111`, the `--surface-dark` token); dark overlays/landing to
-  match. Controls: a top-left pill **toolbar** (reset view, isolate,
-  show-all, measure, import), a searchable **component tree** (top-right
-  toggle → `component-list.js`; click a part to frame + accent-glow it),
-  **isolate** (toolbar button isolates the selected tree part, or enters
-  a click-to-pick mode; show-all / Esc to exit; banner shows the
-  isolated part), a **hover glow** (soft blue emissive on the mesh under
-  the cursor; non-destructive save/restore so a selected part keeps its
-  accent on un-hover), and **measure** (`measure.js`; click a point on
-  two component faces — both ends stay on the real surfaces (markers),
-  the dimension line is drawn PARALLEL to the dominant X/Y/Z axis, and a
-  faint connector ties it back to the 2nd face so nothing floats; reports
-  the axis distance `· X/Y/Z` + per-axis ΔX/ΔY/ΔZ as `mm (in)`
-  bottom-centre; Esc to exit. GLB has no unit, so `unitToMm` is
-  auto-detected from the model span: < 10 units across → metre export
-  ×1000, else mm ×1). No view-cube
-  (the one thing that blanked the canvas — see warning below). **Real
-  component colours**: the
-  file's own materials are KEPT and lit by a neutral `RoomEnvironment`
-  map under `NeutralToneMapping`; only sanitised for invisible-import
-  causes (near-zero opacity → opaque, broken texture maps stripped,
-  `DoubleSide`, `envMapIntensity = 1`); normals recomputed,
-  `frustumCulled` off, model recentred to origin, camera fit to scale.
-  Lifecycle hardened: one WebGL context per mount, `dispose()` +
-  `forceContextLoss()`, capped DPR (1.5), visibility-pause.
-  - ⚠️ TWO things to know before re-adding features:
-    (1) The "invisible model" was never a render bug — it was a grey
-    machine on the old near-black viewport (white bg fixed it).
-    (2) three.js `ViewHelper.render()` re-clears the canvas every frame;
-    with the default `renderer.autoClear = true` it wiped the white bg
-    (+ model) to black, leaving only the gizmo. If a view-cube is
-    re-added, set `renderer.autoClear = false` and clear manually
-    (`renderer.clear()` → render scene → `viewHelper.render()`), or it
-    will black out a light background.
-- **Chips/tags**: white pill, hairline border, mono uppercase
-  `text-[10px]`–`text-xs`, `--ink-muted`.
-- **Buttons**: pill, mono uppercase bold; primary = `--ink` bg
-  white text, hover → `--accent`; secondary = white bg hairline
-  border.
-- **Custom cursor** (marketing pages, fine pointers only):
-  dot tracks the pointer instantly; a circle eases (lerps, 0.2)
-  behind it for an elastic trail, both `mix-blend-exclusion`.
-  Over `a, button, .magnetic-btn` the circle scales to 2× and
-  fills `rgba(255,255,255,0.1)` with a transparent border. While
-  mounted it hides the native cursor (`body.custom-cursor-active
-  { cursor: none }`). Disabled on touch devices and utility
-  pages. Runs regardless of reduced-motion (core brand effect).
-- **Magnetic buttons** (marketing pages only): slight
-  translate-toward-cursor on hover.
-- **Unit converter** (utility, `/tools`): calm — no cursor,
-  marquee, or magnetic effects. Lives in a **sticky control-panel
-  card docked at the far right** of the page (`lg:order-2 lg:sticky
-  lg:top-28 lg:self-start lg:max-h-[calc(100vh-8rem)]
-  lg:overflow-y-auto`). The `/tools` page is a wide two-column grid
-  (`max-w-[1800px]`, `lg:grid-cols-[1fr_320px]`) — ALL page
-  sections go in the LEFT column, so the right panel stays visible
-  while scrolling through every section (it releases only at the
-  page bottom; on short viewports it scrolls internally). On mobile
-  it stacks first, above the content. Note: this utility page
-  intentionally uses the wide `max-w-[1800px]` (not the usual
-  `max-w-6xl`) to dock the panel far-right; body text stays capped
-  (`max-w-xl`) for readability. The left column also carries a
-  static "Common Conversions" quick-reference grid. Inside the
-  `rounded-lg` hairline
-  card the content is a **vertical stack**: category pills (mono
-  uppercase; active = `--ink` fill + `--on-dark`, inactive =
-  hairline + `--ink-muted`, hover → accent) → **From** (value
-  `<input>` + unit `<select>`) → a centered circular **Swap**
-  button (`ArrowLeftRight`, rotated 90°) → **To** (read-only
-  `<output>` on `--canvas` + unit `<select>`) → a top-hairline
-  footer with a live `1 x = y` equivalence and a precision selector
-  (4/6/8/10 sig figs). All numbers mono; invalid input switches the
-  field + helper text to `--state-error`. Built from native
-  token-styled form controls (not shadcn).
-- **Motor sizing calculator** (utility, `/tools/motor-sizing`):
-  calm, its own route (linked from the toolkit overview). Two-column
-  `lg:grid-cols-[1fr_360px]`: a left input stack of grouped
-  `<fieldset>` cards (Mechanism / Motion / Drive / Candidate motor),
-  each with a mono accent `<legend>` and a `sm:grid-cols-2` field
-  grid; a right **sticky results card** (`lg:sticky lg:top-28`) of
-  label→value rows (peak speed, torques, power, inertia, ratio, duty
-  cycle) plus a pass/over acceptance block. The **mechanism
-  selector is an illustration card grid** (`grid-cols-2
-  sm:grid-cols-3 lg:grid-cols-5`): each card shows a line-art
-  mechanism image (`/public/mechanisms/*.png` — ball screw, belt
-  conveyor, rack & pinion, index table, direct drive; ~96 px,
-  `object-contain`) over a mono label, with the active card
-  `border-accent`. If an image file is missing, the card falls back
-  automatically to the built-in SVG line icon (`mechanism-icons.tsx`
-  + the `MechanismVisual` `onError` swap). **Nothing below the cards
-  shows until one is selected** — on open, only the card grid + a
-  "select a mechanism" hint appear; clicking a card reveals that
-  mechanism's **formula panel** (reflected inertia / load torque /
-  motor speed + shared force, accel-torque, required-torque
-  formulas), the input fieldsets, and the results column. Motor type
-  is a pill group (none / servo / stepper / AC); acceptance checks
-  use small `--state-success` / `--state-error` bordered pills.
-  Native token-styled controls; results format via the converter's
-  `formatResult`.
+### Navbar
+Fixed top, `mix-blend-difference` so text inverts over any
+background. `joseph vu` in `--font-display` condensed, two lines,
+uppercase. Center links in a CSS-grid `[ bracket ]` format via
+`.link-bracket` class. `link-line` contact CTA (underline-wipe on
+hover). Solid pill CTA for contact.
+
+### Hero
+Full-viewport opening section. `DESIGN ENGINEER` in
+`--font-display` at `clamp(5rem,15.5vw,22rem)` — the dominant
+visual. Per-letter staggered rise animation (`.hero-letter`,
+`--delay` CSS variable per letter). Gray descriptor box containing
+portrait (`joe.png`) at `aspect-3/4`, overlapping the headline.
+`BASED IN VIETNAM` mono label. Portfolio + email CTAs with
+`ArrowUpRight` arrow that rotates 45° on hover. Page-load one-shot
+animation — not scroll-triggered.
+
+### Marquee band
+Dark `--surface-dark` strip, `--font-mono` uppercase items
+separated by `--accent` dot separators, slow `40s linear infinite`
+CSS animation. Engineering skills: SolidWorks, Automation,
+Pneumatics, Three.js, Motor Sizing, etc. Pauses on hover.
+Always runs — exempt from `prefers-reduced-motion`.
+
+### ServicesSection
+Dark `--surface-dark` zone. Four numbered Olha-style service rows:
+`01 / AUTOMATION SYSTEMS`, etc. Condensed `--font-display` service
+titles, hairline-dark dividers. On hover: row background flashes
+accent, arrow icon rotates 45°. "See my work" `link-line` CTA at
+bottom.
+
+### AboutSection
+Dark `--surface-dark` zone (same surface as ServicesSection —
+they read as one continuous dark band). Two-column layout.
+Left: intro paragraph + education card. Right: experience timeline
+with `--hairline-dark` vertical rule, circular role markers, `[ /
+bracket ]` bullet list points. All text on-dark palette; role
+titles in `--font-display` condensed.
+
+### ProjectsSection ("Recent Works")
+Dark snap-scroll showcase section. Three.js-inspired slider
+recreated in CSS scroll snap. Project cards: grayscale → color
+on hover, slight scale. Mono accent eyebrow with project number.
+Tech chips as bordered pills. "View Project ↗" mono link.
+
+### CredentialsSection ("Awards / Recognition")
+Hover-preview list. Each credential row: number, title, mono
+metadata. On hover: a preview image wipes in via clip-path;
+the row highlights in accent. Engineering disciplines + counts
+adapted from Olha's awards section.
+
+### Contact form section
+Giant condensed display headline: `GREAT MACHINES / start with /
+SHARP ENGINEERING`. Project-type radio pills. Name/email/message
+fields. Submits via `mailto:` (no backend needed). Mono labels,
+hairline borders.
+
+### Footer
+Dark `--surface-dark` band. Oversized `JOSEPH VU` wordmark in
+`--font-display`. Email link. Socials (LinkedIn, GitHub). Pages
+column. Location column. All text `--on-dark`.
+
+### Contact / info grid
+Centered `max-w-[1200px]`, top hairline border. Small accent
+eyebrow (`Status: Available`, `tracking-[0.3em]`); giant centered
+two-line `--font-display` heading; email link with icon + underline-
+to-accent hover. Below a top-hairline divider: 4-column info grid
+(Socials, Location, Focus, scroll-to-top button).
+
+### Custom cursor (marketing pages, fine pointers only)
+Dot tracks pointer instantly; a circle lerps (0.2 factor) behind it
+for an elastic trail. Both `mix-blend-exclusion`. Over `a, button,
+.magnetic-btn`: circle scales to 2× + fills `rgba(255,255,255,0.1)`.
+While mounted: `body.custom-cursor-active { cursor: none }`.
+Disabled on touch devices and utility pages. Exempt from
+`prefers-reduced-motion` — core brand effect.
+
+### Magnetic buttons (marketing pages only)
+Slight `translate` toward the cursor on hover, returns on leave.
+Applied to primary CTAs and the custom cursor target group.
+
+### Page transition
+`PageTransition` client component re-keyed on `usePathname()`.
+On route change, `animation: page-enter 0.65s
+cubic-bezier(0.22,1,0.36,1)` fires once. Disabled under
+`prefers-reduced-motion`.
+
+### Project rows (portfolio listing)
+Alternating 7/5 column grid. Image: `next/image`, grayscale →
+color + slight scale on hover. Mono accent eyebrow with icon. Tech
+chips as bordered white pills. "View Project ↗" mono link. Whole
+row wrapped in a `Link` to `/portfolio/[slug]`.
+
+### CAD Viewer (utility, `/tools/cad-viewer`, fullscreen route)
+Intentionally MINIMAL — utility surface, not marketing. Dark 3D
+environment (`0x111111`). One vanilla Three.js engine
+(`viewer/lib/viewer-core.js`). Controls: toolbar (reset, isolate,
+show-all, measure, import), component tree (searchable, collapsible),
+isolate mode (banner), hover glow (blue emissive), measure tool
+(face-to-face axis distance, mm + inches), explode slider, section
+cut (X/Y/Z, flip, face-align), face properties card, volume + weight
+readout. Real component colors from GLB materials kept. No custom
+cursor, no GSAP, no Lenis. See architecture.md for engine details.
+⚠️ Do not re-add a three.js ViewHelper view-cube without setting
+`renderer.autoClear = false` — it clears the canvas every frame.
+
+### Chips/tags
+White pill, hairline border, `--font-mono` uppercase `text-[10px]`–
+`text-xs`, `--ink-muted`. On dark surfaces: `--on-dark-muted`.
+
+### Buttons
+Pill, `--font-mono` uppercase bold. Primary = `--ink` bg / white
+text, hover → `--accent`. Secondary = white bg / hairline border.
+
+### Unit converter (utility, `/tools`)
+Calm — no cursor, marquee, or magnetic effects. Sticky control-panel
+card docked far-right (`lg:order-2 lg:sticky lg:top-28
+lg:self-start`). `/tools` page is wide two-column grid
+(`max-w-[1800px]`, `lg:grid-cols-[1fr_320px]`) — all sections in
+left column so the panel stays visible while scrolling. Vertical
+stack: category pills → From input + unit select → Swap button →
+To output + unit select → live `1 x = y` equivalence + precision
+selector. Native token-styled form controls (not shadcn).
+
+### Motor sizing calculator (utility, `/tools/motor-sizing`)
+Calm. Two-column `lg:grid-cols-[1fr_360px]`. Mechanism selector
+is an illustration card grid (5 cards: ball screw, belt conveyor,
+rack & pinion, index table, direct drive) — nothing shows until one
+is selected. Left: grouped `<fieldset>` cards (Mechanism / Motion /
+Drive / Candidate motor). Right: sticky results card with
+label→value rows + pass/over acceptance block. Motor type is a pill
+group (None / Servo / Stepper / AC). Native token-styled controls.
 
 ## Motion Rules
 
-- Reveals: fade/slide/blur-in ONCE on scroll into view
-  (IntersectionObserver or GSAP `from` with
-  `toggleActions: "play none none none"`). No scrub-pinned
-  sections anywhere.
-- Hover transitions: 200–500ms, ease-out.
-- Respect `prefers-reduced-motion` for reveals (content visible
-  immediately) and the hero one-shot/status-bar pulse. The
-  custom cursor and the marquee scroll are EXEMPT — they are
-  core brand effects and always run (owner's decision,
-  2026-06-13). The marquee is a slow, non-flashing continuous
-  motion; the cursor is fine-pointer only. Revisit if shipping
-  to a motion-sensitive audience.
-- **Skip the template's percentage loader.** It fakes progress
-  and punishes repeat visitors. Site loads fast; no loader.
+### Marketing surfaces
+- **Scroll reveals** (GSAP ScrollTrigger): fade/blur/slide or
+  per-letter stagger, triggered once per page load
+  (`toggleActions: "play none none none"`). Never scrub-pinned.
+- **Per-letter reveals** (`.split-letter` spans + `--d` stagger CSS
+  var): `gsap.fromTo(".split-letter", { y: "120%", opacity: 0 }, {
+  y: 0, opacity: 1, stagger: 0.03, ease: "power3.out",
+  scrollTrigger: { start: "top 90%" } })`
+- **Hover transitions**: 200–500ms, ease-out, via `--transition-main`
+- **Page transition**: `page-enter` CSS keyframe, 0.65s, fires on
+  route change
+- **Lenis smooth scroll**: initialize on marketing layout root;
+  sync to GSAP ticker
+
+### Utility surfaces
+Simple fade-in on mount at most. No scroll triggers, no GSAP.
+
+### Reduced motion
+`prefers-reduced-motion: reduce` → scroll reveal content appears
+immediately (skip animation). Exempt: custom cursor (fine-pointer
+only, no flash), marquee (slow non-flashing scroll, always on).
+Both are core brand effects and always run per owner decision.
+
+### Do NOT add
+- A percentage/progress loader — it fakes progress and punishes
+  repeat visitors. Site loads fast; no loader.
+- Scroll-jacking that traps the user mid-page.
+- GSAP or Lenis on utility pages or in the CAD viewer.
 
 ## Component Library
 
-shadcn/ui (neutral base) is reserved for **richer** utility
-primitives (dialogs, data tables, comboboxes) — restyle via
-tokens to match this system. It is NOT yet installed: simple form
-fields (the unit converter's inputs/selects) use native,
-token-styled controls, which is preferred when a plain `<input>`/
-`<select>` does the job (fewer deps, and shadcn init won't touch
-the token-defined `globals.css`). Add shadcn when the first richer
-primitive is actually needed (likely the database page). Marketing
-components (hero, marquee, project rows, cursor) are custom, built
-in `src/components/shared/` or feature folders. Never hand-edit
+shadcn/ui (neutral base) is reserved for richer utility primitives
+(dialogs, data tables, comboboxes) — restyle via tokens. Not yet
+installed: the unit converter uses native, token-styled controls
+(fewer deps; shadcn init won't touch `globals.css`). Add shadcn
+when the first richer primitive is actually needed (likely the
+database page). Marketing components (hero, marquee, project rows,
+cursor) are custom in `src/components/shared/`. Never hand-edit
 `components/ui/*`.
 
 ## Layout Patterns
 
 - Content max-width: `max-w-[1800px]` marketing,
-  `max-w-6xl` utility pages. Padding `px-4 md:px-6`.
-- Section headers: title + mono metadata right-aligned, bottom
-  hairline border (`border-b border-black/10 pb-6`). The metadata
-  must state something true (live/planned counts, "Computed in
-  SI", a method credit) — not a decorative `01 —` index.
-- Landing flow: hero → marquee → entry points (portfolio /
-  toolkit / database) → background &amp; experience →
-  contact/footer.
-- Calculators: white card, hairline border, `rounded-lg`;
-  inputs left / live results right (stacked mobile); results
-  update on input.
-- Database: pill search + chip filters + card grid.
-- Footer: dark band, oversized wordmark, mono link columns.
+  `max-w-6xl` utility pages. Padding `px-4 md:px-6 lg:px-8`.
+- Section headers: `--font-display` title + `--font-mono` metadata
+  right-aligned, bottom hairline border
+  (`border-b border-black/10 pb-6`). Metadata states something true
+  (counts, method credit) — not a decorative `01 —` index.
+- Home section order: hero → marquee → about → recent works →
+  services → credentials → contact form → footer
+- Portfolio: listing (project rows) → detail (case study)
+- Calculators: white card, hairline border, `rounded-lg`; inputs
+  left / live results right (stacked on mobile)
+- Database: pill search + chip filters + card grid
+- Footer: dark band, oversized `--font-display` wordmark, mono link
+  columns
 
 ## Icons
 
 Lucide (stroke-based), `stroke-[1.5]`. `w-4 h-4` inline,
-`w-5 h-5` in buttons, `w-3 h-3` in eyebrows/chips. Color
-follows text color; accent only when the icon is the
-interactive element.
+`w-5 h-5` in buttons, `w-3 h-3` in eyebrows/chips. Color follows
+text; accent only when the icon is the interactive element.
+`ArrowUpRight` is a shared SVG component (`components/shared/
+arrow-up-right.tsx`) used for all external/CTA links — rotates 45°
+on hover.

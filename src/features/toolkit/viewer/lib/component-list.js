@@ -35,6 +35,15 @@ export class ComponentList {
             const validChildren = object.children.filter((c) => !c.userData.isEdgeHelper);
             const componentType = this.determineComponentType(object, validChildren, rootObject);
 
+            // A mesh body is an ingredient of its part — never list it on its own.
+            if (componentType === "Body") return;
+            // Skip Unknown nodes, but keep descending so any real part beneath an
+            // Unknown wrapper still appears (attached to this node's parent).
+            if (componentType === "Unknown") {
+                validChildren.forEach((child) => traverse(child, level, parentIndex));
+                return;
+            }
+
             let meshCount = 0;
             object.traverse((child) => {
                 if (child.isMesh && !child.userData.isEdgeHelper) meshCount++;
@@ -47,7 +56,7 @@ export class ComponentList {
                 level,
                 uuid: object.uuid,
                 meshCount,
-                hasChildren: validChildren.length > 0,
+                hasChildren: false, // set below, from the rows that survived
                 object,
                 index: currentIndex,
                 parentIndex,
@@ -58,6 +67,16 @@ export class ComponentList {
         };
 
         traverse(rootObject);
+
+        // A Part whose bodies were hidden should show no expand arrow, so base
+        // hasChildren on the rows actually kept rather than the raw scene graph.
+        const parents = new Set(
+            this.hierarchy.map((c) => c.parentIndex).filter((p) => p !== null),
+        );
+        this.hierarchy.forEach((comp) => {
+            comp.hasChildren = parents.has(comp.index);
+        });
+
         return this.hierarchy;
     }
 
@@ -73,7 +92,7 @@ export class ComponentList {
         return "Unknown";
     }
 
-    display(onComponentClick) {
+    display(onComponentClick, onComponentContextMenu) {
         const listContainer = document.getElementById("component-list");
         const headerElement = document.getElementById("component-list-header");
         if (!listContainer) return;
@@ -89,7 +108,7 @@ export class ComponentList {
         listContainer.innerHTML =
             this.buildSearchBar() + '<div class="space-y-0.5 p-1">' + this.buildItems() + "</div>";
 
-        this.attachEventListeners(listContainer, onComponentClick);
+        this.attachEventListeners(listContainer, onComponentClick, onComponentContextMenu);
     }
 
     buildSearchBar() {
@@ -150,7 +169,7 @@ export class ComponentList {
         return false;
     }
 
-    attachEventListeners(listContainer, onComponentClick) {
+    attachEventListeners(listContainer, onComponentClick, onComponentContextMenu) {
         const searchInput = document.getElementById("component-search");
         if (searchInput) {
             searchInput.addEventListener("input", (e) => this.filterList(e.target.value));
@@ -165,6 +184,17 @@ export class ComponentList {
                 }
             });
         });
+
+        if (onComponentContextMenu) {
+            listContainer.querySelectorAll(".component-item").forEach((item) => {
+                item.addEventListener("contextmenu", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const component = this.hierarchy.find((c) => c.uuid === item.dataset.uuid);
+                    if (component) onComponentContextMenu(component, e);
+                });
+            });
+        }
 
         listContainer.querySelectorAll(".collapse-arrow").forEach((arrow) => {
             arrow.addEventListener("click", (e) => {

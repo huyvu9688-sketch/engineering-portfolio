@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowUpRight } from "@/components/shared/arrow-up-right";
 
 const NAV_LINKS = [
   { href: "/portfolio", label: "Portfolio" },
@@ -8,36 +9,43 @@ const NAV_LINKS = [
 
 export function Navbar() {
   return (
-    <header className="fixed inset-x-0 top-0 z-50 mix-blend-difference">
-      <nav className="mx-auto flex max-w-[1800px] items-center justify-between px-4 py-4 md:px-6">
+    // mix-blend-difference inverts against whatever scrolls beneath, so
+    // one near-white color stays legible over both light and dark zones.
+    <header className="fixed inset-x-0 top-0 z-50 text-[#efefef] mix-blend-difference">
+      {/* Three-column grid: logo | nav (screen-center) | contact */}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center px-4 py-6 md:px-8 md:py-8">
+        {/* Logo — condensed display, lowercase */}
         <Link
           href="/"
-          className="font-mono text-xs uppercase leading-tight tracking-widest text-white"
+          className="font-display text-2xl font-bold uppercase leading-none tracking-tight md:text-4xl"
         >
-          EngiHub
-          <br />
-          <span className="text-white/60">Engineering</span>
+          VU, JOSEPH
         </Link>
 
-        <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 rounded-full bg-white/10 px-2 py-1 backdrop-blur md:flex">
+        {/* Center nav — bracket links, screen-center via grid */}
+        <div className="hidden items-center gap-5 md:flex lg:gap-10">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-full px-4 py-2 font-mono text-xs uppercase tracking-widest text-white transition-colors duration-200 hover:text-accent"
+              className="link-bracket text-sm lg:text-base"
             >
               {link.label}
             </Link>
           ))}
         </div>
 
-        <a
-          href="mailto:huyvu9688@gmail.com"
-          className="rounded-full bg-white px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-widest text-black transition-colors duration-200 hover:bg-accent hover:text-white"
-        >
-          Contact
-        </a>
-      </nav>
+        {/* Contact — underline-wipe + rotating arrow, right-aligned */}
+        <div className="flex justify-end">
+          <Link
+            href="/#contact"
+            className="link-line font-mono text-sm uppercase tracking-tight md:text-base"
+          >
+            contact me
+            <ArrowUpRight className="ml-2 h-4.5 w-4.5" />
+          </Link>
+        </div>
+      </div>
     </header>
   );
 }

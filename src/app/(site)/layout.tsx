@@ -1,5 +1,6 @@
-import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
+import { Navbar } from "@/components/shared/navbar";
+import { PageTransition } from "@/components/shared/page-transition";
 
 export default function SiteLayout({
   children,
@@ -9,7 +10,9 @@ export default function SiteLayout({
   return (
     <>
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        <PageTransition>{children}</PageTransition>
+      </main>
       <Footer />
     </>
   );

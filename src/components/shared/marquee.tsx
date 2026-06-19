@@ -19,7 +19,7 @@ function MarqueeContent({ ariaHidden = false }: { ariaHidden?: boolean }) {
     >
       {MARQUEE_ITEMS.map((item) => (
         <span key={item} className="flex items-center">
-          <span className="px-8 font-mono text-sm uppercase tracking-widest text-on-dark">
+          <span className="px-8 font-mono text-sm uppercase tracking-widest text-ink">
             {item}
           </span>
           <span className="h-1.5 w-1.5 rounded-full bg-accent" />
@@ -31,7 +31,7 @@ function MarqueeContent({ ariaHidden = false }: { ariaHidden?: boolean }) {
 
 export function Marquee() {
   return (
-    <div className="overflow-hidden bg-surface-dark py-6">
+    <div className="overflow-hidden bg-canvas py-6">
       <div className="marquee-track">
         <MarqueeContent />
         <MarqueeContent ariaHidden />

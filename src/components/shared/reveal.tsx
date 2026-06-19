@@ -1,27 +1,19 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode, type CSSProperties } from "react";
 
 interface RevealProps {
   children: ReactNode;
-  /** Extra classes for the wrapper element */
-  className?: string;
-  /** Stagger delay in milliseconds */
   delayMs?: number;
+  className?: string;
 }
 
-/**
- * Fades content in once when it scrolls into view.
- * The animation styles live in globals.css under [data-reveal];
- * reduced-motion users see content immediately.
- */
-export function Reveal({ children, className, delayMs = 0 }: RevealProps) {
+export function Reveal({ children, delayMs = 0, className }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-
+    const el = ref.current;
+    if (!el) return;
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -31,10 +23,10 @@ export function Reveal({ children, className, delayMs = 0 }: RevealProps) {
           }
         }
       },
-      { threshold: 0.15 },
+      { threshold: 0.1 },
     );
 
-    observer.observe(element);
+    observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
@@ -43,7 +35,7 @@ export function Reveal({ children, className, delayMs = 0 }: RevealProps) {
       ref={ref}
       data-reveal
       className={className}
-      style={delayMs ? { transitionDelay: `${delayMs}ms` } : undefined}
+      style={delayMs ? ({ transitionDelay: `${delayMs}ms` } as CSSProperties) : undefined}
     >
       {children}
     </div>

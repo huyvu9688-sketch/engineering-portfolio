@@ -18,8 +18,6 @@ import { FaceSelector } from "./face-select.js";
 const DRACO_DECODER_PATH = "https://www.gstatic.com/draco/versioned/decoders/1.5.6/";
 const TEXTURE_SLOTS = ["map", "emissiveMap", "metalnessMap", "roughnessMap", "aoMap", "normalMap"];
 const SELECT_COLOR = 0xeb3a14; // accent glow on the focused part
-const HOVER_COLOR = 0x4488ff; // soft blue glow under the cursor
-const HOVER_INTENSITY = 0.25; // "glow up a little"
 const EXPLODE_MAX = 1.5; // slider 100% pushes parts 1.5× their centre offset
 
 // Standard-view directions (from target) + the up vector each needs.
@@ -109,8 +107,6 @@ export class ViewerCore {
         this.boundListeners = [];
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
-        this.hoveredMesh = null;
-        this.hoverSaved = [];
         this.lastHoverTime = 0;
         this.contextTarget = null; // part the right-click menu acts on
         this.rightDown = { x: 0, y: 0 }; // to tell a right-click from a right-drag
@@ -291,6 +287,10 @@ export class ViewerCore {
         this.bind("view-cube-hit", "click", (e) => this.onViewCubeClick(e));
         this.bind("properties-close", "click", () => this.hideProperties());
 
+        this.bind("export-stl", "click", () => {
+            if (this.model) this.exportSTL();
+        });
+
         this.bind("toggle-section", "click", () => {
             if (this.model) this.toggleSection();
         });
@@ -434,35 +434,8 @@ export class ViewerCore {
         else this.faceSelector.clearHover();
     }
 
-    // Soft glow on the mesh under the cursor. Non-destructive: it saves the
-    // mesh's current emissive (so a selected part keeps its accent on un-hover).
-    setHover(mesh) {
-        if (this.hoveredMesh === mesh) return;
-        this.clearHover();
-        if (!mesh || !mesh.isMesh) return;
-        this.hoveredMesh = mesh;
-        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        mats.forEach((m) => {
-            if (!m || !m.emissive) return;
-            this.hoverSaved.push({ mat: m, hex: m.emissive.getHex(), intensity: m.emissiveIntensity });
-            m.emissive.setHex(HOVER_COLOR);
-            m.emissiveIntensity = Math.max(m.emissiveIntensity, HOVER_INTENSITY);
-        });
-    }
-
-    clearHover() {
-        if (!this.hoveredMesh) return;
-        this.hoverSaved.forEach(({ mat, hex, intensity }) => {
-            mat.emissive.setHex(hex);
-            mat.emissiveIntensity = intensity;
-        });
-        this.hoverSaved = [];
-        this.hoveredMesh = null;
-    }
-
     // Persistent accent glow on the focused part, clearing the previous one.
     selectPart(object) {
-        this.clearHover();
         if (this.selectedObject && this.selectedObject !== object) {
             this.setEmissive(this.selectedObject, 0x000000, 0);
         }
@@ -702,13 +675,13 @@ export class ViewerCore {
         this.setToolActive(document.getElementById("toggle-edges"), this.edgesVisible);
     }
 
-    // Feature edges (>30° between faces) drawn as black lines, parented to each
-    // mesh so they follow its transform and hide with it when isolated.
-    enableEdges() {
+    // Feature edges drawn as black lines. `thresholdAngle` controls how sharp an
+    // edge must be to show: 30° = standard, 15° = fine (reveals chamfers/fillets).
+    enableEdges(thresholdAngle = 30) {
         this.edgesVisible = true;
         this.allParts.forEach((mesh) => {
             if (!mesh.geometry || mesh.userData.__edges) return;
-            const edgesGeometry = new THREE.EdgesGeometry(mesh.geometry, 30);
+            const edgesGeometry = new THREE.EdgesGeometry(mesh.geometry, thresholdAngle);
             const material = new THREE.LineBasicMaterial({ color: 0x000000 });
             if (this.sectionActive) material.clippingPlanes = [this.sectionPlane];
             const lines = new THREE.LineSegments(edgesGeometry, material);
@@ -1110,6 +1083,49 @@ export class ViewerCore {
         this.syncSliderToPlane();
     }
 
+    // ----- STL export ----------------------------------------------------
+
+    async exportSTL() {
+        if (!this.model) return;
+
+        // Clear face overlays so they are not included in the output.
+        this.faceSelector.clearSelect();
+        this.faceSelector.clearHover();
+
+        const { STLExporter } = await import(
+            "three/examples/jsm/exporters/STLExporter.js"
+        );
+
+        // Build a temporary group: one cloned geometry per visible mesh with its
+        // world transform already baked in. This gives a single merged binary STL
+        // at full tessellation quality — no decimation, no LOD reduction.
+        this.model.updateMatrixWorld(true);
+        const exportGroup = new THREE.Group();
+
+        this.allParts.forEach((mesh) => {
+            if (!mesh.visible || mesh.userData.isEdgeHelper) return;
+            const geom = mesh.geometry.clone();
+            geom.applyMatrix4(mesh.matrixWorld); // bake world transform into vertex positions
+            exportGroup.add(new THREE.Mesh(geom));
+        });
+
+        if (exportGroup.children.length === 0) return;
+
+        const exporter = new STLExporter();
+        const buffer = exporter.parse(exportGroup, { binary: true });
+
+        // Dispose temporary geometries
+        exportGroup.children.forEach((m) => m.geometry.dispose());
+
+        const blob = new Blob([buffer], { type: "application/octet-stream" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "export.stl";
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
     // ----- Measure -------------------------------------------------------
 
     exitMeasureMode() {
@@ -1209,7 +1225,6 @@ export class ViewerCore {
     }
 
     clearModel() {
-        this.clearHover();
         this.faceSelector.clearHover();
         this.faceSelector.clearSelect();
         this.selectedFacePoint = null;
@@ -1304,7 +1319,6 @@ export class ViewerCore {
             dom.removeEventListener("wheel", this.onWheelHideBound);
         }
         document.removeEventListener("click", this.onDocClickBound);
-        this.clearHover();
         window.removeEventListener("resize", this.onResize);
         window.removeEventListener("keydown", this.onKeyDown);
         document.removeEventListener("visibilitychange", this.onVisibility);

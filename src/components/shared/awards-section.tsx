@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { ArrowUpRight } from "@/components/shared/arrow-up-right";
 import { Reveal } from "@/components/shared/reveal";
-import { SplitText } from "@/components/shared/split-text";
+import { ScrollSectionTitle } from "@/components/shared/scroll-section-title";
 
 // Reference site lists awarding bodies + counts with a hover image preview.
 // Adapted to an engineer's credentials: each row is a discipline with a
@@ -44,19 +44,17 @@ export function AwardsSection() {
   return (
     <section className="px-4 py-24 md:px-8 md:py-40">
       <div className="mx-auto max-w-300">
-        <Reveal>
-          <div className="flex items-baseline justify-between">
-            <SplitText
-              as="h2"
-              className="font-display text-[clamp(3rem,10vw,10rem)] font-bold uppercase leading-[0.74] tracking-[-0.04em]"
-            >
-              Credentials
-            </SplitText>
-            <span className="font-display text-lg font-bold uppercase tracking-tight md:text-3xl">
-              skills/4
-            </span>
-          </div>
-        </Reveal>
+        <div className="flex items-baseline justify-between">
+          <ScrollSectionTitle
+            as="h2"
+            className="font-display text-[clamp(3.5rem,11vw,11rem)] font-bold uppercase leading-[0.74] tracking-[-0.04em]"
+          >
+            Credentials
+          </ScrollSectionTitle>
+          <span className="font-display text-lg font-bold uppercase tracking-tight md:text-3xl">
+            skills/4
+          </span>
+        </div>
 
         <div className="relative mt-16 md:mt-24">
           {/* Hover preview — floats top-right on desktop */}

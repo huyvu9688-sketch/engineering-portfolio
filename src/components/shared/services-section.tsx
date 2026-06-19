@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "@/components/shared/arrow-up-right";
 import { Reveal } from "@/components/shared/reveal";
+import { ScrollSectionTitle } from "@/components/shared/scroll-section-title";
 
 interface Service {
   num: string;
@@ -47,16 +48,17 @@ export function ServicesSection() {
     <section className="bg-canvas px-4 pt-24 md:px-6 md:pt-40">
       <div className="mx-auto max-w-[1600px]">
         {/* ── Title row ──────────────────────────────────────────── */}
-        <Reveal>
-          <div className="flex items-end justify-between">
-            <h2 className="font-display text-[clamp(3.5rem,11vw,10rem)] font-bold uppercase leading-[0.74] tracking-[-0.06em]">
-              Services
-            </h2>
-            <span className="hidden pb-2 font-display text-sm font-bold uppercase tracking-tight text-ink md:block md:text-xl">
-              / what I build
-            </span>
-          </div>
-        </Reveal>
+        <div className="flex items-end justify-between">
+          <ScrollSectionTitle
+            as="h2"
+            className="font-display text-[clamp(3.5rem,11vw,11rem)] font-bold uppercase leading-[0.74] tracking-[-0.04em]"
+          >
+            Services
+          </ScrollSectionTitle>
+          <span className="hidden pb-2 font-display text-sm font-bold uppercase tracking-tight text-ink md:block md:text-xl">
+            / what I build
+          </span>
+        </div>
 
         {/* ── Expanding card row ─────────────────────────────────── */}
         <div className="mt-10 flex flex-col border-black md:mt-16 md:flex-row md:border-t-2">

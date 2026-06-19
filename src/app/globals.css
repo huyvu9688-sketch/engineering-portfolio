@@ -198,6 +198,8 @@ body {
 .split-letter {
   display: inline-block;
   will-change: transform;
+  /* Prevent sub-pixel gaps that appear between inline-block spans at large sizes */
+  font-kerning: none;
 }
 
 /* Letters are visible by default (so they never get stuck hidden if JS is
@@ -206,7 +208,9 @@ body {
    A keyframe (not a transition) runs reliably the moment its class lands —
    no dependency on a prior paint of the hidden state. */
 .split-text.is-prepared .split-letter {
-  transform: translateY(110%);
+  /* --y is set per-letter in JS (centerOut mode scales depth by ring distance).
+     Falls back to 110% for standard left-to-right stagger. */
+  transform: translateY(var(--y, 110%));
 }
 
 .split-text.is-prepared.is-revealed .split-letter {
@@ -216,7 +220,7 @@ body {
 
 @keyframes split-rise {
   from {
-    transform: translateY(110%);
+    transform: translateY(var(--y, 110%));
   }
   to {
     transform: translateY(0);
@@ -367,21 +371,6 @@ body {
     opacity: 1;
   }
 
-  /* Marquee keeps scrolling — it is a core brand element and is
-     a slow, non-flashing continuous motion (owner's request). */
-
-  [data-reveal] {
-    opacity: 1;
-    transform: none;
-    filter: none;
-    transition: none;
-  }
-
-  /* JS skips `is-prepared` under reduced motion, so letters stay visible;
-     this is a belt-and-braces guard in case the class is present. */
-  .split-text.is-prepared .split-letter,
-  .split-text.is-prepared.is-revealed .split-letter {
-    transform: none;
-    animation: none;
-  }
+  /* Marquee, split-text reveals, and scroll reveals keep running —
+     all are intentional brand motion (owner's explicit request). */
 }

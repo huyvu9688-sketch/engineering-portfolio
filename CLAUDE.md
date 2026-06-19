@@ -9,7 +9,7 @@ making any architectural decision:
    storage model, and invariants
 3. `context/ui-context.md` — theme, colors, typography, and
    component conventions (full component specs — no separate
-   design-reference file needed)
+   design-reference file needed)1
 4. `context/code-standards.md` — implementation rules and
    conventions
 5. `context/ai-workflow-rules.md` — development workflow,

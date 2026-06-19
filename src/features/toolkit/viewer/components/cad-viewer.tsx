@@ -5,6 +5,7 @@ import {
   Box,
   Boxes,
   Crosshair,
+  Download,
   Eye,
   Frame,
   ListTree,
@@ -170,6 +171,15 @@ export function CadViewer() {
           <Scissors className="h-4 w-4 stroke-[1.5]" />
         </button>
         <span className="mx-0.5 h-5 w-px bg-hairline-dark" />
+        <button
+          type="button"
+          id="export-stl"
+          className={TOOL_BTN}
+          title="Export as STL (binary, full resolution)"
+          aria-label="Export STL"
+        >
+          <Download className="h-4 w-4 stroke-[1.5]" />
+        </button>
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}

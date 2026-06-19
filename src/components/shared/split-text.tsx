@@ -23,18 +23,15 @@ interface SplitTextProps {
    *   Use for section titles further down the page.
    */
   trigger?: "load" | "scroll";
+  /**
+   * When true, letters are staggered from outside-in: the two outermost
+   * letters animate first (delay = 0) and the centre letter last. Each
+   * letter's `--y` start-depth also scales with distance from centre so
+   * outer letters rise from further below, amplifying the wing-spread look.
+   */
+  centerOut?: boolean;
 }
 
-/**
- * Scroll-triggered per-letter reveal — the reference's signature title
- * effect. Each letter sits below an overflow-hidden mask (per word, so
- * words still wrap) and rises into place, staggered, the first time the
- * heading scrolls into view. Works because every title is uppercase, so
- * there are no descenders to clip.
- *
- * Animation/easing live in globals.css under `.split-text`; reduced-motion
- * users see the text immediately.
- */
 export function SplitText({
   children,
   as,
@@ -43,23 +40,17 @@ export function SplitText({
   delay = 0,
   replay = false,
   trigger = "scroll",
+  centerOut = false,
 }: SplitTextProps) {
   const Tag = (as ?? "span") as ElementType;
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    // "load" mode is a pure-CSS reveal (.split-text--load) that runs on
-    // first paint — no observer needed, so nothing here to wire up.
     if (trigger !== "scroll") return;
 
     const el = ref.current;
     if (!el) return;
 
-    // Respect reduced motion — leave the letters visible, no reveal.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    // Hide the letters now that JS is running. (Default CSS keeps them
-    // visible so they're never stuck hidden if hydration is slow/blocked.)
     el.classList.add("is-prepared");
 
     const observer = new IntersectionObserver(
@@ -73,7 +64,7 @@ export function SplitText({
           }
         }
       },
-      { threshold: 0.2 },
+      { threshold: 0.1 },
     );
 
     observer.observe(el);
@@ -81,7 +72,14 @@ export function SplitText({
   }, [replay, trigger]);
 
   const words = children.split(" ");
-  let letterIndex = 0;
+
+  // Pre-count total letters so center-out distances can be computed
+  // across the full string regardless of word boundaries.
+  const totalLetters = children.replace(/ /g, "").length;
+  const centerIndex = (totalLetters - 1) / 2;
+  const maxDist = centerIndex; // symmetric — same for odd or even counts
+
+  let globalIndex = 0;
 
   return (
     <Tag
@@ -92,19 +90,38 @@ export function SplitText({
       {words.map((word, w) => (
         <span key={`${word}-${w}`} className="split-word" aria-hidden>
           {word.split("").map((char, c) => {
-            const i = letterIndex++;
+            const i = globalIndex++;
+            let letterDelay: number;
+            let startY: string;
+
+            if (centerOut) {
+              const dist = Math.abs(i - centerIndex);
+              // Outermost letters get delay=0, centre letter gets maxDist*stagger.
+              letterDelay = delay + (maxDist - dist) * stagger;
+              // Outer letters fall from further ABOVE (negative = above the clip box).
+              // Each ring step adds 30% extra height, so A/T start highest.
+              startY = `-${100 + dist * 30}%`;
+            } else {
+              letterDelay = delay + i * stagger;
+              startY = "110%";
+            }
+
             return (
               <span
                 key={`${char}-${c}`}
                 className="split-letter"
-                style={{ "--d": `${delay + i * stagger}s` } as CSSProperties}
+                style={
+                  {
+                    "--d": `${letterDelay}s`,
+                    "--y": startY,
+                  } as CSSProperties
+                }
               >
                 {char}
               </span>
             );
           })}
-          {/* preserve the inter-word space */}
-          {w < words.length - 1 ? " " : ""}
+          {w < words.length - 1 ? " " : ""}
         </span>
       ))}
     </Tag>

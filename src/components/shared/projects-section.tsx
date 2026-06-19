@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight } from "@/components/shared/arrow-up-right";
 import { Reveal } from "@/components/shared/reveal";
-import { SplitText } from "@/components/shared/split-text";
+import { ScrollSectionTitle } from "@/components/shared/scroll-section-title";
 import { PROJECTS } from "@/features/portfolio/data/projects";
 
 // Mechanism line-drawings double as project visuals until real photos
@@ -26,14 +26,14 @@ export function ProjectsSection() {
       id="works"
       className="bg-surface-dark py-24 text-on-dark md:py-36"
     >
-      <SplitText
+      <ScrollSectionTitle
         as="h2"
         className="block px-4 text-center font-display text-[clamp(3.5rem,11vw,11rem)] font-bold uppercase leading-[0.8] tracking-[-0.04em] md:px-8"
       >
-        Recent works
-      </SplitText>
+        Works
+      </ScrollSectionTitle>
 
-      <div className="mt-12 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-6 md:mt-20 md:gap-8 md:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="mt-12 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-6 md:mt-20 md:gap-8 md:px-8 scrollbar-none">
         {PROJECTS.map((project, i) => (
           <Link
             key={project.slug}

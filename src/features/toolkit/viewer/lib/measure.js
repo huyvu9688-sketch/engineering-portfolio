@@ -1,5 +1,6 @@
 // Measurement tool with three modes:
 //   • Distance        — 2 picks → axis-aligned face-to-face gap (X/Y/Z).
+//                       Auto-upgrades to axis C–C when both picks are cylindrical faces.
 //   • Circle (Ø/R)    — 3 picks on a round edge → fitted circle, diameter+radius.
 //   • Center-to-center — two circles (3 picks each) → distance between centres.
 //
@@ -9,7 +10,7 @@
 import * as THREE from "three";
 
 const MEASURE_COLOR = 0xeb3a14; // accent
-const CENTER_COLOR = 0x4488ff; // fitted circle centres
+const CENTER_COLOR = 0x4488ff; // fitted circle centres / cylinder axis centres
 const DRAG_THRESHOLD = 5;
 
 const MODES = {
@@ -49,7 +50,7 @@ export class MeasureTool {
         this.core = core;
         this.active = false;
         this.mode = "distance";
-        this.picks = []; // [{ point, axis }]
+        this.picks = []; // [{ point, axis, faceInfo }]
         this.firstCircle = null; // fitted circle 1 in centers mode
         this.markers = [];
         this.lines = []; // straight lines + fitted circles
@@ -75,7 +76,8 @@ export class MeasureTool {
 
         if (this.core.model) {
             const size = new THREE.Box3().setFromObject(this.core.model).getSize(new THREE.Vector3());
-            this.markerRadius = (Math.max(size.x, size.y, size.z) || 1) * 0.008;
+            // 0.004 × maxDim — half the old size, less visual clutter
+            this.markerRadius = (Math.max(size.x, size.y, size.z) || 1) * 0.004;
         }
 
         const dom = this.dom;
@@ -139,7 +141,6 @@ export class MeasureTool {
         const intersects = this.raycaster.intersectObjects(visibleParts, false);
 
         if (intersects.length === 0) {
-            // Empty background — reset to start a fresh measurement.
             if (this.picks.length > 0 || this.lines.length > 0) {
                 this.clear();
                 this.setInstruction(this.instructionFor());
@@ -148,24 +149,42 @@ export class MeasureTool {
         }
 
         const max = MODES[this.mode].picks;
-        if (this.picks.length >= max) this.clear(); // a fresh pick starts over
+        if (this.picks.length >= max) this.clear();
 
         const hit = intersects[0];
-        const point = hit.point.clone();
+        const hitPoint = hit.point.clone();
+
+        // In distance mode, check if we clicked a cylindrical face and use the
+        // computed axis centre as the effective measurement point.
+        let faceInfo = null;
+        let effectivePoint = hitPoint;
+        let isCylinder = false;
+
+        if (this.mode === "distance") {
+            faceInfo = this.core.faceSelector.analyzeFace(hit.object, hit.faceIndex);
+            if (faceInfo.type === "cylindrical" && faceInfo.cylinderCenter) {
+                effectivePoint = faceInfo.cylinderCenter;
+                isCylinder = true;
+            }
+        }
 
         let normal = null;
         let axis = null;
-        if (hit.face) {
+        if (hit.face && !isCylinder) {
             const normalMatrix = new THREE.Matrix3().getNormalMatrix(hit.object.matrixWorld);
             normal = hit.face.normal.clone().applyNormalMatrix(normalMatrix);
             axis = dominantAxis(normal);
         }
 
-        // Normal arrow only helps in face-to-face distance mode.
-        this.addMarker(point, this.mode === "distance" ? normal : null);
-        this.picks.push({ point, axis });
+        if (isCylinder) {
+            // Blue centre marker — visually distinct from a surface pick
+            this.addCenterMarker(effectivePoint);
+        } else {
+            this.addMarker(hitPoint, this.mode === "distance" ? normal : null);
+        }
 
-        // Centers mode: lock in the first circle once its 3 points are down.
+        this.picks.push({ point: effectivePoint, axis, faceInfo, isCylinder });
+
         if (this.mode === "centers" && this.picks.length === 3) this.drawFirstCircle();
 
         if (this.picks.length === MODES[this.mode].picks) this.complete();
@@ -181,6 +200,20 @@ export class MeasureTool {
 
     completeDistance() {
         const [a, b] = this.picks;
+
+        // --- Cylinder axis C–C: both picks resolved to a cylinder centre ---
+        if (a.isCylinder && b.isCylinder) {
+            const dist = a.point.distanceTo(b.point) * this.scale;
+            this.addLine(a.point, b.point);
+            this.showResult(
+                "Axis C–C",
+                `${dist.toFixed(2)} mm (${(dist / 25.4).toFixed(3)} in)`,
+                "Cylinder axis centre to centre",
+            );
+            return;
+        }
+
+        // --- Mixed or flat: axis-aligned face-to-face gap (original behaviour) ---
         let axis;
         const parallel = !!(a.axis && b.axis && a.axis === b.axis);
         if (a.axis) axis = a.axis;
@@ -260,11 +293,12 @@ export class MeasureTool {
     }
 
     instructionFor() {
-        const n = this.picks.length % MODES[this.mode].picks; // 0 when empty or done
+        const n = this.picks.length % MODES[this.mode].picks;
         if (this.mode === "distance") {
-            return n === 0
-                ? "Click the first point · Esc to exit"
-                : "Click the second point · Esc to exit";
+            if (n === 0) return "Click a surface or cylinder · Esc to exit";
+            const first = this.picks[0];
+            if (first?.isCylinder) return "Cylinder axis locked · click second surface · Esc to exit";
+            return "Click the second point · Esc to exit";
         }
         if (this.mode === "circle") {
             return `Click 3 points around the round edge · ${n + 1}/3 · Esc to exit`;
@@ -274,7 +308,7 @@ export class MeasureTool {
     }
 
     addMarker(point, normal) {
-        const geometry = new THREE.SphereGeometry(this.markerRadius, 16, 16);
+        const geometry = new THREE.SphereGeometry(this.markerRadius, 12, 12);
         const material = new THREE.MeshBasicMaterial({ color: MEASURE_COLOR, depthTest: false });
         const marker = new THREE.Mesh(geometry, material);
         marker.position.copy(point);
@@ -301,7 +335,7 @@ export class MeasureTool {
     }
 
     addCenterMarker(point) {
-        const geometry = new THREE.SphereGeometry(this.markerRadius * 1.1, 16, 16);
+        const geometry = new THREE.SphereGeometry(this.markerRadius * 1.1, 12, 12);
         const material = new THREE.MeshBasicMaterial({ color: CENTER_COLOR, depthTest: false });
         const marker = new THREE.Mesh(geometry, material);
         marker.position.copy(point);

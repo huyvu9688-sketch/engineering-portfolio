@@ -87,8 +87,9 @@ Spline_Sans_Mono({ subsets: ["latin"], weight: ["400","500"] })
 Type rules:
 - **Display** (`--font-display`): uppercase only, tight tracking
   (`tracking-tighter`), weight 700–900. Viewport-scaled on hero
-  (`clamp(5rem,15.5vw,22rem)`), `text-5xl`–`text-8xl` on section
-  titles. This is the dominant visual element on every marketing page.
+  (`clamp(5rem,15.5vw,22rem)`). Giant section titles (Works, Services,
+  Credentials, About): `clamp(3.5rem,11vw,11rem)`, tracking `-0.04em`.
+  This is the dominant visual element on every marketing page.
 - **Mono chrome** (`--font-mono`): ALL nav links, eyebrows, chips,
   captions, metadata, buttons, labels — always uppercase,
   `text-[10px]`–`text-xs`, `tracking-widest`.
@@ -132,26 +133,38 @@ portrait (`joe.png`) at `aspect-3/4`, overlapping the headline.
 animation — not scroll-triggered.
 
 ### Marquee band
-Dark `--surface-dark` strip, `--font-mono` uppercase items
-separated by `--accent` dot separators, slow `40s linear infinite`
-CSS animation. Engineering skills: SolidWorks, Automation,
-Pneumatics, Three.js, Motor Sizing, etc. Pauses on hover.
-Always runs — exempt from `prefers-reduced-motion`.
+Light `--canvas` strip, `--font-mono` uppercase items separated by
+`--accent` dot separators, slow `40s linear infinite` CSS animation.
+Engineering skills: SolidWorks, Automation, Pneumatics, Three.js,
+Motor Sizing, etc. Pauses on hover. Always runs — never gated on
+`prefers-reduced-motion` (owner's OS has it ON; it's a core brand
+effect).
 
 ### ServicesSection
-Dark `--surface-dark` zone. Four numbered Olha-style service rows:
-`01 / AUTOMATION SYSTEMS`, etc. Condensed `--font-display` service
-titles, hairline-dark dividers. On hover: row background flashes
-accent, arrow icon rotates 45°. "See my work" `link-line` CTA at
-bottom.
+Light `--canvas` zone. Four numbered Olha-style expanding cards:
+`01 / AUTOMATION`, etc. Condensed `--font-display` service titles,
+black border dividers. Cards expand `flex-grow` on hover revealing
+capability list + image + description text. "See my work" `link-line`
+CTA at bottom.
 
 ### AboutSection
-Dark `--surface-dark` zone (same surface as ServicesSection —
-they read as one continuous dark band). Two-column layout.
-Left: intro paragraph + education card. Right: experience timeline
-with `--hairline-dark` vertical rule, circular role markers, `[ /
-bracket ]` bullet list points. All text on-dark palette; role
-titles in `--font-display` condensed.
+Light `--canvas` zone. Giant `ABOUT` heading animates via
+`ScrollSectionTitle`. Two-column layout: intro paragraph + education
+card on left; experience timeline on right with hairline vertical
+rule, circular role markers, `[ / bracket ]` bullet points.
+
+### ScrollSectionTitle
+Reusable scroll-driven section heading
+(`src/components/shared/scroll-section-title.tsx`). Letters fall
+outside-in as the user scrolls: outermost letters drop first and
+from furthest above, center letter last. Each letter is a
+`.split-letter` span inside a `.split-word { overflow: hidden }`
+clip mask. Progress is lerped in a RAF loop
+(`current += delta * 0.10`), eased with `Math.sin(lp * π / 2)`.
+Props: `children: string`, `as?`, `className?`, `scrollWindow=0.8`,
+`phase=0.6`. Used on: About, Works, Services, Credentials.
+Standard font: `clamp(3.5rem,11vw,11rem) / tracking -0.04em`.
+**Never gated on `prefers-reduced-motion`.**
 
 ### ProjectsSection ("Recent Works")
 Dark snap-scroll showcase section. Three.js-inspired slider
@@ -211,14 +224,19 @@ row wrapped in a `Link` to `/portfolio/[slug]`.
 Intentionally MINIMAL — utility surface, not marketing. Dark 3D
 environment (`0x111111`). One vanilla Three.js engine
 (`viewer/lib/viewer-core.js`). Controls: toolbar (reset, isolate,
-show-all, measure, import), component tree (searchable, collapsible),
-isolate mode (banner), hover glow (blue emissive), measure tool
-(face-to-face axis distance, mm + inches), explode slider, section
-cut (X/Y/Z, flip, face-align), face properties card, volume + weight
-readout. Real component colors from GLB materials kept. No custom
-cursor, no GSAP, no Lenis. See architecture.md for engine details.
+show-all, measure, edges, volume, explode, section, STL export,
+import), component tree (searchable, collapsible), isolate mode
+(banner), hover highlight (translucent face overlay, BFS-picked so
+curved faces select whole), measure tool (face-to-face axis distance
++ cylinder axis C–C + Ø + circle C–C, mm + inches), explode slider,
+section cut (X/Y/Z, flip, face-align), face properties card, volume +
+weight readout, binary STL export at full resolution. Real component
+colors from GLB materials kept. No custom cursor, no GSAP, no Lenis.
+See architecture.md for engine details.
 ⚠️ Do not re-add a three.js ViewHelper view-cube without setting
 `renderer.autoClear = false` — it clears the canvas every frame.
+⚠️ Do not add screen-space post-processing or a render/RealView mode —
+tried and reverted (looked worse on real CAD models).
 
 ### Chips/tags
 White pill, hairline border, `--font-mono` uppercase `text-[10px]`–
@@ -250,27 +268,23 @@ group (None / Servo / Stepper / AC). Native token-styled controls.
 ## Motion Rules
 
 ### Marketing surfaces
-- **Scroll reveals** (GSAP ScrollTrigger): fade/blur/slide or
-  per-letter stagger, triggered once per page load
-  (`toggleActions: "play none none none"`). Never scrub-pinned.
-- **Per-letter reveals** (`.split-letter` spans + `--d` stagger CSS
-  var): `gsap.fromTo(".split-letter", { y: "120%", opacity: 0 }, {
-  y: 0, opacity: 1, stagger: 0.03, ease: "power3.out",
-  scrollTrigger: { start: "top 90%" } })`
+- **Section title reveals** (`ScrollSectionTitle`): custom
+  scroll-driven JS (RAF + lerp + ease-out sine). Outside-in letter
+  stagger. Never gated on `prefers-reduced-motion`.
+- **General reveals** (`Reveal`): IntersectionObserver, plays once.
+  Used for supporting elements (paragraphs, CTAs).
 - **Hover transitions**: 200–500ms, ease-out, via `--transition-main`
 - **Page transition**: `page-enter` CSS keyframe, 0.65s, fires on
-  route change
-- **Lenis smooth scroll**: initialize on marketing layout root;
-  sync to GSAP ticker
+  route change via `PageTransition` component.
 
 ### Utility surfaces
-Simple fade-in on mount at most. No scroll triggers, no GSAP.
+Simple fade-in on mount at most. No scroll triggers, no JS animation.
 
 ### Reduced motion
-`prefers-reduced-motion: reduce` → scroll reveal content appears
-immediately (skip animation). Exempt: custom cursor (fine-pointer
-only, no flash), marquee (slow non-flashing scroll, always on).
-Both are core brand effects and always run per owner decision.
+**Do NOT gate any animation on `prefers-reduced-motion`** — the
+owner's OS has it ON and it kills all motion. All animations run
+unconditionally. Custom cursor and marquee are also always-on core
+brand effects.
 
 ### Do NOT add
 - A percentage/progress loader — it fakes progress and punishes

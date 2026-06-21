@@ -7,6 +7,7 @@ import {
   getCategory,
   isAcceptedExtension,
   acceptAttribute,
+  firstCategoryForExtension,
 } from "./categories.ts";
 
 test("there are exactly 6 categories with unique keys", () => {
@@ -33,4 +34,18 @@ test("acceptAttribute renders a dot-prefixed comma list for <input accept>", () 
 
 test("MAX_FILE_BYTES is 50 MB", () => {
   assert.equal(MAX_FILE_BYTES, 50 * 1024 * 1024);
+});
+
+test("firstCategoryForExtension maps unambiguous types and resolves shared ones in order", () => {
+  // Unambiguous extensions land on their only category.
+  assert.equal(firstCategoryForExtension("step"), "cad_3d");
+  assert.equal(firstCategoryForExtension("STL"), "cad_3d"); // case-insensitive
+  assert.equal(firstCategoryForExtension("dwg"), "drawing_2d");
+  assert.equal(firstCategoryForExtension("xlsx"), "report");
+  assert.equal(firstCategoryForExtension("png"), "image");
+  // Shared extensions resolve to the first matching category in CATEGORIES order.
+  assert.equal(firstCategoryForExtension("pdf"), "drawing_2d");
+  assert.equal(firstCategoryForExtension("docx"), "datasheet");
+  // Unknown extension → null.
+  assert.equal(firstCategoryForExtension("zip"), null);
 });

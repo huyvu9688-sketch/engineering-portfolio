@@ -36,3 +36,15 @@ export function acceptAttribute(category: CategoryKey): string {
   if (!def) return "";
   return def.extensions.map((e) => `.${e}`).join(",");
 }
+
+/**
+ * First category whose allowlist includes this extension, or null if none.
+ * Used to auto-select a category when a file is picked. Extensions shared by
+ * several categories (pdf, docx) resolve to the first in CATEGORIES order; the
+ * admin can refine the choice afterward.
+ */
+export function firstCategoryForExtension(ext: string): CategoryKey | null {
+  const lower = ext.toLowerCase();
+  const def = CATEGORIES.find((c) => c.extensions.includes(lower));
+  return def ? def.key : null;
+}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { CATEGORIES, MAX_FILE_BYTES, acceptAttribute, isAcceptedExtension } from "@/features/file-database/lib/categories";
+import { CATEGORIES, MAX_FILE_BYTES, acceptAttribute, isAcceptedExtension, firstCategoryForExtension } from "@/features/file-database/lib/categories";
 import { fileExtension, sanitizeFilename, formatFileSize } from "@/features/file-database/lib/format";
 import type { CategoryKey, DocumentInput, Project } from "@/features/file-database/lib/types";
 
@@ -19,7 +19,16 @@ export function UploadForm({ projects, onUploaded }: { projects: Project[]; onUp
   function onPickFile(f: File | null) {
     setFile(f);
     setError(null);
-    if (f && !title) setTitle(f.name.replace(/\.[^.]+$/, ""));
+    if (!f) return;
+    if (!title) setTitle(f.name.replace(/\.[^.]+$/, ""));
+    // Auto-select a category from the file's extension. If the current category
+    // already accepts it, leave the admin's choice alone (handles ambiguous
+    // types like pdf/docx, where they may have deliberately picked one).
+    const ext = fileExtension(f.name);
+    if (ext && !isAcceptedExtension(category, ext)) {
+      const match = firstCategoryForExtension(ext);
+      if (match) setCategory(match);
+    }
   }
 
   async function onSubmit(e: React.FormEvent) {

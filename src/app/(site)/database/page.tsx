@@ -2,24 +2,38 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { DocumentBrowser } from "@/features/file-database/components/document-browser";
 import { CATEGORIES } from "@/features/file-database/lib/categories";
-import type { DocumentRecord, Project } from "@/features/file-database/lib/types";
+import type { DocumentRecord } from "@/features/file-database/lib/types";
 
 export const metadata: Metadata = {
   title: "Database — Joseph Vu",
 };
 
-// Always fetch fresh counts/listing on request.
+// Always fetch fresh counts/listing and the current session on request.
 export const dynamic = "force-dynamic";
 
 export default async function DatabasePage() {
   const supabase = await createClient();
-  const [{ data: docs }, { data: projects }] = await Promise.all([
-    supabase.from("documents").select("*").order("created_at", { ascending: false }),
-    supabase.from("projects").select("*").order("name"),
-  ]);
+
+  // Is the current visitor the signed-in admin? (Drives the upload + delete UI.)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  let isAdmin = false;
+  if (user) {
+    const { data: admin } = await supabase
+      .from("app_admins")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    isAdmin = Boolean(admin);
+  }
+
+  const { data: docs } = await supabase
+    .from("documents")
+    .select("*")
+    .order("created_at", { ascending: false });
 
   const documents = (docs ?? []) as DocumentRecord[];
-  const projectList = (projects ?? []) as Project[];
   const categoryCount = new Set(documents.map((d) => d.category)).size;
 
   return (
@@ -37,11 +51,11 @@ export default async function DatabasePage() {
 
       <p className="mt-8 max-w-xl text-base leading-relaxed text-ink-muted md:text-lg">
         A downloadable library of 3D CAD models, drawings, datasheets, standards,
-        and calculation reports. Search by name or tag, filter by category or
-        project, and download any file directly.
+        and calculation reports. Search by name or tag, filter by category, and
+        download any file directly.
       </p>
 
-      <DocumentBrowser initialDocuments={documents} projects={projectList} />
+      <DocumentBrowser initialDocuments={documents} isAdmin={isAdmin} />
     </section>
   );
 }

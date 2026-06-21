@@ -7,7 +7,7 @@ export function SignOutButton() {
   const router = useRouter();
   async function signOut() {
     await createClient().auth.signOut();
-    router.replace("/admin");
+    router.replace("/database");
     router.refresh();
   }
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -10,6 +10,18 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // Already signed in? Skip the form and go straight to the library.
+  useEffect(() => {
+    createClient()
+      .auth.getUser()
+      .then(({ data }) => {
+        if (data.user) {
+          router.replace("/database");
+          router.refresh();
+        }
+      });
+  }, [router]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -22,7 +34,7 @@ export default function AdminLoginPage() {
       setError("Sign-in failed. Check your email and password.");
       return;
     }
-    router.replace("/admin/documents");
+    router.replace("/database");
     router.refresh();
   }
 

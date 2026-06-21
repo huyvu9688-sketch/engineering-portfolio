@@ -1,29 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { CATEGORIES, MAX_FILE_BYTES, acceptAttribute, isAcceptedExtension, firstCategoryForExtension } from "@/features/file-database/lib/categories";
+import { CATEGORIES, MAX_FILE_BYTES, isAcceptedExtension, firstCategoryForExtension } from "@/features/file-database/lib/categories";
 import { fileExtension, sanitizeFilename, formatFileSize } from "@/features/file-database/lib/format";
-import type { CategoryKey, DocumentInput, Project } from "@/features/file-database/lib/types";
+import type { CategoryKey, DocumentInput } from "@/features/file-database/lib/types";
 
-export function UploadForm({ projects, onUploaded }: { projects: Project[]; onUploaded: () => void }) {
+export function UploadForm({ onUploaded }: { onUploaded: () => void }) {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<CategoryKey>("cad_3d");
   const [description, setDescription] = useState("");
   const [tagText, setTagText] = useState("");
-  const [projectId, setProjectId] = useState<string>("");
+  const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // Click-picker accepts every known extension; auto-categorization handles sorting.
+  const acceptAll = useMemo(
+    () => Array.from(new Set(CATEGORIES.flatMap((c) => c.extensions))).map((e) => `.${e}`).join(","),
+    [],
+  );
 
   function onPickFile(f: File | null) {
     setFile(f);
     setError(null);
     if (!f) return;
     if (!title) setTitle(f.name.replace(/\.[^.]+$/, ""));
-    // Auto-select a category from the file's extension. If the current category
-    // already accepts it, leave the admin's choice alone (handles ambiguous
-    // types like pdf/docx, where they may have deliberately picked one).
+    // Auto-detect category from extension; only override when the current
+    // category can't accept the file (keeps a deliberate pdf/docx choice).
     const ext = fileExtension(f.name);
     if (ext && !isAcceptedExtension(category, ext)) {
       const match = firstCategoryForExtension(ext);
@@ -35,7 +40,7 @@ export function UploadForm({ projects, onUploaded }: { projects: Project[]; onUp
     e.preventDefault();
     setError(null);
 
-    if (!file) return setError("Choose a file first.");
+    if (!file) return setError("Choose or drop a file first.");
     if (file.size > MAX_FILE_BYTES) return setError(`File exceeds ${formatFileSize(MAX_FILE_BYTES)}.`);
     const ext = fileExtension(file.name);
     if (!ext) return setError("File has no extension.");
@@ -68,7 +73,7 @@ export function UploadForm({ projects, onUploaded }: { projects: Project[]; onUp
       mime_type: file.type || null,
       size_bytes: file.size,
       tags: tagText.split(",").map((t) => t.trim()).filter(Boolean),
-      project_id: projectId || null,
+      project_id: null,
       storage_path: storagePath,
       original_filename: file.name,
     };
@@ -91,7 +96,6 @@ export function UploadForm({ projects, onUploaded }: { projects: Project[]; onUp
     setTitle("");
     setDescription("");
     setTagText("");
-    setProjectId("");
     onUploaded();
   }
 
@@ -100,29 +104,55 @@ export function UploadForm({ projects, onUploaded }: { projects: Project[]; onUp
 
   return (
     <form onSubmit={onSubmit} className="rounded-lg border border-hairline bg-surface p-6">
-      <div className="grid gap-5 md:grid-cols-2">
-        <label className="block md:col-span-2">
-          <span className={labelCls}>File (max {formatFileSize(MAX_FILE_BYTES)})</span>
-          <input
-            type="file"
-            accept={acceptAttribute(category)}
-            onChange={(e) => onPickFile(e.target.files?.[0] ?? null)}
-            className={inputCls}
-          />
-          {file && (
-            <span className="mt-1 block font-mono text-[10px] uppercase tracking-widest text-ink-faint">
-              {file.name} · {formatFileSize(file.size)}
-            </span>
-          )}
-        </label>
+      {/* Drag-and-drop zone (also click-to-browse via the hidden input). */}
+      <label
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragOver(false);
+          onPickFile(e.dataTransfer.files?.[0] ?? null);
+        }}
+        className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-6 py-10 text-center transition-colors ${
+          dragOver ? "border-accent bg-canvas" : "border-hairline hover:border-accent"
+        }`}
+      >
+        <input
+          type="file"
+          accept={acceptAll}
+          onChange={(e) => onPickFile(e.target.files?.[0] ?? null)}
+          className="hidden"
+        />
+        {file ? (
+          <>
+            <p className="font-mono text-xs uppercase tracking-widest text-ink">{file.name}</p>
+            <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-ink-faint">
+              {formatFileSize(file.size)} · click or drop to replace
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="font-mono text-xs uppercase tracking-widest text-ink-muted">
+              Drag &amp; drop a file here
+            </p>
+            <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-ink-faint">
+              or click to browse · max {formatFileSize(MAX_FILE_BYTES)}
+            </p>
+          </>
+        )}
+      </label>
 
+      <div className="mt-5 grid gap-5 md:grid-cols-2">
         <label className="block">
           <span className={labelCls}>Title</span>
           <input value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} />
         </label>
 
         <label className="block">
-          <span className={labelCls}>Category</span>
+          <span className={labelCls}>Category (auto-detected)</span>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as CategoryKey)}
@@ -134,17 +164,7 @@ export function UploadForm({ projects, onUploaded }: { projects: Project[]; onUp
           </select>
         </label>
 
-        <label className="block">
-          <span className={labelCls}>Project (optional)</span>
-          <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className={inputCls}>
-            <option value="">— None —</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </label>
-
-        <label className="block">
+        <label className="block md:col-span-2">
           <span className={labelCls}>Tags (comma-separated)</span>
           <input value={tagText} onChange={(e) => setTagText(e.target.value)} className={inputCls} />
         </label>

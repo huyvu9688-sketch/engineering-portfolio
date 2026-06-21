@@ -5,6 +5,29 @@
 **Status:** Approved design, pending implementation plan
 **Owner:** Joe
 
+## Revision — 2026-06-21 (Consolidation)
+
+Post-build UX changes, agreed with Joe and now implemented:
+
+- **One surface.** Upload + management moved onto the public `/database` page.
+  It is read-only for visitors; when the admin is signed in it also shows a
+  **drag-and-drop upload card** and a **delete** button on each document card.
+- **`/admin` is login-only** and redirects to `/database` after sign-in (and
+  immediately if already signed in). The separate `/admin/documents` and
+  `/admin/projects` dashboard pages and their components were removed.
+- **Projects removed from the UX.** No project filter on browse, no project
+  field on upload, no project manager. The `projects` table and
+  `documents.project_id` column remain (dormant, nullable) so projects can
+  return later; the `/api/projects` routes also remain but are currently unused.
+- **Auto category detection** on file pick (`firstCategoryForExtension`):
+  unambiguous extensions map exactly; shared types (pdf/docx) pick the first
+  match and stay editable.
+- A discreet **Admin** link was added to the site footer (→ `/admin`).
+
+Sections below describe the original design; where they mention the admin
+dashboard, the project filter, or project grouping in the UI, read them through
+this revision.
+
 ## 1. Purpose
 
 A searchable, downloadable library where Joe (single admin) stores **all

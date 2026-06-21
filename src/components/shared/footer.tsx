@@ -86,9 +86,17 @@ export function Footer() {
           <p className="font-mono text-[10px] uppercase tracking-tight text-ink-muted">
             © 2026 Joseph Vu
           </p>
-          <p className="font-mono text-[10px] uppercase tracking-tight text-ink-muted">
-            Automation &amp; Production Engineering
-          </p>
+          <div className="flex items-center gap-4 md:gap-6">
+            <p className="font-mono text-[10px] uppercase tracking-tight text-ink-muted">
+              Automation &amp; Production Engineering
+            </p>
+            <Link
+              href="/admin"
+              className="font-mono text-[10px] uppercase tracking-tight text-ink-faint transition-colors duration-300 hover:text-accent"
+            >
+              Admin
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

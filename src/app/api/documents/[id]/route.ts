@@ -44,8 +44,14 @@ export async function DELETE(
   const { error: delErr } = await auth.supabase.from("documents").delete().eq("id", id);
   if (delErr) return NextResponse.json({ error: delErr.message }, { status: 500 });
 
-  // Remove the binary; ignore storage error so a missing object can't block the row delete.
-  await auth.supabase.storage.from("documents").remove([doc.storage_path]);
+  // Remove the binary; don't let a storage error block the row delete, but log
+  // it so an orphaned object is discoverable.
+  const { error: storageErr } = await auth.supabase.storage
+    .from("documents")
+    .remove([doc.storage_path]);
+  if (storageErr) {
+    console.error(`Storage cleanup failed for ${doc.storage_path}: ${storageErr.message}`);
+  }
 
   return NextResponse.json({ data: { id } });
 }

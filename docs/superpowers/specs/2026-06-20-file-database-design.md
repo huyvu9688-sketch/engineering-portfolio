@@ -212,10 +212,13 @@ the `/tools` page structure exactly.
 - `/admin` — email + password login, accent button. Success → documents.
 - `admin/layout.tsx` — server component session guard; no admin session →
   redirect to `/admin`.
-- `/admin/documents` — list of all docs with edit + delete; **Upload form**:
+- `/admin/documents` — list of all docs with delete; **Upload form**:
   file picker → title, category select (drives accepted-extension
   allowlist), tag chip-input, project select + "new project", description.
   Client validates ext + size, uploads to Storage, POSTs metadata.
+  *(Metadata **edit** UI is a deferred fast-follow — see §9. The
+  `PATCH /api/documents/[id]` route already exists; only the form is
+  pending. Until then, re-upload to change a file.)*
 - `/admin/projects` — minimal CRUD.
 - Controls are native token-styled (matching converter/motor-sizing).
 
@@ -253,6 +256,13 @@ failure, correct HTTP status (per `code-standards.md`).
 
 ## 9. Out of Scope (YAGNI)
 
+- **Metadata edit UI (deferred fast-follow):** the `PATCH /api/documents/[id]`
+  and `PATCH /api/projects/[id]` routes are built and guarded, but no edit
+  form is wired into the admin UI yet — create/delete + re-upload cover the
+  launch need. When the edit form ships, PATCH should be narrowed to mutable
+  columns only (title, description, category, tags, project_id) so immutable
+  storage fields (`storage_path`, `size_bytes`, `file_ext`, `original_filename`)
+  can't drift.
 - Part numbers, BOMs, revision/version history (the Mini-PDM option).
 - Inside-PDF full-text extraction (metadata + tags search only).
 - Download counts / analytics.

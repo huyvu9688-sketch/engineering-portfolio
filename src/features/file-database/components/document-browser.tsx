@@ -21,6 +21,7 @@ export function DocumentBrowser({
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<CategoryKey | null>(null);
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const supabase = useMemo(() => createClient(), []);
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -37,7 +38,12 @@ export function DocumentBrowser({
       if (term) q = q.textSearch("search", term, { type: "websearch" });
       if (category) q = q.eq("category", category);
       if (projectId) q = q.eq("project_id", projectId);
-      const { data } = await q;
+      const { data, error: queryError } = await q;
+      if (queryError) {
+        setError("Search failed — please try again.");
+        return;
+      }
+      setError(null);
       if (data) setDocs(data as DocumentRecord[]);
     }, 250);
     return () => {
@@ -59,6 +65,10 @@ export function DocumentBrowser({
       <p className="font-mono text-[10px] uppercase tracking-widest tabular-nums text-ink-faint">
         {docs.length} {docs.length === 1 ? "result" : "results"}
       </p>
+
+      {error && (
+        <p className="font-mono text-xs uppercase tracking-widest text-state-error">{error}</p>
+      )}
 
       {docs.length === 0 ? (
         <p className="py-16 text-center font-mono text-xs uppercase tracking-widest text-ink-faint">

@@ -22,11 +22,7 @@ create table public.documents (
   project_id        uuid references public.projects(id) on delete set null,
   storage_path      text not null unique,
   original_filename text not null,
-  search            tsvector generated always as (
-                      to_tsvector('english',
-                        coalesce(title,'') || ' ' ||
-                        coalesce(description,'') || ' ' ||
-                        array_to_string(tags,' '))) stored,
+  search            tsvector,
   created_at        timestamptz not null default now(),
   updated_at        timestamptz not null default now()
 );
@@ -53,6 +49,24 @@ set search_path = public, pg_temp
 as $$
   select exists (select 1 from public.app_admins where user_id = auth.uid());
 $$;
+
+-- Trigger to update search tsvector on insert/update ----------------------
+create or replace function public.update_documents_search()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.search := to_tsvector('english',
+    coalesce(new.title,'') || ' ' ||
+    coalesce(new.description,'') || ' ' ||
+    array_to_string(new.tags,' '));
+  return new;
+end;
+$$;
+
+create trigger documents_update_search
+  before insert or update on public.documents
+  for each row execute function public.update_documents_search();
 
 -- updated_at trigger -------------------------------------------------------
 create or replace function public.set_updated_at()

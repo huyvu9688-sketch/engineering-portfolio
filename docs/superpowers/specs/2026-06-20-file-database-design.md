@@ -122,11 +122,11 @@ tags              text[] not null default '{}'
 project_id        uuid references projects(id) on delete set null
 storage_path      text not null unique
 original_filename text not null
-search            tsvector GENERATED ALWAYS AS (
-                    to_tsvector('english',
-                      coalesce(title,'') || ' ' ||
-                      coalesce(description,'') || ' ' ||
-                      array_to_string(tags,' '))) STORED
+search            tsvector  -- maintained by a BEFORE INSERT/UPDATE trigger
+                  -- (to_tsvector over title + description + tags). A STORED
+                  -- generated column was rejected by Postgres because
+                  -- to_tsvector('english', ...) is not IMMUTABLE; a trigger is
+                  -- the standard workaround and keeps the same GIN-indexed search.
 created_at        timestamptz not null default now()
 updated_at        timestamptz not null default now()
 ```

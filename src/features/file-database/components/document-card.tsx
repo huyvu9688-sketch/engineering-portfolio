@@ -1,15 +1,33 @@
-import { Download, Trash2, FileText, Box, Image as ImageIcon, FileSpreadsheet, Presentation } from "lucide-react";
+import {
+  Download,
+  Trash2,
+  FileText,
+  FileType,
+  Box,
+  Boxes,
+  Image as ImageIcon,
+  FileSpreadsheet,
+  Table,
+  Presentation,
+  FileArchive,
+  FileVideo,
+} from "lucide-react";
 import { getCategory } from "@/features/file-database/lib/categories";
 import { formatFileSize } from "@/features/file-database/lib/format";
 import type { CategoryKey, DocumentRecord } from "@/features/file-database/lib/types";
 
 const ICON: Record<CategoryKey, typeof FileText> = {
-  cad_3d: Box,
-  drawing_2d: FileText,
+  cad: Box,
+  model_3d: Boxes,
   pdf: FileText,
-  image: ImageIcon,
-  ppt: Presentation,
+  word: FileType,
   excel: FileSpreadsheet,
+  csv: Table,
+  ppt: Presentation,
+  image: ImageIcon,
+  text: FileText,
+  archive: FileArchive,
+  video: FileVideo,
 };
 
 export function DocumentCard({

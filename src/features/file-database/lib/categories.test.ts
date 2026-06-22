@@ -10,26 +10,26 @@ import {
   firstCategoryForExtension,
 } from "./categories.ts";
 
-test("there are exactly 6 categories with unique keys", () => {
-  assert.equal(CATEGORIES.length, 6);
-  assert.equal(new Set(CATEGORY_KEYS).size, 6);
+test("there are exactly 11 categories with unique keys", () => {
+  assert.equal(CATEGORIES.length, 11);
+  assert.equal(new Set(CATEGORY_KEYS).size, 11);
 });
 
 test("getCategory returns def for known key, undefined otherwise", () => {
-  assert.equal(getCategory("cad_3d")?.label, "3D Models");
+  assert.equal(getCategory("cad")?.label, "CAD");
   assert.equal(getCategory("nope"), undefined);
 });
 
 test("isAcceptedExtension is case-insensitive and category-scoped", () => {
-  assert.equal(isAcceptedExtension("cad_3d", "STEP"), true);
-  assert.equal(isAcceptedExtension("cad_3d", "step"), true);
-  assert.equal(isAcceptedExtension("cad_3d", "pdf"), false);
-  assert.equal(isAcceptedExtension("drawing_2d", "dwg"), true);
+  assert.equal(isAcceptedExtension("cad", "STEP"), true);
+  assert.equal(isAcceptedExtension("cad", "step"), true);
+  assert.equal(isAcceptedExtension("cad", "pdf"), false);
+  assert.equal(isAcceptedExtension("model_3d", "stl"), true);
   assert.equal(isAcceptedExtension("image", "png"), true);
 });
 
 test("acceptAttribute renders a dot-prefixed comma list for <input accept>", () => {
-  assert.equal(acceptAttribute("drawing_2d"), ".dwg,.dxf");
+  assert.equal(acceptAttribute("ppt"), ".ppt,.pptx");
 });
 
 test("MAX_FILE_BYTES is 50 MB", () => {
@@ -47,17 +47,22 @@ test("no extension belongs to more than one category", () => {
 });
 
 test("firstCategoryForExtension maps every category's extensions exactly", () => {
-  assert.equal(firstCategoryForExtension("step"), "cad_3d");
-  assert.equal(firstCategoryForExtension("STL"), "cad_3d"); // case-insensitive
-  assert.equal(firstCategoryForExtension("dwg"), "drawing_2d");
-  assert.equal(firstCategoryForExtension("dxf"), "drawing_2d");
+  assert.equal(firstCategoryForExtension("step"), "cad");
+  assert.equal(firstCategoryForExtension("DWG"), "cad"); // case-insensitive
+  assert.equal(firstCategoryForExtension("sldprt"), "cad");
+  assert.equal(firstCategoryForExtension("stl"), "model_3d");
+  assert.equal(firstCategoryForExtension("glb"), "model_3d");
   assert.equal(firstCategoryForExtension("pdf"), "pdf");
-  assert.equal(firstCategoryForExtension("docx"), "pdf");
-  assert.equal(firstCategoryForExtension("png"), "image");
-  assert.equal(firstCategoryForExtension("ppt"), "ppt");
-  assert.equal(firstCategoryForExtension("pptx"), "ppt");
+  assert.equal(firstCategoryForExtension("docx"), "word");
+  assert.equal(firstCategoryForExtension("doc"), "word");
   assert.equal(firstCategoryForExtension("xlsx"), "excel");
-  assert.equal(firstCategoryForExtension("csv"), "excel");
+  assert.equal(firstCategoryForExtension("csv"), "csv");
+  assert.equal(firstCategoryForExtension("ppt"), "ppt");
+  assert.equal(firstCategoryForExtension("png"), "image");
+  assert.equal(firstCategoryForExtension("svg"), "image");
+  assert.equal(firstCategoryForExtension("txt"), "text");
+  assert.equal(firstCategoryForExtension("zip"), "archive");
+  assert.equal(firstCategoryForExtension("mp4"), "video");
   // Unknown extension → null.
-  assert.equal(firstCategoryForExtension("zip"), null);
+  assert.equal(firstCategoryForExtension("xyz"), null);
 });

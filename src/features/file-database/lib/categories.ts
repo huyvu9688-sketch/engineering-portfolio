@@ -9,14 +9,19 @@ export interface CategoryDef {
 
 // Each extension belongs to exactly one category, so auto-detection from a
 // picked file is always exact (no guessing which of several categories a
-// shared extension like .pdf "really" means).
+// shared extension "really" means).
 export const CATEGORIES: CategoryDef[] = [
-  { key: "cad_3d", label: "3D Models", extensions: ["step", "stp", "iges", "igs", "sldprt", "x_t", "stl", "glb"] },
-  { key: "drawing_2d", label: "2D Drawings", extensions: ["dwg", "dxf"] },
-  { key: "pdf", label: "Documents", extensions: ["pdf", "docx"] },
-  { key: "image", label: "Images", extensions: ["png", "jpg", "jpeg", "webp"] },
-  { key: "ppt", label: "Presentations", extensions: ["ppt", "pptx"] },
-  { key: "excel", label: "Spreadsheets", extensions: ["xlsx", "csv"] },
+  { key: "cad", label: "CAD", extensions: ["step", "stp", "iges", "igs", "dwg", "dxf", "sat", "sldprt", "sldasm", "slddrw", "ipt", "iam", "prt", "asm", "x_t"] },
+  { key: "model_3d", label: "3D Model", extensions: ["glb", "gltf", "obj", "fbx", "stl", "3ds"] },
+  { key: "pdf", label: "PDF", extensions: ["pdf"] },
+  { key: "word", label: "Word", extensions: ["doc", "docx"] },
+  { key: "excel", label: "Excel", extensions: ["xls", "xlsx"] },
+  { key: "csv", label: "CSV", extensions: ["csv"] },
+  { key: "ppt", label: "PowerPoint", extensions: ["ppt", "pptx"] },
+  { key: "image", label: "Image", extensions: ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "tiff", "tif"] },
+  { key: "text", label: "Text", extensions: ["txt"] },
+  { key: "archive", label: "Archive", extensions: ["zip", "rar", "7z", "tar", "gz"] },
+  { key: "video", label: "Video", extensions: ["mp4", "avi", "mov", "wmv", "mkv", "webm"] },
 ];
 
 export const CATEGORY_KEYS: CategoryKey[] = CATEGORIES.map((c) => c.key);

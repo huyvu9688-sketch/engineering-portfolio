@@ -1,10 +1,10 @@
 export type CategoryKey =
   | "cad_3d"
   | "drawing_2d"
-  | "datasheet"
-  | "standard"
-  | "report"
-  | "image";
+  | "pdf"
+  | "image"
+  | "ppt"
+  | "excel";
 
 export interface Project {
   id: string;

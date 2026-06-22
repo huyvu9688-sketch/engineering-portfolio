@@ -5,7 +5,7 @@ import { validateDocumentInput, validateProjectInput } from "./validation.ts";
 const validDoc = {
   title: "Gearbox Housing",
   description: "Cast housing, rev A",
-  category: "cad_3d",
+  category: "cad",
   file_ext: "step",
   mime_type: "model/step",
   size_bytes: 1024,

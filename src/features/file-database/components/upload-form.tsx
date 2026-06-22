@@ -10,7 +10,7 @@ import type { CategoryKey, DocumentInput } from "@/features/file-database/lib/ty
 export function UploadForm({ onUploaded }: { onUploaded: () => void }) {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<CategoryKey>("cad_3d");
+  const [category, setCategory] = useState<CategoryKey>("cad");
   const [description, setDescription] = useState("");
   const [tagText, setTagText] = useState("");
   const [dragOver, setDragOver] = useState(false);

@@ -7,13 +7,16 @@ export interface CategoryDef {
   extensions: string[];
 }
 
+// Each extension belongs to exactly one category, so auto-detection from a
+// picked file is always exact (no guessing which of several categories a
+// shared extension like .pdf "really" means).
 export const CATEGORIES: CategoryDef[] = [
-  { key: "cad_3d", label: "3D CAD Models", extensions: ["step", "stp", "iges", "igs", "sldprt", "x_t", "stl", "glb"] },
-  { key: "drawing_2d", label: "2D Drawings", extensions: ["pdf", "dwg", "dxf"] },
-  { key: "datasheet", label: "Datasheets", extensions: ["pdf", "docx"] },
-  { key: "standard", label: "Standards & Refs", extensions: ["pdf", "docx"] },
-  { key: "report", label: "Calcs & Reports", extensions: ["xlsx", "docx", "pdf", "csv"] },
+  { key: "cad_3d", label: "3D Models", extensions: ["step", "stp", "iges", "igs", "sldprt", "x_t", "stl", "glb"] },
+  { key: "drawing_2d", label: "2D Drawings", extensions: ["dwg", "dxf"] },
+  { key: "pdf", label: "Documents", extensions: ["pdf", "docx"] },
   { key: "image", label: "Images", extensions: ["png", "jpg", "jpeg", "webp"] },
+  { key: "ppt", label: "Presentations", extensions: ["ppt", "pptx"] },
+  { key: "excel", label: "Spreadsheets", extensions: ["xlsx", "csv"] },
 ];
 
 export const CATEGORY_KEYS: CategoryKey[] = CATEGORIES.map((c) => c.key);
@@ -52,10 +55,9 @@ export function acceptAttribute(category: CategoryKey): string {
 }
 
 /**
- * First category whose allowlist includes this extension, or null if none.
- * Used to auto-select a category when a file is picked. Extensions shared by
- * several categories (pdf, docx) resolve to the first in CATEGORIES order; the
- * admin can refine the choice afterward.
+ * Category whose allowlist includes this extension, or null if none.
+ * Used to auto-select a category when a file is picked. Deterministic since
+ * no extension appears in more than one category.
  */
 export function firstCategoryForExtension(ext: string): CategoryKey | null {
   const lower = ext.toLowerCase();

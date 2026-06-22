@@ -29,8 +29,8 @@ export function UploadForm({ onUploaded }: { onUploaded: () => void }) {
     setError(null);
     if (!f) return;
     if (!title) setTitle(f.name.replace(/\.[^.]+$/, ""));
-    // Auto-detect category from extension; only override when the current
-    // category can't accept the file (keeps a deliberate pdf/docx choice).
+    // Auto-detect category from extension; each extension maps to exactly
+    // one category, so this is always exact, never a guess.
     const ext = fileExtension(f.name);
     if (ext && !isAcceptedExtension(category, ext)) {
       const match = firstCategoryForExtension(ext);

@@ -28,6 +28,28 @@ Sections below describe the original design; where they mention the admin
 dashboard, the project filter, or project grouping in the UI, read them through
 this revision.
 
+## Revision — 2026-06-22 (Categories by literal file type)
+
+The original categories (datasheet/standard/report) all accepted `.pdf`, so
+auto-detection had no way to know which one a PDF "meant" and always landed
+on the same one (2D Drawings, since it was first in the list). Replaced with
+categories keyed to literal file type, where every extension belongs to
+exactly one category — detection is now always exact, never a guess:
+
+| key          | label          | extensions                                  |
+| ------------ | -------------- | -------------------------------------------- |
+| `cad_3d`     | 3D Models      | step, stp, iges, igs, sldprt, x_t, stl, glb  |
+| `drawing_2d` | 2D Drawings    | dwg, dxf                                     |
+| `pdf`        | Documents      | pdf, docx                                    |
+| `image`      | Images         | png, jpg, jpeg, webp                         |
+| `ppt`        | Presentations  | ppt, pptx                                    |
+| `excel`      | Spreadsheets   | xlsx, csv                                    |
+
+Migration `0004_recategorize_by_filetype.sql` remaps existing rows (by old
+category + file_ext) before swapping the `documents.category` CHECK
+constraint to the new key set. §4 and §6 below describe the original
+six-category taxonomy; read `category` references through this revision.
+
 ## 1. Purpose
 
 A searchable, downloadable library where Joe (single admin) stores **all

@@ -1,4 +1,4 @@
-import { Download, Trash2, FileText, Box, Image as ImageIcon, FileSpreadsheet, BookText } from "lucide-react";
+import { Download, Trash2, FileText, Box, Image as ImageIcon, FileSpreadsheet, Presentation } from "lucide-react";
 import { getCategory } from "@/features/file-database/lib/categories";
 import { formatFileSize } from "@/features/file-database/lib/format";
 import type { CategoryKey, DocumentRecord } from "@/features/file-database/lib/types";
@@ -6,10 +6,10 @@ import type { CategoryKey, DocumentRecord } from "@/features/file-database/lib/t
 const ICON: Record<CategoryKey, typeof FileText> = {
   cad_3d: Box,
   drawing_2d: FileText,
-  datasheet: FileText,
-  standard: BookText,
-  report: FileSpreadsheet,
+  pdf: FileText,
   image: ImageIcon,
+  ppt: Presentation,
+  excel: FileSpreadsheet,
 };
 
 export function DocumentCard({

@@ -7,8 +7,33 @@ Update this file after every meaningful implementation change.
 - Phase 1 — Foundation & landing page: COMPLETE (deployed, live at https://engineering-portfolio-svy8.vercel.app)
 - Phase 2 — Portfolio: COMPLETE (units 1 & 2 done; resume DROPPED; 3D viewer REMOVED 2026-06-14)
 - Phase 3 — Toolkit: IN PROGRESS (unit converter DONE; motor-sizing slices 1–4 DONE; pneumatic pending; CAD viewer re-added 2026-06-15)
+- Phase 4 — Database: COMPLETE (deployed 2026-06-22; schema, RLS, auth, upload/browse/search/download, PDF text search, file-type categories)
 
 ## Session Notes (most recent first)
+
+- **2026-06-22 (WRAP-UP, Database deploy)**: Phase 4 file database shipped and deployed.
+  - **Schema/auth/storage** (Supabase): `documents`/`projects`/`app_admins` tables, RLS
+    (public read, admin-only write via `is_admin()`), public-read Storage bucket, 50 MB cap,
+    weighted tsvector search trigger. Three-layer write lock: Auth signups disabled, RLS,
+    `requireAdmin()` re-check in every API route. No service-role key in the app.
+  - **Consolidated UX**: upload + delete moved onto the public `/database` page (visible
+    only when signed in), drag-and-drop upload card, auto category detection from file
+    extension. `/admin` reduced to login-only, auto-redirects to `/database`. Projects
+    removed from the UI (schema kept dormant for later). Footer has a discreet Admin link.
+  - **PDF full-text search**: `unpdf` (lazy-loaded, admin-only bundle cost) extracts PDF
+    body text client-side at upload; stored in `content_text`; folded into the search
+    `tsvector` with weighted ranking (title > description/tags > body).
+  - **Categories rebuilt twice this session**: first attempt grouped by document purpose
+    (datasheet/standard/report) — all four of those accepted `.pdf`, so auto-detect always
+    guessed the same category. Replaced with 11 categories keyed to literal file type
+    (CAD, 3D Model, PDF, Word, Excel, CSV, PowerPoint, Image, Text, Archive, Video) where
+    every extension belongs to exactly one category — detection is now always exact.
+    `firstCategoryForExtension()` in `categories.ts` is the single source of truth.
+  - **Migrations 0001–0004** all run live on Supabase by the owner (interactively, with a
+    few SQL/dashboard hiccups along the way — see commit history for fixes). Pushed to
+    `main` (`7a32ee8`) and Vercel auto-deployed via GitHub integration.
+  - Ship test (upload as admin, download as anonymous visitor) — owner to confirm on the
+    live deployed URL.
 
 - **2026-06-19 (WRAP-UP, CAD viewer)**: Face picking + measure + export upgrades.
   - **Face selection** rewritten (`face-select.js`): coplanar-normal scan replaced with
@@ -79,14 +104,14 @@ Update this file after every meaningful implementation change.
 1. **Phase 1** — Setup, theme, landing page, deploy ✅
 2. **Phase 2** — Portfolio listing + detail pages ✅ (resume DROPPED; viewer REMOVED)
 3. **Phase 3** — Toolkit: unit converter ✅ · motor sizing ✅ · pneumatic (pending) · CAD viewer ✅
-4. **Phase 4** — Database: Supabase, admin auth, upload, browse/download
+4. **Phase 4** — Database: Supabase, admin auth, upload, browse/download ✅
 5. **Phase 5+** — Tolerance/fit calc, standard parts library, formula reference
 
 ## Current Goal
 
-Phase 3 continuing. Pneumatic calculator BLOCKED — owner must fill §2 of
-`calculator-specs.md`. Motor-sizing slice 5 (optional: hoist, preload, multi-RMS)
-low priority. Portfolio inner pages still need Olha design treatment.
+Phase 4 shipped and deployed. Phase 3 pneumatic calculator still BLOCKED — owner must
+fill §2 of `calculator-specs.md`. Motor-sizing slice 5 (optional: hoist, preload,
+multi-RMS) low priority. Portfolio inner pages still need Olha design treatment.
 
 ## Completed
 
@@ -100,6 +125,9 @@ low priority. Portfolio inner pages still need Olha design treatment.
 - Phase 3 unit 3 slices 1–4: motor-sizing (engine + 5 mechanisms + servo/stepper/AC)
 - CAD Viewer (`/tools/cad-viewer`): fullscreen, tree, isolate, BFS curved-face pick,
   measure (incl. cylinder axis C–C), explode, section cut, face props, STL export
+- Phase 4 Database (`/database`): Supabase schema + RLS, admin-only write (Auth +
+  RLS + API guard), drag-and-drop upload with auto file-type categorization (11
+  categories), full-text search incl. PDF body text, public download, deployed to Vercel
 
 ## In Progress
 
@@ -120,8 +148,10 @@ low priority. Portfolio inner pages still need Olha design treatment.
 
 ### Infra
 
-- shadcn/ui: defer until a richer primitive is needed (likely Phase 4 database page).
-- Phase 4 (Database): Supabase schema + RLS, admin auth, upload, browse/filter, download.
+- shadcn/ui: defer until a richer primitive is needed.
+- Database fast-follows (deferred, see spec §9): metadata edit UI (PATCH routes already
+  built), part numbers/BOMs/revision history (out of scope), download analytics, private
+  files/signed URLs, "open in CAD viewer" deep link from a document card.
 
 ## Open Questions
 
@@ -158,3 +188,18 @@ low priority. Portfolio inner pages still need Olha design treatment.
 - **shadcn/ui**: not yet installed. Native token-styled controls for calculators.
 - **Deploy**: push `main` → Vercel auto-deploys. Owner confirms before push.
   Dev server run by owner — do NOT launch in IDE.
+- **Database security model**: owner is the only writer, everyone else is read-only —
+  enforced at three layers (Supabase Auth signups disabled, RLS via `app_admins` +
+  `is_admin()`, and `requireAdmin()` re-check in every API route). No service-role key
+  ships in the app; only the public URL + anon key, which are safe to expose because RLS
+  is the real guard.
+- **Database categories**: keyed to literal file type (CAD, 3D Model, PDF, Word, Excel,
+  CSV, PowerPoint, Image, Text, Archive, Video) in `categories.ts`, the single source of
+  truth for both validation and the UI. Every extension belongs to exactly one category —
+  do NOT let any future category share an extension with another; that breaks
+  `firstCategoryForExtension()`'s auto-detect on upload (this happened once already with
+  a purpose-based taxonomy where 4 categories all accepted `.pdf`).
+- **Database file upload**: browser uploads the binary straight to Supabase Storage
+  (bypasses Vercel's ~4.5 MB serverless body cap), then POSTs only metadata to the API
+  route. PDF body text is extracted client-side via lazy-loaded `unpdf` (admin-only
+  bundle cost) and folded into the search `tsvector` with weighted ranking.

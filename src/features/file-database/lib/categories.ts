@@ -20,6 +20,20 @@ export const CATEGORY_KEYS: CategoryKey[] = CATEGORIES.map((c) => c.key);
 
 export const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
+/**
+ * Cap on stored extracted PDF text. Keeps the metadata POST under Vercel's
+ * ~4.5 MB body limit and well below Postgres's ~1 MB tsvector ceiling, while
+ * still indexing far more than any real datasheet needs.
+ */
+export const MAX_CONTENT_TEXT_CHARS = 500_000;
+
+/** Extensions we can pull searchable body text from at upload time. */
+const TEXT_EXTRACTABLE_EXTENSIONS = new Set(["pdf"]);
+
+export function isTextExtractable(ext: string): boolean {
+  return TEXT_EXTRACTABLE_EXTENSIONS.has(ext.toLowerCase());
+}
+
 export function getCategory(key: string): CategoryDef | undefined {
   return CATEGORIES.find((c) => c.key === key);
 }

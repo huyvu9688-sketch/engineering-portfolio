@@ -41,6 +41,16 @@ test("rejects size over the cap", () => {
   assert.equal(r.ok, false);
 });
 
+test("normalizes content_text and defaults it to null when absent", () => {
+  const without = validateDocumentInput(validDoc);
+  assert.equal(without.ok, true);
+  if (without.ok) assert.equal(without.value.content_text, null);
+
+  const withText = validateDocumentInput({ ...validDoc, content_text: "  Spec  sheet\n M8 " });
+  assert.equal(withText.ok, true);
+  if (withText.ok) assert.equal(withText.value.content_text, "Spec sheet M8");
+});
+
 test("rejects non-object payload", () => {
   assert.equal(validateDocumentInput(null).ok, false);
   assert.equal(validateDocumentInput("x").ok, false);

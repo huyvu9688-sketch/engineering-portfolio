@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { DocumentBrowser } from "@/features/file-database/components/document-browser";
 import { CATEGORIES } from "@/features/file-database/lib/categories";
+import { DOCUMENT_LIST_COLUMNS } from "@/features/file-database/lib/query";
 import type { DocumentRecord } from "@/features/file-database/lib/types";
 
 export const metadata: Metadata = {
@@ -30,7 +31,7 @@ export default async function DatabasePage() {
 
   const { data: docs } = await supabase
     .from("documents")
-    .select("*")
+    .select(DOCUMENT_LIST_COLUMNS)
     .order("created_at", { ascending: false });
 
   const documents = (docs ?? []) as DocumentRecord[];

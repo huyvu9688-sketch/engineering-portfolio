@@ -31,7 +31,11 @@ export interface DocumentRecord {
   updated_at: string;
 }
 
-/** Payload accepted by POST /api/documents (no server-generated columns). */
+/**
+ * Payload accepted by POST /api/documents (no server-generated columns).
+ * `content_text` is the body text extracted from a PDF at upload time; it is
+ * indexed for full-text search but never displayed, and is null for non-PDFs.
+ */
 export interface DocumentInput {
   title: string;
   description: string | null;
@@ -43,6 +47,7 @@ export interface DocumentInput {
   project_id: string | null;
   storage_path: string;
   original_filename: string;
+  content_text: string | null;
 }
 
 export interface ProjectInput {

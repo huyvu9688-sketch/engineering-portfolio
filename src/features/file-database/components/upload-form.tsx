@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { CATEGORIES, MAX_FILE_BYTES, isAcceptedExtension, firstCategoryForExtension } from "@/features/file-database/lib/categories";
+import { CATEGORIES, MAX_FILE_BYTES, isAcceptedExtension, firstCategoryForExtension, isTextExtractable } from "@/features/file-database/lib/categories";
 import { fileExtension, sanitizeFilename, formatFileSize } from "@/features/file-database/lib/format";
+import { extractPdfText } from "@/features/file-database/lib/pdf-text";
 import type { CategoryKey, DocumentInput } from "@/features/file-database/lib/types";
 
 export function UploadForm({ onUploaded }: { onUploaded: () => void }) {
@@ -15,6 +16,7 @@ export function UploadForm({ onUploaded }: { onUploaded: () => void }) {
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
 
   // Click-picker accepts every known extension; auto-categorization handles sorting.
   const acceptAll = useMemo(
@@ -55,16 +57,28 @@ export function UploadForm({ onUploaded }: { onUploaded: () => void }) {
     const storagePath = `${id}/${sanitizeFilename(file.name)}`;
 
     // 1) Upload the binary straight to Storage (bypasses Vercel's body cap).
+    setStatus("Uploading file…");
     const up = await supabase.storage.from("documents").upload(storagePath, file, {
       cacheControl: "3600",
       upsert: false,
     });
     if (up.error) {
       setBusy(false);
+      setStatus(null);
       return setError(`Upload failed: ${up.error.message}`);
     }
 
-    // 2) POST metadata to the admin-guarded API.
+    // 2) For PDFs, pull the body text in-browser (the bytes are already here)
+    //    so the search box can match words inside the document. Best-effort:
+    //    a failure just leaves the file un-indexed, never blocks the upload.
+    let contentText: string | null = null;
+    if (isTextExtractable(ext)) {
+      setStatus("Indexing PDF text…");
+      contentText = await extractPdfText(file);
+    }
+
+    // 3) POST metadata to the admin-guarded API.
+    setStatus("Saving…");
     const payload: DocumentInput = {
       title: title.trim(),
       description: description.trim() || null,
@@ -76,6 +90,7 @@ export function UploadForm({ onUploaded }: { onUploaded: () => void }) {
       project_id: null,
       storage_path: storagePath,
       original_filename: file.name,
+      content_text: contentText,
     };
     const res = await fetch("/api/documents", {
       method: "POST",
@@ -83,9 +98,10 @@ export function UploadForm({ onUploaded }: { onUploaded: () => void }) {
       body: JSON.stringify(payload),
     });
     setBusy(false);
+    setStatus(null);
 
     if (!res.ok) {
-      // 3) Roll back the orphaned object so Storage and DB stay consistent.
+      // 4) Roll back the orphaned object so Storage and DB stay consistent.
       await supabase.storage.from("documents").remove([storagePath]);
       const body = await res.json().catch(() => ({ error: "Save failed." }));
       return setError(body.error ?? "Save failed.");
@@ -132,6 +148,11 @@ export function UploadForm({ onUploaded }: { onUploaded: () => void }) {
             <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-ink-faint">
               {formatFileSize(file.size)} · click or drop to replace
             </p>
+            {isTextExtractable(fileExtension(file.name)) && (
+              <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-accent">
+                Contents will be indexed for search
+              </p>
+            )}
           </>
         ) : (
           <>
@@ -189,7 +210,7 @@ export function UploadForm({ onUploaded }: { onUploaded: () => void }) {
         disabled={busy}
         className="mt-6 rounded-full bg-ink px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest text-on-dark transition-colors hover:bg-accent disabled:opacity-50"
       >
-        {busy ? "Uploading…" : "Upload Document"}
+        {busy ? (status ?? "Working…") : "Upload Document"}
       </button>
     </form>
   );

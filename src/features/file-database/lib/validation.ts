@@ -1,5 +1,6 @@
 import type { CategoryKey, DocumentInput, ProjectInput } from "./types.ts";
 import { CATEGORY_KEYS, MAX_FILE_BYTES, isAcceptedExtension } from "./categories.ts";
+import { normalizeExtractedText } from "./pdf-text.ts";
 
 export type Validated<T> = { ok: true; value: T } | { ok: false; error: string };
 
@@ -75,6 +76,9 @@ export function validateDocumentInput(raw: unknown): Validated<DocumentInput> {
       project_id,
       storage_path,
       original_filename,
+      // Extracted PDF body text (client-supplied); re-normalized and capped
+      // here. Absent/empty for non-PDFs and for PDFs we couldn't read.
+      content_text: normalizeExtractedText(raw.content_text),
     },
   };
 }

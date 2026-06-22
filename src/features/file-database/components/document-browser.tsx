@@ -7,7 +7,7 @@ import { FilterBar } from "./filter-bar";
 import { DocumentCard } from "./document-card";
 import { UploadForm } from "./upload-form";
 import { SignOutButton } from "./sign-out-button";
-import { normalizeSearchTerm } from "@/features/file-database/lib/query";
+import { normalizeSearchTerm, DOCUMENT_LIST_COLUMNS } from "@/features/file-database/lib/query";
 import type { CategoryKey, DocumentRecord } from "@/features/file-database/lib/types";
 
 const BUCKET = "documents";
@@ -31,7 +31,10 @@ export function DocumentBrowser({
   }
 
   const runQuery = useCallback(async () => {
-    let q = supabase.from("documents").select("*").order("created_at", { ascending: false });
+    let q = supabase
+      .from("documents")
+      .select(DOCUMENT_LIST_COLUMNS)
+      .order("created_at", { ascending: false });
     const term = normalizeSearchTerm(query);
     if (term) q = q.textSearch("search", term, { type: "websearch" });
     if (category) q = q.eq("category", category);

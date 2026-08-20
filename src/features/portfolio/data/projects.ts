@@ -6,6 +6,8 @@ export interface Project {
   tags: string[];
   /** Path under /public, e.g. "/portfolio/project-one.jpg". Omitted for a placeholder visual. */
   image?: string;
+  images?: string[];
+  video?: string;
   /** Your role on the project, shown on the detail page. */
   role?: string;
   /** When the work happened, e.g. "2024" or "2023 – 2024". */
@@ -19,6 +21,8 @@ export const PROJECTS: Project[] = [
     slug: "project-one",
     title: "Foam Cell Automation",
     image: "/1.png",
+    images: ["/1.png", "/1.1.png"],
+    video: "/1.mp4",
     category: "[Category — e.g. Automation]",
     summary:
       "[One or two sentence summary: the problem, your approach, and the outcome.]",
@@ -35,6 +39,8 @@ export const PROJECTS: Project[] = [
     slug: "project-two",
     title: "Auto Router Cell",
     image: "/2.png",
+    images: ["/2.png", "/2.1.png"],
+    video: "/2.mp4",
     category: "[Category — e.g. Pneumatics]",
     summary:
       "[One or two sentence summary: the problem, your approach, and the outcome.]",
@@ -51,6 +57,7 @@ export const PROJECTS: Project[] = [
     slug: "project-three",
     title: "Verona Expansion",
     image: "/3.png",
+    images: ["/3.png", "/3.1.png", "/3.2.png"],
     category: "[Category — e.g. SolidWorks]",
     summary:
       "[One or two sentence summary: the problem, your approach, and the outcome.]",

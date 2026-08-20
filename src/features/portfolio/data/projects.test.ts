@@ -18,3 +18,30 @@ test("Works projects retain their approved titles and cover images", () => {
     },
   );
 });
+
+test("Works projects expose their approved media", () => {
+  assert.deepEqual(
+    Object.fromEntries(
+      ["project-one", "project-two", "project-three"].map((slug) => {
+        const project = getProjectBySlug(slug);
+        return [slug, { images: project?.images, video: project?.video }];
+      }),
+    ),
+    {
+      "project-one": {
+        images: ["/1.png", "/1.1.png"],
+        video: "/1.mp4",
+      },
+      "project-two": {
+        images: ["/2.png", "/2.1.png"],
+        video: "/2.mp4",
+      },
+      "project-three": {
+        images: ["/3.png", "/3.1.png", "/3.2.png"],
+        video: undefined,
+      },
+    },
+  );
+
+  assert.equal(Object.hasOwn(getProjectBySlug("project-three")!, "video"), false);
+});

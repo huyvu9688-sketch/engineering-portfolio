@@ -23,7 +23,7 @@ export function ProjectRow({ project, reversed }: ProjectRowProps) {
               alt={project.title}
               width={1280}
               height={800}
-              className="h-full w-full object-cover grayscale transition-all duration-500 group-hover:scale-[1.02] group-hover:grayscale-0"
+              className="h-full w-full object-contain p-4 grayscale transition-all duration-500 group-hover:scale-[1.02] group-hover:grayscale-0"
             />
           ) : (
             <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-ink-faint transition-transform duration-500 group-hover:scale-[1.02]">

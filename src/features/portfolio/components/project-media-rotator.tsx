@@ -13,6 +13,7 @@ export function ProjectMediaRotator({
   title,
 }: ProjectMediaRotatorProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const activeImageIndex = Math.min(activeIndex, Math.max(images.length - 1, 0));
 
   useEffect(() => {
     if (images.length < 2) return;
@@ -32,9 +33,10 @@ export function ProjectMediaRotator({
           src={image}
           alt={`${title} — view ${index + 1} of ${images.length}`}
           fill
+          aria-hidden={index !== activeImageIndex}
           sizes="(max-width: 1500px) 100vw, 1500px"
           className={`object-contain p-4 transition-opacity duration-700 ${
-            index === activeIndex ? "opacity-100" : "opacity-0"
+            index === activeImageIndex ? "opacity-100" : "opacity-0"
           }`}
           priority={index === 0}
         />

@@ -104,7 +104,7 @@ export default async function ProjectDetailPage({
               ))}
             </div>
             {project.video ? (
-              <div className="mt-10 max-w-3xl overflow-hidden rounded-sm border border-hairline bg-surface">
+              <div className="mt-10 aspect-video max-w-3xl overflow-hidden rounded-sm border border-hairline bg-surface">
                 <video
                   src={project.video}
                   autoPlay
@@ -113,7 +113,7 @@ export default async function ProjectDetailPage({
                   playsInline
                   controls
                   preload="metadata"
-                  className="h-auto w-full"
+                  className="h-full w-full object-contain"
                 />
               </div>
             ) : null}

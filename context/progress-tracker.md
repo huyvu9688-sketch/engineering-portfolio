@@ -11,6 +11,12 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes (most recent first)
 
+- **2026-08-20 (Works project assets)**: Updated the primary project assets used by Works:
+  - Foam Cell Automation → `/1.png`
+  - Auto Router Cell → `/2.png`
+  - Verona Expansion → `/3.png`
+  - `1.1.png`, `2.1.png`, `3.1.png`, `3.2.png`, `1.mp4`, and `2.mp4` are intentionally unused.
+
 - **2026-06-22 (WRAP-UP, Database deploy)**: Phase 4 file database shipped and deployed.
   - **Schema/auth/storage** (Supabase): `documents`/`projects`/`app_admins` tables, RLS
     (public read, admin-only write via `is_admin()`), public-read Storage bucket, 50 MB cap,

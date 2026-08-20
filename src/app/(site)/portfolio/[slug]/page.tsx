@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowUpRight, Cog, ImageOff } from "lucide-react";
 import { CustomCursor } from "@/components/shared/custom-cursor";
 import { Reveal } from "@/components/shared/reveal";
 import { ProjectMediaRotator } from "@/features/portfolio/components/project-media-rotator";
+import { ProjectModelViewer } from "@/features/portfolio/components/project-model-viewer";
 import { PROJECTS, getProjectBySlug } from "@/features/portfolio/data/projects";
 
 interface ProjectDetailPageProps {
@@ -103,7 +104,12 @@ export default async function ProjectDetailPage({
                 </p>
               ))}
             </div>
-            {project.video ? (
+            {project.model ? (
+              <ProjectModelViewer
+                src={project.model}
+                alt={`${project.title} interactive 3D model`}
+              />
+            ) : project.video ? (
               <div className="mt-10 aspect-video max-w-3xl overflow-hidden rounded-sm border border-hairline bg-surface">
                 <video
                   src={project.video}

@@ -17,7 +17,8 @@ export interface Project {
 export const PROJECTS: Project[] = [
   {
     slug: "project-one",
-    title: "[Project Title]",
+    title: "Foam Cell Automation",
+    image: "/1.png",
     category: "[Category — e.g. Automation]",
     summary:
       "[One or two sentence summary: the problem, your approach, and the outcome.]",
@@ -32,7 +33,8 @@ export const PROJECTS: Project[] = [
   },
   {
     slug: "project-two",
-    title: "[Project Title]",
+    title: "Auto Router Cell",
+    image: "/2.png",
     category: "[Category — e.g. Pneumatics]",
     summary:
       "[One or two sentence summary: the problem, your approach, and the outcome.]",
@@ -47,7 +49,8 @@ export const PROJECTS: Project[] = [
   },
   {
     slug: "project-three",
-    title: "[Project Title]",
+    title: "Verona Expansion",
+    image: "/3.png",
     category: "[Category — e.g. SolidWorks]",
     summary:
       "[One or two sentence summary: the problem, your approach, and the outcome.]",

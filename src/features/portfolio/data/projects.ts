@@ -8,6 +8,7 @@ export interface Project {
   image?: string;
   images?: string[];
   video?: string;
+  model?: string;
   /** Your role on the project, shown on the detail page. */
   role?: string;
   /** When the work happened, e.g. "2024" or "2023 – 2024". */
@@ -57,7 +58,8 @@ export const PROJECTS: Project[] = [
     slug: "project-three",
     title: "Verona Expansion",
     image: "/3.png",
-    images: ["/3.png", "/3.1.png", "/3.2.png"],
+    images: ["/3.png", "/3.1.png"],
+    model: "/12400_10000.glb",
     category: "[Category — e.g. SolidWorks]",
     summary:
       "[One or two sentence summary: the problem, your approach, and the outcome.]",

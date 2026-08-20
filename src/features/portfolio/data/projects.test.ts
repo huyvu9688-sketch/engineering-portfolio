@@ -24,21 +24,28 @@ test("Works projects expose their approved media", () => {
     Object.fromEntries(
       ["project-one", "project-two", "project-three"].map((slug) => {
         const project = getProjectBySlug(slug);
-        return [slug, { images: project?.images, video: project?.video }];
+        return [slug, {
+          images: project?.images,
+          video: project?.video,
+          model: project?.model,
+        }];
       }),
     ),
     {
       "project-one": {
         images: ["/1.png", "/1.1.png"],
         video: "/1.mp4",
+        model: undefined,
       },
       "project-two": {
         images: ["/2.png", "/2.1.png"],
         video: "/2.mp4",
+        model: undefined,
       },
       "project-three": {
-        images: ["/3.png", "/3.1.png", "/3.2.png"],
+        images: ["/3.png", "/3.1.png"],
         video: undefined,
+        model: "/12400_10000.glb",
       },
     },
   );

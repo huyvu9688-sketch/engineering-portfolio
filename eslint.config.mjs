@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Agent/skill tooling — git-ignored and excluded from tsconfig too.
     ".agents/**",
+    // Vendored WebAssembly decoder required at runtime by the project model.
+    "public/draco/**",
   ]),
 ]);
 

@@ -59,7 +59,7 @@ export const PROJECTS: Project[] = [
     title: "Verona Expansion",
     image: "/3.png",
     images: ["/3.png", "/3.1.png"],
-    model: "/12400_10000.glb",
+    model: "/12400_10000.web.glb",
     category: "[Category — e.g. SolidWorks]",
     summary:
       "[One or two sentence summary: the problem, your approach, and the outcome.]",

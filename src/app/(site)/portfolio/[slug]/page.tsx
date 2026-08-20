@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight, Cog, ImageOff } from "lucide-react";
 import { CustomCursor } from "@/components/shared/custom-cursor";
 import { Reveal } from "@/components/shared/reveal";
+import { ProjectMediaRotator } from "@/features/portfolio/components/project-media-rotator";
 import { PROJECTS, getProjectBySlug } from "@/features/portfolio/data/projects";
 
 interface ProjectDetailPageProps {
@@ -30,6 +30,7 @@ export default async function ProjectDetailPage({
   const { slug } = await params;
   const project = getProjectBySlug(slug);
   if (!project) notFound();
+  const projectImages = project.images ?? (project.image ? [project.image] : []);
 
   return (
     <>
@@ -71,22 +72,17 @@ export default async function ProjectDetailPage({
         </Reveal>
 
         <Reveal>
-          <div className="mt-10 aspect-video overflow-hidden rounded-sm border border-hairline bg-surface md:mt-12">
-            {project.image ? (
-              <Image
-                src={project.image}
-                alt={project.title}
-                width={1920}
-                height={1080}
-                className="h-full w-full object-cover"
-                priority
-              />
+          <div className="mt-10 md:mt-12">
+            {projectImages.length > 0 ? (
+              <ProjectMediaRotator images={projectImages} title={project.title} />
             ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-ink-faint">
-                <ImageOff className="h-10 w-10 stroke-[1.5]" />
-                <span className="font-mono text-[10px] uppercase tracking-widest">
-                  [Project Visual]
-                </span>
+              <div className="aspect-16/10 overflow-hidden rounded-sm border border-hairline bg-surface">
+                <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-ink-faint">
+                  <ImageOff className="h-10 w-10 stroke-[1.5]" />
+                  <span className="font-mono text-[10px] uppercase tracking-widest">
+                    [Project Visual]
+                  </span>
+                </div>
               </div>
             )}
           </div>
@@ -107,6 +103,20 @@ export default async function ProjectDetailPage({
                 </p>
               ))}
             </div>
+            {project.video ? (
+              <div className="mt-10 max-w-3xl overflow-hidden rounded-sm border border-hairline bg-surface">
+                <video
+                  src={project.video}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  controls
+                  preload="metadata"
+                  className="h-auto w-full"
+                />
+              </div>
+            ) : null}
           </Reveal>
 
           <Reveal className="md:col-span-4" delayMs={100}>

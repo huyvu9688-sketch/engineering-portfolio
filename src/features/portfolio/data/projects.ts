@@ -8,6 +8,7 @@ export interface Project {
   image?: string;
   images?: string[];
   video?: string;
+  /** Path under /public, or a full URL (e.g. Vercel Blob) for files over the 100MB deploy limit. */
   model?: string;
   /** Your role on the project, shown on the detail page. */
   role?: string;
@@ -59,7 +60,8 @@ export const PROJECTS: Project[] = [
     title: "Verona Expansion",
     image: "/3.png",
     images: ["/3.png", "/3.1.png"],
-    model: "/12400_10000.web.glb",
+    model:
+      "https://rcbdu7ailn7momwa.public.blob.vercel-storage.com/12400_10000.web.glb",
     category: "[Category — e.g. SolidWorks]",
     summary:
       "[One or two sentence summary: the problem, your approach, and the outcome.]",

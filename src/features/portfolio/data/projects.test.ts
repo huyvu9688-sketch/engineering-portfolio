@@ -49,7 +49,8 @@ test("Works projects expose their approved media", () => {
       "project-three": {
         images: ["/3.png", "/3.1.png"],
         video: undefined,
-        model: "/12400_10000.web.glb",
+        model:
+          "https://rcbdu7ailn7momwa.public.blob.vercel-storage.com/12400_10000.web.glb",
       },
     },
   );

@@ -11,6 +11,25 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes (most recent first)
 
+- **2026-08-21 (Deploy blocker: 2.3.mp4 → Vercel Blob)**: First deploy attempt to
+  `josephvu-s-projects/engineering-portfolio-svy8` failed — `public/2.3.mp4` (206 MB) exceeds
+  Vercel's 100 MB per-file upload limit (separate from GitHub's, which Git LFS already
+  handles). `2.3.mp4` is not referenced by any project (`projects.ts` only uses `1.mp4` and
+  `2.mp4`) — owner confirmed it's for future use, undecided which project/placement.
+  Uploaded it to a new public Vercel Blob store (`portfolio-media`,
+  `store_rCbDU7AIlN7mOMWA`) instead of compressing:
+  `https://rcbdu7ailn7momwa.public.blob.vercel-storage.com/2.3.mp4`
+  Removed `public/2.3.mp4` from the repo (Git LFS entry too) so the deploy isn't blocked.
+  When wired into a project, reference this Blob URL directly in a `<video src>` — no
+  need to re-add the file to `public/` or `@vercel/blob` SDK (a plain URL is enough for
+  playback; the SDK is only needed for programmatic upload/delete, which isn't used here).
+  Vercel CLI installed locally via `npm install --no-save --ignore-scripts` (global/scripted
+  installs failed: Node v26.5.1 has a spawnSync bug with the space in this folder's path
+  — `D:\5. Mechanical App\...` — that breaks native-binary postinstall scripts like esbuild's;
+  `--ignore-scripts` sidesteps it). Project linked via `vercel link` to
+  `josephvu-s-projects/engineering-portfolio-svy8`. Owner deferred the actual `vercel --prod`
+  deploy to another machine.
+
 - **2026-08-21 (Works media + Verona 3D model)**: Completed and pushed the project-media
   update to `main` (`c4579ab`).
   - Works cards use `/1.png`, `/2.png`, and `/3.png` for Foam Cell Automation, Auto Router

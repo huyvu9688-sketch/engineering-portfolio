@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 import { getProjectBySlug } from "./projects.ts";
+const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../");
 
 test("Works projects retain their approved titles and cover images", () => {
   assert.deepEqual(
@@ -51,4 +55,14 @@ test("Works projects expose their approved media", () => {
   );
 
   assert.equal(Object.hasOwn(getProjectBySlug("project-three")!, "video"), false);
+});
+
+test("Auto Router project stills are available as public assets", () => {
+  for (const asset of ["2.2.jpg", "2.3.jpg", "2.4.png"]) {
+    assert.equal(
+      existsSync(resolve(projectRoot, "public", asset)),
+      true,
+      `Expected public/${asset} to exist`,
+    );
+  }
 });

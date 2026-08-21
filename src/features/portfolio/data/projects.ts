@@ -40,7 +40,7 @@ export const PROJECTS: Project[] = [
     slug: "project-two",
     title: "Auto Router Cell",
     image: "/2.png",
-    images: ["/2.png", "/2.1.png"],
+    images: ["/2.png", "/2.1.png", "/2.2.jpg", "/2.3.jpg", "/2.4.png"],
     video: "/2.mp4",
     category: "[Category — e.g. Pneumatics]",
     summary:

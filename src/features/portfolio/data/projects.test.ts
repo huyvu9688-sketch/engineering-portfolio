@@ -38,7 +38,7 @@ test("Works projects expose their approved media", () => {
         model: undefined,
       },
       "project-two": {
-        images: ["/2.png", "/2.1.png"],
+        images: ["/2.png", "/2.1.png", "/2.2.jpg", "/2.3.jpg", "/2.4.png"],
         video: "/2.mp4",
         model: undefined,
       },

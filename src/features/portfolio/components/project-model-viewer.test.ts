@@ -11,6 +11,6 @@ test("ProjectModelViewer provides loading feedback and balanced lighting", () =>
   assert.match(source, /Loading 3D model/);
   assert.match(source, /setLoadState\("ready"\)/);
   assert.match(source, /setLoadState\("error"\)/);
-  assert.match(source, /new THREE\.DirectionalLight\(0xffffff, 3\.5\)/);
-  assert.match(source, /new THREE\.DirectionalLight\(0xffffff, 1\.8\)/);
+  assert.match(source, /new THREE\.DirectionalLight\(0xffffff, 1\.6\)/);
+  assert.match(source, /new THREE\.DirectionalLight\(0xffffff, 0\.9\)/);
 });

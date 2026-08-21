@@ -14,7 +14,7 @@ interface ExperienceEntry {
 const EXPERIENCE: ExperienceEntry[] = [
   {
     role: "Mechanical Design Engineer",
-    org: "Ashley Furniture Inc. — Binh Duong, Vietnam · Jul 2025 – Present",
+    org: "Ashley Furniture Inc. — NC, USA (Remote) · Jul 2025 – Present",
     current: true,
   },
   {
@@ -28,10 +28,11 @@ const EXPERIENCE: ExperienceEntry[] = [
 ];
 
 const STATEMENT = [
-  "I design and build automated machines —",
-  "and the software that runs them.",
-  "Pneumatics, motor sizing, SolidWorks,",
-  "and the controls that tie it together.",
+  "Mechanical design engineer with 4+ years designing",
+  "automated assembly lines and production machinery.",
+  "Recently completed a 3-month assignment at Ashley Furniture's",
+  "US facility (Advance, NC), working directly with their",
+  "engineering team on line design and optimization.",
 ];
 
 export function AboutSection() {
@@ -61,13 +62,15 @@ export function AboutSection() {
           </div>
         </Reveal>
 
-        {/* ── Statement reveal lines ─────────────────────────────── */}
+        {/* ── Statement reveal lines — alternating indent keeps the
+               asymmetric composition; indents stay small so each line
+               still gets most of the width and the block stays short ── */}
         <div className="mt-20 md:mt-40">
           {STATEMENT.map((line, i) => (
             <Reveal key={line} delayMs={i * 80}>
               <p
-                className={`font-mono text-xl font-light uppercase leading-tight tracking-tight md:text-4xl ${
-                  i % 2 === 1 ? "text-right md:pr-[12vw]" : "md:pl-[18vw]"
+                className={`font-mono text-lg font-light uppercase leading-tight tracking-tight sm:text-xl md:text-3xl lg:text-4xl ${
+                  i % 2 === 1 ? "text-right md:pr-[4vw]" : "md:pl-[6vw]"
                 }`}
               >
                 {line}
@@ -120,10 +123,7 @@ export function AboutSection() {
                   Education
                 </p>
                 <p className="mt-3 font-display text-xl font-bold uppercase tracking-tight md:text-2xl">
-                  [Degree / Program]
-                </p>
-                <p className="mt-1 font-mono text-xs text-ink-muted">
-                  [Institution] · [Years]
+                  VSVS College
                 </p>
               </div>
 

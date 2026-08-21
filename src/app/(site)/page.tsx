@@ -6,11 +6,14 @@ import { AwardsSection } from "@/components/shared/awards-section";
 import { CustomCursor } from "@/components/shared/custom-cursor";
 import { ProjectsSection } from "@/components/shared/projects-section";
 import { ServicesSection } from "@/components/shared/services-section";
-import { Marquee } from "@/components/shared/marquee";
 
 // Edit these three to retune the hero identity.
 const HERO_WORDS = ["Design", "Engineer"];
-const DESCRIPTORS = ["Automation & Controls"];
+const DESCRIPTORS = [
+  "Automation & Controls",
+  "Mechanical Design",
+  "Lead & Quality",
+];
 
 export default function LandingPage() {
   return (
@@ -43,11 +46,12 @@ export default function LandingPage() {
             {/* Gray box — 730px centered, matches Olha's hero-designer width */}
             {/* overflow-visible lets the portrait poke above the box top    */}
             <div
-              className="relative mx-auto overflow-visible bg-[#f1f1f1]"
+              className="relative mx-auto flex overflow-visible bg-[#f1f1f1]"
               style={{ maxWidth: "730px", minHeight: "380px" }}
             >
-              {/* Top padding = the empty zone the headline text "passes over" */}
-              <div className="px-8 pb-8 pt-[5vw] md:px-10 md:pb-10">
+              {/* justify-end pins the descriptors to the bottom of the box,
+                  level with the bottom edge of the portrait */}
+              <div className="flex w-full flex-col justify-end px-8 pb-8 pt-[5vw] md:px-10 md:pb-10">
                 <ul className="relative z-10 space-y-1.5">
                   {DESCRIPTORS.map((d) => (
                     <li key={d}>
@@ -100,9 +104,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* Skills marquee */}
-      <Marquee />
 
       {/* About & Experience */}
       <AboutSection />

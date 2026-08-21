@@ -161,26 +161,6 @@ body {
 }
 
 /* ---------------------------------------------------------- */
-/* Marquee — slow infinite scroll on the dark band            */
-/* ---------------------------------------------------------- */
-
-.marquee-track {
-  display: flex;
-  width: max-content;
-  animation: marquee-scroll 40s linear infinite;
-}
-
-.marquee-track:hover {
-  animation-play-state: paused;
-}
-
-@keyframes marquee-scroll {
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-/* ---------------------------------------------------------- */
 /* Split-text — per-letter rise, triggered on scroll-in       */
 /* (reference's signature giant-title reveal)                 */
 /* ---------------------------------------------------------- */
@@ -371,6 +351,6 @@ body {
     opacity: 1;
   }
 
-  /* Marquee, split-text reveals, and scroll reveals keep running —
-     all are intentional brand motion (owner's explicit request). */
+  /* Split-text reveals and scroll reveals keep running —
+     both are intentional brand motion (owner's explicit request). */
 }

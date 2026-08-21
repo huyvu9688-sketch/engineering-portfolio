@@ -19,7 +19,7 @@ export function Navbar() {
           href="/"
           className="font-display text-2xl font-bold uppercase leading-none tracking-tight md:text-4xl"
         >
-          VU, JOSEPH
+          PORTFOLIO
         </Link>
 
         {/* Center nav — bracket links, screen-center via grid */}

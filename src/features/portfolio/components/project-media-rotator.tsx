@@ -26,7 +26,7 @@ export function ProjectMediaRotator({
   }, [images.length]);
 
   return (
-    <div className="relative mx-auto aspect-16/10 max-w-[1500px] overflow-hidden rounded-sm border border-hairline bg-surface">
+    <div className="relative mx-auto aspect-video max-h-[70vh] max-w-[1500px] overflow-hidden rounded-sm border border-hairline bg-surface">
       {images.map((image, index) => (
         <Image
           key={image}

@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowUpRight, Cog, ImageOff } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, ImageOff } from "lucide-react";
 import { CustomCursor } from "@/components/shared/custom-cursor";
 import { Reveal } from "@/components/shared/reveal";
 import { ProjectMediaRotator } from "@/features/portfolio/components/project-media-rotator";
 import { ProjectModelViewer } from "@/features/portfolio/components/project-model-viewer";
+import { ProjectVideo } from "@/features/portfolio/components/project-video";
 import { PROJECTS, getProjectBySlug } from "@/features/portfolio/data/projects";
 
 interface ProjectDetailPageProps {
@@ -36,7 +37,7 @@ export default async function ProjectDetailPage({
   return (
     <>
       <CustomCursor />
-      <article className="mx-auto max-w-[1800px] px-4 pb-24 pt-32 md:px-6 md:pt-40">
+      <article className="mx-auto max-w-[1800px] px-6 pb-24 pt-32 md:px-14 md:pt-40">
         <Reveal>
           <Link
             href="/portfolio"
@@ -49,84 +50,15 @@ export default async function ProjectDetailPage({
 
         <Reveal>
           <header className="mt-10 border-b border-hairline pb-10 md:mt-12">
-            <p className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-accent">
-              <Cog className="h-3 w-3 stroke-[1.5]" />
-              {project.category}
-            </p>
-            <h1 className="mt-4 max-w-4xl text-4xl font-semibold uppercase leading-[0.95] tracking-tighter md:text-7xl">
+            <h1 className="max-w-4xl text-4xl font-semibold uppercase leading-[0.95] tracking-tighter md:text-7xl">
               {project.title}
             </h1>
-            <p className="mt-6 max-w-2xl text-base leading-relaxed text-ink-muted md:text-lg">
-              {project.summary}
-            </p>
-            <div className="mt-8 flex flex-wrap gap-2">
-              {project.tags.map((tag, index) => (
-                <span
-                  key={`${tag}-${index}`}
-                  className="rounded-full border border-hairline bg-surface px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-ink-muted"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
           </header>
         </Reveal>
 
-        <Reveal>
-          <div className="mt-10 md:mt-12">
-            {projectImages.length > 0 ? (
-              <ProjectMediaRotator images={projectImages} title={project.title} />
-            ) : (
-              <div className="aspect-16/10 overflow-hidden rounded-sm border border-hairline bg-surface">
-                <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-ink-faint">
-                  <ImageOff className="h-10 w-10 stroke-[1.5]" />
-                  <span className="font-mono text-[10px] uppercase tracking-widest">
-                    [Project Visual]
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        </Reveal>
-
-        <div className="mt-12 grid grid-cols-1 gap-12 md:mt-20 md:grid-cols-12 md:gap-16">
-          <Reveal className="md:col-span-8">
-            <h2 className="font-mono text-xs uppercase tracking-widest text-ink-faint">
-              Overview
-            </h2>
-            <div className="mt-6 space-y-6">
-              {(project.overview ?? [project.summary]).map((paragraph, index) => (
-                <p
-                  key={index}
-                  className="text-base leading-relaxed text-ink-muted md:text-lg"
-                >
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-            {project.model ? (
-              <ProjectModelViewer
-                src={project.model}
-                alt={`${project.title} interactive 3D model`}
-              />
-            ) : project.video ? (
-              <div className="mt-10 aspect-video max-w-3xl overflow-hidden rounded-sm border border-hairline bg-surface">
-                <video
-                  src={project.video}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  controls
-                  preload="metadata"
-                  className="h-full w-full object-contain"
-                />
-              </div>
-            ) : null}
-          </Reveal>
-
-          <Reveal className="md:col-span-4" delayMs={100}>
-            <div className="space-y-8 md:sticky md:top-32">
+        <div className="mt-10 grid grid-cols-1 gap-8 md:mt-12 md:grid-cols-12 md:items-center md:gap-12">
+          <Reveal className="md:col-span-3">
+            <div className="space-y-8">
               <div>
                 <h3 className="font-mono text-[10px] uppercase tracking-widest text-ink-faint">
                   Role
@@ -151,6 +83,56 @@ export default async function ProjectDetailPage({
                   {project.category}
                 </p>
               </div>
+            </div>
+          </Reveal>
+
+          <Reveal className="md:col-span-9" delayMs={100}>
+            {projectImages.length > 0 ? (
+              <ProjectMediaRotator images={projectImages} title={project.title} />
+            ) : (
+              <div className="aspect-video max-h-[70vh] overflow-hidden rounded-sm border border-hairline bg-surface">
+                <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-ink-faint">
+                  <ImageOff className="h-10 w-10 stroke-[1.5]" />
+                  <span className="font-mono text-[10px] uppercase tracking-widest">
+                    [Project Visual]
+                  </span>
+                </div>
+              </div>
+            )}
+          </Reveal>
+        </div>
+
+        <div className="mt-12 grid grid-cols-1 gap-12 md:mt-20 md:grid-cols-12 md:gap-16">
+          {project.model || project.video ? (
+            <Reveal className="md:col-span-6">
+              <div className="md:sticky md:top-32">
+                {project.model ? (
+                  <ProjectModelViewer
+                    src={project.model}
+                    alt={`${project.title} interactive 3D model`}
+                  />
+                ) : project.video ? (
+                  <div className="aspect-video overflow-hidden rounded-sm border border-hairline bg-surface">
+                    <ProjectVideo src={project.video} />
+                  </div>
+                ) : null}
+              </div>
+            </Reveal>
+          ) : null}
+
+          <Reveal className="md:col-span-6" delayMs={100}>
+            <h2 className="font-mono text-xs uppercase tracking-widest text-ink-faint">
+              Overview
+            </h2>
+            <div className="mt-6 space-y-6">
+              {(project.overview ?? [project.summary]).map((paragraph, index) => (
+                <p
+                  key={index}
+                  className="text-base leading-relaxed text-ink-muted md:text-lg"
+                >
+                  {paragraph}
+                </p>
+              ))}
             </div>
           </Reveal>
         </div>

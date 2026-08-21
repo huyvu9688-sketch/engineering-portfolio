@@ -10,10 +10,10 @@ infer or invent behavior from scratch.
 The quality bar is **senior front-end / creative developer**
 (reference: olhalazarieva.com). On marketing surfaces, prefer
 elegant, animation-rich, layered solutions — not simplified
-placeholders. On utility surfaces (calculators, database, CAD
-viewer), favor calm, readable, correct behavior. Non-obvious
-engineering math is never invented by the AI — it comes from the
-owner-approved spec.
+placeholders. On any future utility surface (calculators, database,
+CAD viewer — none currently exist, see `progress-tracker.md`), favor
+calm, readable, correct behavior. Non-obvious engineering math is
+never invented by the AI — it comes from the owner-approved spec.
 
 ## Scoping Rules
 
@@ -31,7 +31,7 @@ Split an implementation step if it combines:
 - UI changes and API route / database changes
 - Multiple unrelated calculators or multiple unrelated pages
 - New behavior not clearly defined in the context files
-- A Supabase schema change and the feature that uses it
+- A backend/schema change and the feature that uses it
   (migrate first, verify, then build)
 - A GSAP animation addition and a structural layout change (do
   layout first, animate second — easier to verify each independently)

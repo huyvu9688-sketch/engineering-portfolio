@@ -4,7 +4,6 @@ import { AboutSection } from "@/components/shared/about-section";
 import { ArrowUpRight } from "@/components/shared/arrow-up-right";
 import { AwardsSection } from "@/components/shared/awards-section";
 import { CustomCursor } from "@/components/shared/custom-cursor";
-import { FormSection } from "@/components/shared/form-section";
 import { ProjectsSection } from "@/components/shared/projects-section";
 import { ServicesSection } from "@/components/shared/services-section";
 import { Marquee } from "@/components/shared/marquee";
@@ -116,9 +115,6 @@ export default function LandingPage() {
 
       {/* Credentials */}
       <AwardsSection />
-
-      {/* Contact form */}
-      <FormSection />
     </>
   );
 }

@@ -2,9 +2,9 @@ import Link from "next/link";
 import { ArrowUpRight } from "@/components/shared/arrow-up-right";
 
 const NAV_LINKS = [
-  { href: "/portfolio", label: "Portfolio" },
-  { href: "/tools", label: "Tools" },
-  { href: "/database", label: "Database" },
+  { href: "/#about", label: "About" },
+  { href: "/#works", label: "Projects" },
+  { href: "/#services", label: "Services" },
 ];
 
 export function Navbar() {
@@ -38,7 +38,7 @@ export function Navbar() {
         {/* Contact — underline-wipe + rotating arrow, right-aligned */}
         <div className="flex justify-end">
           <Link
-            href="/#contact"
+            href="mailto:huyvu9688@gmail.com"
             className="link-line font-mono text-sm uppercase tracking-tight md:text-base"
           >
             contact me

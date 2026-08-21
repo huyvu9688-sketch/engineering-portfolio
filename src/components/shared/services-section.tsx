@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "@/components/shared/arrow-up-right";
 import { Reveal } from "@/components/shared/reveal";
@@ -9,43 +8,38 @@ interface Service {
   title: string;
   list: string[];
   text: string;
-  img: string;
 }
 
 const SERVICES: Service[] = [
   {
     num: "01",
     title: "Automation",
-    list: ["PLC Programming", "Motion Control", "HMI / SCADA", "Line Integration", "Commissioning"],
-    text: "Production-line automation from spec to commissioning — controls that run reliably on the floor.",
-    img: "/mechanisms/belt-conveyor.png",
+    list: ["Robotics", "Machine Vision", "Safety Engineering", "Manufacturing Improvement"],
+    text: "Robotic cells, machine vision, and safety-rated systems that keep production improving.",
   },
   {
     num: "02",
     title: "Machine Design",
-    list: ["SolidWorks", "Fixtures", "Mechanisms", "Production Tooling", "Design for Mfg"],
+    list: ["SolidWorks", "AutoCAD", "Manufacturing Processes", "Materials"],
     text: "Fixtures, mechanisms, and tooling modelled for manufacturability and built to last.",
-    img: "/mechanisms/index-table.png",
   },
   {
     num: "03",
-    title: "Drive Sizing",
-    list: ["Servo", "Stepper", "AC Induction", "Torque Analysis", "Inertia Match"],
-    text: "Motor and drive selection backed by full torque, inertia, and duty-cycle analysis.",
-    img: "/mechanisms/ball-screw.png",
+    title: "AI",
+    list: ["Vibe Coding", "AI Platforms", "Automation Tools", "Prompt Engineering", "Workflow Automation"],
+    text: "Practical AI in the workflow — vibe-coded tools, AI platforms, and automation that removes repetitive work.",
   },
   {
     num: "04",
-    title: "Controls",
-    list: ["Ladder Logic", "Sensors", "Closed-Loop", "Process Tuning", "Safety"],
-    text: "Ladder logic, sensing, and closed-loop tuning for stable, repeatable processes.",
-    img: "/mechanisms/rack-pinion.png",
+    title: "Lean and Quality",
+    list: ["Kaizen", "Kanban", "7 QC Tools", "Six Sigma", "5S"],
+    text: "Kaizen, Kanban, and the QC toolkit — driving measurable, sustained process improvement.",
   },
 ];
 
 export function ServicesSection() {
   return (
-    <section className="bg-canvas px-4 pt-24 md:px-6 md:pt-40">
+    <section id="services" className="bg-canvas px-4 pt-24 md:px-6 md:pt-40">
       <div className="mx-auto max-w-[1600px]">
         {/* ── Title row ──────────────────────────────────────────── */}
         <div className="flex items-end justify-between">
@@ -79,7 +73,7 @@ export function ServicesSection() {
                   {s.title}
                 </h3>
 
-                {/* Reveal zone — capability list + image + text */}
+                {/* Reveal zone — capability list + text */}
                 <div className="mt-6 flex flex-1 flex-col md:mt-auto md:max-h-0 md:overflow-hidden md:opacity-0 md:transition-all md:duration-700 md:ease-(--transition-main) md:group-hover:max-h-[440px] md:group-hover:opacity-100">
                   <ul className="space-y-1.5">
                     {s.list.map((item) => (
@@ -92,17 +86,7 @@ export function ServicesSection() {
                     ))}
                   </ul>
 
-                  <div className="relative mt-6 h-40 w-full overflow-hidden bg-canvas md:mt-8 md:h-52">
-                    <Image
-                      src={s.img}
-                      alt={s.title}
-                      fill
-                      className="object-contain p-4 mix-blend-multiply"
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                    />
-                  </div>
-
-                  <p className="mt-5 font-mono text-xs uppercase leading-snug tracking-tight text-ink-muted md:text-sm">
+                  <p className="mt-6 font-mono text-xs uppercase leading-snug tracking-tight text-ink-muted md:mt-8 md:text-sm">
                     {s.text}
                   </p>
                 </div>

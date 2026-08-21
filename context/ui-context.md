@@ -307,6 +307,10 @@ cursor) are custom in `src/components/shared/`. Never hand-edit
 
 - Content max-width: `max-w-[1800px]` marketing,
   `max-w-6xl` utility pages. Padding `px-4 md:px-6 lg:px-8`.
+- **Footer is the one exception**: no inner max-width cap — its
+  content spans the same full-width gutter as the navbar
+  (`px-4 md:px-8` only) so both stay edge-aligned even on very wide
+  viewports.
 - Section headers: `--font-display` title + `--font-mono` metadata
   right-aligned, bottom hairline border
   (`border-b border-black/10 pb-6`). Metadata states something true

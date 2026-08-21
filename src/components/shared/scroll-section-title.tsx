@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ElementType } from "react";
+import { applyScrollLetterProgress } from "@/lib/scroll-letter-animation";
 
 // Animation constants — same values as AboutSection for visual consistency.
 const BASE_Y = -100; // % above the split-word clip boundary for centre letter
@@ -43,13 +44,15 @@ export function ScrollSectionTitle({
 
   useEffect(() => {
     const el      = elRef.current;
-    const letters = letterRefs.current as HTMLSpanElement[];
-    if (!el || letters.some((l) => !l)) return;
+    const letters = letterRefs.current;
+    if (!el) return;
 
     // Seed each letter at its starting position above the clip boundary.
     letters.forEach((letter, i) => {
-      letter.style.willChange = "transform";
-      letter.style.transform  = `translateY(${BASE_Y + Math.abs(i - center) * RING_Y}%)`;
+      if (letter) {
+        letter.style.willChange = "transform";
+        letter.style.transform = `translateY(${BASE_Y + Math.abs(i - center) * RING_Y}%)`;
+      }
     });
 
     let raf     = 0;
@@ -57,15 +60,13 @@ export function ScrollSectionTitle({
     let target  = 0;
 
     const applyProgress = (p: number) => {
-      letters.forEach((letter, i) => {
-        const dist       = Math.abs(i - center);
-        const normalized = maxDist > 0 ? dist / maxDist : 0;
-        // Outer letters (normalized=1) start at overall=0; centre (0) starts at (1-phase).
-        const phaseStart = (1 - normalized) * (1 - phase);
-        const lp         = Math.max(0, Math.min((p - phaseStart) / phase, 1));
-        // Ease-out sine: smooth deceleration, no jarring burst at phase boundaries.
-        const eased      = Math.sin((lp * Math.PI) / 2);
-        letter.style.transform = `translateY(${(BASE_Y + dist * RING_Y) * (1 - eased)}%)`;
+      applyScrollLetterProgress(letters, {
+        progress: p,
+        center,
+        maxDistance: maxDist,
+        phase,
+        baseY: BASE_Y,
+        ringY: RING_Y,
       });
     };
 

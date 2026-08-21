@@ -31,9 +31,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": [
-    "node_modules",
-    ".agents",
-    "src/features/toolkit/viewer/lib/**/*.js"
-  ]
+  "exclude": ["node_modules", ".agents"]
 }

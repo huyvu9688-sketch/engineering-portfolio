@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { ArrowUpRight } from "@/components/shared/arrow-up-right";
 import { Reveal } from "@/components/shared/reveal";
+import { ScrollSectionTitle } from "@/components/shared/scroll-section-title";
 
 interface ExperienceEntry {
   role: string;
@@ -13,13 +13,17 @@ interface ExperienceEntry {
 
 const EXPERIENCE: ExperienceEntry[] = [
   {
-    role: "Automation & Production Engineer",
-    org: "[Company Name] · [Start Year] – Present",
+    role: "Mechanical Design Engineer",
+    org: "Ashley Furniture Inc. — Binh Duong, Vietnam · Jul 2025 – Present",
     current: true,
   },
   {
-    role: "[Previous Role Title]",
-    org: "[Company Name] · [Start Year] – [End Year]",
+    role: "Automation Engineer (Mechanical Design)",
+    org: "Panasonic Electric Works Vietnam · Sep 2023 – Jul 2025",
+  },
+  {
+    role: "Production Foreman",
+    org: "Panasonic Electric Works Vietnam · Aug 2022 – Sep 2023",
   },
 ];
 
@@ -30,106 +34,17 @@ const STATEMENT = [
   "and the controls that tie it together.",
 ];
 
-const WORD      = "ABOUT";
-const CENTER    = (WORD.length - 1) / 2; // 2
-const MAX_DIST  = CENTER;                 // 2
-
-// Scroll window: how many viewport-heights of scroll spans the full reveal.
-const SCROLL_WINDOW = 0.8;
-// Each letter's sub-phase as a fraction of the overall window.
-const PHASE = 0.6;
-// Starting Y (negative = above the split-word overflow:hidden boundary).
-const BASE_Y = -100;
-const RING_Y = -30; // extra depth per ring step outward
-
-// Lerp factor: how quickly the animated value chases the scroll target.
-// Lower = smoother but more lag; 0.10 gives a nice spring-like follow.
-const LERP = 0.10;
-
 export function AboutSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const letterRefs = useRef<(HTMLSpanElement | null)[]>(
-    Array(WORD.length).fill(null),
-  );
-
-  useEffect(() => {
-    const section = sectionRef.current;
-    const letters = letterRefs.current as HTMLSpanElement[];
-    if (!section || letters.some((l) => !l)) return;
-
-    letters.forEach((letter, i) => {
-      letter.style.willChange = "transform";
-      letter.style.transform  = `translateY(${BASE_Y + Math.abs(i - CENTER) * RING_Y}%)`;
-    });
-
-    let raf     = 0;
-    let current = 0; // smoothed progress
-    let target  = 0; // raw scroll progress
-
-    const applyProgress = (p: number) => {
-      letters.forEach((letter, i) => {
-        const dist       = Math.abs(i - CENTER);
-        const normalized = MAX_DIST > 0 ? dist / MAX_DIST : 0;
-        const phaseStart = (1 - normalized) * (1 - PHASE);
-        const lp         = Math.max(0, Math.min((p - phaseStart) / PHASE, 1));
-        // Ease-out sine: gentler deceleration, no jarring burst at phase start.
-        const eased      = Math.sin((lp * Math.PI) / 2);
-        letter.style.transform = `translateY(${(BASE_Y + dist * RING_Y) * (1 - eased)}%)`;
-      });
-    };
-
-    const tick = () => {
-      const delta = target - current;
-      if (Math.abs(delta) < 0.0002) {
-        current = target;
-        applyProgress(current);
-        raf = 0;
-        return;
-      }
-      current += delta * LERP;
-      applyProgress(current);
-      raf = requestAnimationFrame(tick);
-    };
-
-    const onScroll = () => {
-      const vh    = window.innerHeight;
-      const sRect = section.getBoundingClientRect();
-      target = Math.max(0, Math.min((vh - sRect.top) / (vh * SCROLL_WINDOW), 1));
-      if (!raf) raf = requestAnimationFrame(tick);
-    };
-
-    onScroll(); // seed correct position immediately
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
-
   return (
-    <section ref={sectionRef} className="bg-canvas py-16 text-ink md:py-24">
+    <section id="about" className="bg-canvas py-16 text-ink md:py-24">
       <div className="mx-auto max-w-[1600px] px-4 md:px-6">
 
         {/* ── Giant title — scroll-driven per-letter fall, outside-in ── */}
-        <h2
-          aria-label={WORD}
+        <ScrollSectionTitle
           className="block text-center font-display text-[clamp(6rem,28vw,22rem)] font-bold uppercase leading-[0.65] tracking-[-0.07em]"
         >
-          <span className="split-word" aria-hidden>
-            {WORD.split("").map((char, i) => (
-              <span
-                key={i}
-                className="split-letter"
-                ref={(el) => { letterRefs.current[i] = el; }}
-              >
-                {char}
-              </span>
-            ))}
-          </span>
-        </h2>
+          ABOUT
+        </ScrollSectionTitle>
 
         {/* ── Top row ────────────────────────────────────────────── */}
         <Reveal>

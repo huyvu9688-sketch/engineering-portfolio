@@ -1,46 +1,48 @@
 # Architecture Context
 
+> **Toolkit and Database removed 2026-07-03** at the owner's request. Everything below
+> that mentions Supabase, `features/toolkit/`, or `features/file-database/` is historical
+> — kept as reference in case either feature is rebuilt, not a description of current
+> code. See `progress-tracker.md` for what was deleted.
+
 ## Stack
 
 | Layer         | Technology                        | Role                                                   |
 | ------------- | --------------------------------- | ------------------------------------------------------ |
-| Framework     | Next.js 16 (App Router) + TypeScript | Frontend pages + API routes in one project           |
+| Framework     | Next.js 16 (App Router) + TypeScript | Frontend pages in one project                        |
 | UI            | Tailwind CSS v4                   | Styling — CSS-first, token-driven, no separate config  |
 | Animation     | GSAP + ScrollTrigger              | Marketing-surface scroll animation, stagger, timelines |
 | Smooth Scroll | Lenis                             | Physics-based smooth scroll on marketing pages         |
-| 3D (CAD)      | Three.js (vanilla JS engine)      | CAD viewer only — `features/toolkit/viewer/`           |
-| Auth          | Supabase Auth                     | Admin sign-in only (single admin user)                 |
-| Database      | Supabase (PostgreSQL)             | File metadata, categories, project data                |
-| File Storage  | Supabase Storage                  | STEP/SLDPRT/GLB/PDF binaries                           |
 | Hosting       | Vercel                            | Deployment, CI on git push                             |
 
 ## System Boundaries
 
-- `src/app/(site)/` — public routes with shared navbar/footer:
-  home, portfolio, tools, database pages. Thin; pages compose
-  features.
-- `src/app/(fullscreen)/` — routes that run without navbar/footer
-  (e.g. `/tools/cad-viewer` fills the full viewport).
-- `src/app/api/` — server endpoints. Owns auth checks and Supabase
-  mutations. Nothing else calls Supabase with write access.
+- `src/app/(site)/` — public routes with shared navbar/footer: home
+  and portfolio pages. Thin; pages compose features.
 - `src/features/portfolio/` — project data plus project card and
-  detail components.
-- `src/features/calculators/` — all calculator logic and UIs.
-  `lib/` holds pure math functions (no React, no I/O);
-  `components/` holds the UIs that call them.
-- `src/features/file-database/` — file listing, filters, upload
-  form, download handling.
-- `src/features/toolkit/viewer/` — CAD viewer. Engine in
-  `lib/*.js` (plain JS, excluded from tsconfig, typed via
-  `viewer-core.d.ts`); React shell in `components/cad-viewer.tsx`.
+  detail components. Project media lives in `public/`; `.glb` assets
+  are tracked with Git LFS and rendered client-side with direct Three.js
+  + GLTF/Draco loaders.
 - `src/components/shared/` — navbar, footer, layout shells, and all
   marketing section components (hero, marquee, about, projects,
   services, credentials, form, cursor, magnetic button, page
   transition, split text reveal).
 - `src/components/ui/` — shadcn-generated components. Generated
   code; do not hand-edit.
-- `src/lib/` — Supabase client setup, shared utilities, constants.
-  No feature-specific code.
+- `src/lib/` — shared utilities and constants. No feature-specific
+  code.
+
+### Removed (historical reference only)
+
+- `src/app/(fullscreen)/` — held `/tools/cad-viewer` (ran without
+  navbar/footer to fill the viewport). Removed with Toolkit.
+- `src/app/api/` — held the Database feature's auth-checked Supabase
+  mutation endpoints. Removed with Database; no API routes exist now.
+- `src/features/toolkit/` — calculator logic/UIs (`lib/` pure math,
+  `components/` UIs) plus `viewer/` (Three.js CAD viewer engine in
+  plain JS, typed via a hand-written `.d.ts`, excluded from tsconfig).
+- `src/features/file-database/` — file listing, filters, upload
+  form, download handling.
 
 ## Animation Architecture
 
@@ -61,8 +63,6 @@ scroll effects. CSS animations handle simpler self-contained effects.
   and sync it to GSAP's ticker: `gsap.ticker.add(time =>
   lenis.raf(time * 1000))`. Do NOT call `lenis.raf` inside a
   `requestAnimationFrame` loop separately.
-- Utility pages (`/tools`, `/database`) do NOT use Lenis — native
-  scroll only.
 
 **CSS animations** (`@keyframes`, scroll-driven `animation-timeline:
 view()`) handle: marquee scroll, page transition, hover states,
@@ -73,38 +73,21 @@ section components they serve. No standalone `/animations/` folder.
 
 ## Storage Model
 
-- **PostgreSQL (Supabase)**: file metadata (name, category, type,
-  size, storage path, description, upload date), categories, and
-  portfolio project records once they outgrow the static data file.
-- **Supabase Storage**: the actual binaries — STEP, SLDPRT, GLB,
-  PDF. The database stores only the storage path, never file content.
 - **Static data files** (`features/portfolio/data/`): portfolio
   project content during early phases, before DB migration.
+- **Static project media** (`public/`): project images/videos and
+  Git-LFS-tracked GLB models referenced by portfolio data.
 
 ## Auth and Access Model
 
-- All content is publicly readable; no visitor accounts exist.
-- One admin account (Joe) signs in via Supabase Auth.
-- All mutations (upload, edit, delete) require the admin session,
-  enforced in API routes AND by Supabase Row Level Security
-  policies — never by UI hiding alone.
+- All content is publicly readable; no visitor accounts or admin
+  auth exist in the app right now (removed with Database).
 
 ## Invariants
 
-1. Calculator math lives in pure functions under
-   `features/toolkit/lib/` — no React, no fetch, no Supabase
-   imports. UIs only call these functions.
-2. File binaries never go in the database; metadata never goes in
-   Storage. Path lives in DB, bytes live in Storage.
-3. Every mutation endpoint verifies the admin session before any
-   write. RLS policies back this at the database level.
-4. Features do not import from other features. Shared code goes in
+1. Features do not import from other features. Shared code goes in
    `src/lib/` or `src/components/shared/`.
-5. No hardcoded colors — all styling uses the tokens defined in
+2. No hardcoded colors — all styling uses the tokens defined in
    `ui-context.md`.
-6. GSAP and Lenis are only initialized on marketing surfaces
-   (`"use client"` components). Never on utility pages or in the
-   CAD viewer.
-7. Three.js (CAD viewer) is excluded from the TS program
-   (`tsconfig.json`) so the language server never crawls its
-   types — engine is plain JS with a hand-written `.d.ts`.
+3. GSAP and Lenis are only initialized on marketing surfaces
+   (`"use client"` components).

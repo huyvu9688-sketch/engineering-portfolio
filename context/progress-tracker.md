@@ -6,16 +6,83 @@ Update this file after every meaningful implementation change.
 
 - Phase 1 — Foundation & landing page: COMPLETE (deployed, live at https://engineering-portfolio-svy8.vercel.app)
 - Phase 2 — Portfolio: COMPLETE (units 1 & 2 done; resume DROPPED; 3D viewer REMOVED 2026-06-14)
-- Phase 3 — Toolkit: IN PROGRESS (unit converter DONE; motor-sizing slices 1–4 DONE; pneumatic pending; CAD viewer re-added 2026-06-15)
-- Phase 4 — Database: COMPLETE (deployed 2026-06-22; schema, RLS, auth, upload/browse/search/download, PDF text search, file-type categories)
+- Phase 3 — Toolkit: REMOVED 2026-07-03 (owner request)
+- Phase 4 — Database: REMOVED 2026-07-03 (owner request, after Supabase was pulled out earlier the same day)
 
 ## Session Notes (most recent first)
 
-- **2026-08-20 (Works project assets)**: Updated the primary project assets used by Works:
-  - Foam Cell Automation → `/1.png`
-  - Auto Router Cell → `/2.png`
-  - Verona Expansion → `/3.png`
-  - `1.1.png`, `2.1.png`, `3.1.png`, `3.2.png`, `1.mp4`, and `2.mp4` are intentionally unused.
+- **2026-08-21 (Works media + Verona 3D model)**: Completed and pushed the project-media
+  update to `main` (`c4579ab`).
+  - Works cards use `/1.png`, `/2.png`, and `/3.png` for Foam Cell Automation, Auto Router
+    Cell, and Verona Expansion respectively; card images use `object-contain` padding so the
+    full engineering view is visible.
+  - Project detail media rotates every five seconds: project 1 uses `/1.png` + `/1.1.png`
+    and `/1.mp4`; project 2 uses `/2.png` + `/2.1.png` and `/2.mp4`; Verona uses `/3.png`
+    + `/3.1.png`. `/3.2.png` and `/2.3.mp4` are intentionally not shown.
+  - Verona’s media slot now contains an interactive GLB model. The original SolidWorks GLB
+    falsely labelled embedded DDS data as PNG, which caused browser texture failures.
+    `/12400_10000.web.glb` is the Git-LFS-tracked, web-safe derivative with only invalid
+    texture bindings removed; it retains the model geometry and material colours.
+  - `<model-viewer>` was incompatible with this model’s scene graph (repeated “Mesh is
+    missing primitive index association” errors), so `ProjectModelViewer` now uses direct
+    Three.js with `GLTFLoader`, local Draco decoder assets (`public/draco/`), orbit controls,
+    and gentle auto-rotation. A fresh headless Edge load reports no GLTF texture or
+    primitive-association errors. Lint and all 3 Node tests pass. The local production build
+    was terminated during Turbopack optimisation without a source diagnostic, so browser
+    verification is the current end-to-end evidence.
+
+- **2026-08-20 (Scroll-title runtime fix)**: Fixed `Cannot read properties of null (reading
+  'style')` in the About and reusable `ScrollSectionTitle` animations. React can detach a
+  letter ref while a queued animation frame is still running; transform application now skips
+  detached refs. About now reuses `ScrollSectionTitle`, removing the duplicated unsafe loop.
+  Added `scroll-letter-animation.test.ts` to cover the detached-ref case; tests and production
+  build pass.
+
+- **2026-08-20 (Home page content pass)**: Owner-driven content updates from resume +
+  reference screenshots.
+  - `about-section.tsx`: `EXPERIENCE` filled in with real roles (Mechanical Design
+    Engineer @ Ashley Furniture, Automation Engineer @ Panasonic Electric Works,
+    Production Foreman @ Panasonic Electric Works), replacing `[placeholder]` entries.
+  - `navbar.tsx`: "Projects" nav link now scrolls to the home page Works section
+    (`/#works`, `ProjectsSection`'s id) instead of navigating to `/portfolio`. "Contact
+    me" now points to `mailto:huyvu9688@gmail.com` directly (the `/#contact` anchor it
+    used to target never existed — `FormSection`'s id was `connect`, and that section is
+    now removed anyway).
+  - Contact form section removed at owner's request: `<FormSection />` dropped from
+    `page.tsx`, `form-section.tsx` deleted outright. Footer already carries direct
+    email/phone contact, so no replacement was needed. `SplitText` component left in
+    place (generic, reusable) even though currently unused.
+  - `services-section.tsx` rewritten: cards 03/04 retitled from "Drive Sizing"/"Controls"
+    to "AI" (Vibe Coding, AI Platforms, Automation Tools, Prompt Engineering, Workflow
+    Automation) and "Lean and Quality" (Kaizen, Kanban, 7 QC Tools, Six Sigma, 5S). Cards
+    01/02 keep their titles but got new capability lists (Robotics/Machine Vision/Safety
+    Engineering/Manufacturing Improvement; SolidWorks/AutoCAD/Manufacturing Processes/
+    Materials). Also dropped the per-card mechanism-illustration `<Image>` — those files
+    (`public/mechanisms/*.png`) were already deleted from disk in an earlier, uncommitted
+    session (matches the 2026-07-03 Toolkit removal note below) and the `img` src's were
+    dangling. `projects-section.tsx` and `awards-section.tsx` still reference
+    `/mechanisms/*.png` too — pre-existing, out of scope for this session, flagged for
+    the owner to fix next time those sections are touched.
+
+- **2026-07-03 (Toolkit + Database removal)**: Owner asked to remove the entire Tools and
+  Database functionality. Deleted outright:
+  - Routes: `(site)/tools/` (unit converter, motor-sizing), `(fullscreen)/tools/cad-viewer/`,
+    `(site)/database/`, `admin/`, `api/documents/`, `api/projects/`
+  - Feature code: `src/features/toolkit/` (calculators + Three.js CAD viewer engine),
+    `src/features/file-database/` (upload/browse/search components + lib)
+  - Assets: `public/mechanisms/` (mechanism illustration PNGs, toolkit-only)
+  - Deps: `three`, `unpdf` (no longer used by anything)
+  - Nav: removed "Tools"/"Database" links from `navbar.tsx`, "Tools" link and "Admin"
+    link from `footer.tsx`
+  - `tsconfig.json`: dropped the now-dead `toolkit/viewer/lib` exclude entry
+  - Portfolio (Phase 1–2) and its home-page marketing sections never referenced Tools or
+    Database, so nothing there needed changing.
+  - Earlier the same session: Supabase itself (SDK, `src/lib/supabase/`, `src/proxy.ts`,
+    `.env.local.example`) was removed first, at the owner's request, before the owner
+    decided to drop the whole feature rather than rebuild it on a new backend.
+  - `context/architecture.md`'s Supabase-era stack table and file-database code-standards
+    references are now historical only — see the stale-notice banner added to
+    `architecture.md`.
 
 - **2026-06-22 (WRAP-UP, Database deploy)**: Phase 4 file database shipped and deployed.
   - **Schema/auth/storage** (Supabase): `documents`/`projects`/`app_admins` tables, RLS
@@ -109,15 +176,17 @@ Update this file after every meaningful implementation change.
 
 1. **Phase 1** — Setup, theme, landing page, deploy ✅
 2. **Phase 2** — Portfolio listing + detail pages ✅ (resume DROPPED; viewer REMOVED)
-3. **Phase 3** — Toolkit: unit converter ✅ · motor sizing ✅ · pneumatic (pending) · CAD viewer ✅
-4. **Phase 4** — Database: Supabase, admin auth, upload, browse/download ✅
-5. **Phase 5+** — Tolerance/fit calc, standard parts library, formula reference
+3. **Phase 3** — Toolkit ❌ REMOVED 2026-07-03
+4. **Phase 4** — Database ❌ REMOVED 2026-07-03
+5. **Phase 5+** — Tolerance/fit calc, standard parts library, formula reference (open —
+   owner to say whether this is still wanted now that Toolkit is gone)
 
 ## Current Goal
 
-Phase 4 shipped and deployed. Phase 3 pneumatic calculator still BLOCKED — owner must
-fill §2 of `calculator-specs.md`. Motor-sizing slice 5 (optional: hoist, preload,
-multi-RMS) low priority. Portfolio inner pages still need Olha design treatment.
+Toolkit and Database are both gone. The site is back to Phases 1–2 scope: landing page +
+portfolio. Portfolio inner pages still need the Olha design treatment. Everything under
+"Toolkit (Phase 3)" and the pneumatic calculator work below is moot unless the owner
+decides to rebuild it.
 
 ## Completed
 
@@ -127,13 +196,6 @@ multi-RMS) low priority. Portfolio inner pages still need Olha design treatment.
 - Home page (Olha clone): hero → marquee → about → works → services → credentials → contact → footer
 - Section title scroll animation via `ScrollSectionTitle` (outside-in, lerped, ease-out sine)
 - Phase 2 units 1 & 2: portfolio listing + project detail pages
-- Phase 3 unit 1: unit converter (length, force, pressure, torque, power, flow)
-- Phase 3 unit 3 slices 1–4: motor-sizing (engine + 5 mechanisms + servo/stepper/AC)
-- CAD Viewer (`/tools/cad-viewer`): fullscreen, tree, isolate, BFS curved-face pick,
-  measure (incl. cylinder axis C–C), explode, section cut, face props, STL export
-- Phase 4 Database (`/database`): Supabase schema + RLS, admin-only write (Auth +
-  RLS + API guard), drag-and-drop upload with auto file-type categorization (11
-  categories), full-text search incl. PDF body text, public download, deployed to Vercel
 
 ## In Progress
 
@@ -147,65 +209,50 @@ multi-RMS) low priority. Portfolio inner pages still need Olha design treatment.
   treatment: clip-path image wipes, scroll reveals, hover previews.
 - **Content**: owner to provide real project write-ups, photos, experience details.
 
-### Toolkit (Phase 3)
-
-- Pneumatic cylinder calculator: BLOCKED until owner fills §2 of `calculator-specs.md`.
-- Motor-sizing slice 5 (optional): vertical hoist, ball-screw preload, multi-segment RMS.
-
 ### Infra
 
 - shadcn/ui: defer until a richer primitive is needed.
-- Database fast-follows (deferred, see spec §9): metadata edit UI (PATCH routes already
-  built), part numbers/BOMs/revision history (out of scope), download analytics, private
-  files/signed URLs, "open in CAD viewer" deep link from a document card.
+- Toolkit/Database: both removed 2026-07-03. If either is revisited, treat it as new
+  scoping work — the old `architecture.md`/`code-standards.md` sections describing them
+  are historical reference only, not a spec to resume from as-is.
 
 ## Open Questions
 
 - All `[bracketed]` placeholder content (project write-ups, role titles, company names,
   education, location) — owner to fill before shipping.
-- Pneumatic calculator: owner to fill §2 of `calculator-specs.md`.
-- Mechanism illustration PNGs: drop in `/public/mechanisms/` (filenames in `README.md` there).
+- Whether Toolkit and/or Database get rebuilt at all, and on what backend (Database used
+  Supabase before removal) — no decision made, not currently planned.
 
 ## Pre-Flight Checklist
 
 - [x] Node.js LTS, GitHub repo (`huyvu9688-sketch/engineering-portfolio`), Vercel linked
 - [ ] Content: 2–3 project writeups + photos
-- [ ] Mechanism PNGs in `/public/mechanisms/`
 
 ## Architecture Decisions
 
-- **SI units**: coherent SI (m, N, Pa, N·m, W, m³/s) internal base; display conversion
-  at UI layer only.
-- **Calculator pattern**: pure logic + `node --test` tests in `src/features/toolkit/lib/`;
-  calm client UI in `src/features/toolkit/components/`. No test framework — Node 26
-  strips TS types natively.
 - **Animation**: Section titles use `ScrollSectionTitle` (custom scroll-driven JS, no
   GSAP/Lenis). General reveals use `Reveal` (IntersectionObserver). Marquee always runs.
   **Never gate any animation on `prefers-reduced-motion`** — owner's OS has it ON and
   it kills everything.
-- **3D Viewer (Toolkit)**: vanilla JS engine in `src/features/toolkit/viewer/lib/*.js`,
-  excluded from tsconfig, typed via `.d.ts`. React shell dynamically imports on client.
-  `three@0.184`. Face picking is BFS flood-fill (40° feature-edge stop) for curved faces.
-  ⚠️ Do NOT add `ViewHelper` without `renderer.autoClear = false` — it clears the canvas
-  every frame. ⚠️ Do NOT add screen-space post-processing (SSAO/bloom/composer) or a
-  "render/RealView" mode — tried 2026-06-19, looked worse on real CAD models, reverted.
-- **3D Viewer (Portfolio)**: REMOVED 2026-06-14. Use `<model-viewer>` web component if
-  revisited.
-- **shadcn/ui**: not yet installed. Native token-styled controls for calculators.
+- **3D Viewer (Portfolio)**: Verona Expansion uses a direct Three.js GLTF/Draco renderer in
+  `ProjectModelViewer`. Do not reintroduce `<model-viewer>` for this SolidWorks-derived
+  model: its scene-graph layer logs missing primitive associations. Keep GLB assets under
+  Git LFS and use web-safe texture data.
+- **shadcn/ui**: not yet installed.
 - **Deploy**: push `main` → Vercel auto-deploys. Owner confirms before push.
   Dev server run by owner — do NOT launch in IDE.
-- **Database security model**: owner is the only writer, everyone else is read-only —
-  enforced at three layers (Supabase Auth signups disabled, RLS via `app_admins` +
-  `is_admin()`, and `requireAdmin()` re-check in every API route). No service-role key
-  ships in the app; only the public URL + anon key, which are safe to expose because RLS
-  is the real guard.
-- **Database categories**: keyed to literal file type (CAD, 3D Model, PDF, Word, Excel,
-  CSV, PowerPoint, Image, Text, Archive, Video) in `categories.ts`, the single source of
-  truth for both validation and the UI. Every extension belongs to exactly one category —
-  do NOT let any future category share an extension with another; that breaks
-  `firstCategoryForExtension()`'s auto-detect on upload (this happened once already with
-  a purpose-based taxonomy where 4 categories all accepted `.pdf`).
-- **Database file upload**: browser uploads the binary straight to Supabase Storage
-  (bypasses Vercel's ~4.5 MB serverless body cap), then POSTs only metadata to the API
-  route. PDF body text is extracted client-side via lazy-loaded `unpdf` (admin-only
-  bundle cost) and folded into the search `tsvector` with weighted ranking.
+
+### Removed (Toolkit + Database, 2026-07-03)
+
+Kept as tribal knowledge in case either feature is rebuilt — none of this reflects
+current code, all of it was deleted:
+- Toolkit calculators used coherent SI internal units (m, N, Pa, N·m, W, m³/s) with
+  display conversion at the UI layer, and a pure-logic/`node --test` pattern.
+- The Toolkit's CAD viewer's curved-face picking was BFS flood-fill (40° feature-edge
+  stop); screen-space post-processing (SSAO/bloom/composer) was tried and reverted twice
+  — looked worse on real CAD models.
+- The Database's security model layered Supabase Auth signup-disable + RLS + a
+  `requireAdmin()` API re-check so the owner was the only writer.
+- The Database's file-type categories (CAD, 3D Model, PDF, Word, Excel, CSV, PowerPoint,
+  Image, Text, Archive, Video) were designed so every extension mapped to exactly one
+  category, after an earlier purpose-based taxonomy broke auto-detection.

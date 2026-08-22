@@ -4,7 +4,7 @@ import { ArrowUpRight } from "@/components/shared/arrow-up-right";
 const NAV_LINKS = [
   { href: "/#about", label: "About" },
   { href: "/#works", label: "Projects" },
-  { href: "/#services", label: "Services" },
+  { href: "/#expertise", label: "Expertise" },
 ];
 
 export function Navbar() {

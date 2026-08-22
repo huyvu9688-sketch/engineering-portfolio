@@ -111,11 +111,11 @@ export default function LandingPage() {
       {/* Recent works */}
       <ProjectsSection />
 
-      {/* Services — what Joe builds */}
+      {/* Expertise — what Joe does */}
       <ServicesSection />
 
-      {/* Credentials */}
-      <AwardsSection />
+      {/* Credentials — hidden until real content backs the counts */}
+      {/* <AwardsSection /> */}
     </>
   );
 }

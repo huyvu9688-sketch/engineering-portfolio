@@ -14,6 +14,101 @@ interface ProjectModelViewerProps {
 
 type LoadState = "loading" | "ready" | "error";
 
+const GLB_MAGIC = 0x46546c67;
+const JSON_CHUNK_TYPE = 0x4e4f534a;
+const BIN_CHUNK_TYPE = 0x004e4942;
+const DDS_MAGIC = [0x44, 0x44, 0x53, 0x20];
+
+/**
+ * Some exported .glb files embed DDS-compressed textures mislabeled as
+ * image/png — browsers can't decode DDS, so GLTFLoader logs a texture load
+ * error per occurrence (harmless: the model still loads, just without that
+ * texture). Strip references to those textures up front so the load is
+ * clean, falling back to each material's base color.
+ */
+function stripUndecodableTextures(buffer: ArrayBuffer): ArrayBuffer {
+  const dv = new DataView(buffer);
+  if (buffer.byteLength < 12 || dv.getUint32(0, true) !== GLB_MAGIC) return buffer;
+
+  let offset = 12;
+  let jsonChunk: { start: number; length: number } | null = null;
+  let binChunk: { start: number; length: number } | null = null;
+  while (offset + 8 <= buffer.byteLength) {
+    const chunkLength = dv.getUint32(offset, true);
+    const chunkType = dv.getUint32(offset + 4, true);
+    const dataStart = offset + 8;
+    if (chunkType === JSON_CHUNK_TYPE) jsonChunk = { start: dataStart, length: chunkLength };
+    else if (chunkType === BIN_CHUNK_TYPE) binChunk = { start: dataStart, length: chunkLength };
+    offset = dataStart + chunkLength;
+  }
+  if (!jsonChunk || !binChunk) return buffer;
+
+  const json = JSON.parse(
+    new TextDecoder().decode(new Uint8Array(buffer, jsonChunk.start, jsonChunk.length)),
+  );
+  if (!Array.isArray(json.images) || !Array.isArray(json.bufferViews)) return buffer;
+
+  const bin = new Uint8Array(buffer, binChunk.start, binChunk.length);
+  const brokenImages = new Set<number>();
+  json.images.forEach((image: { bufferView?: number }, i: number) => {
+    if (image.bufferView == null) return;
+    const bv = json.bufferViews[image.bufferView];
+    if (!bv) return;
+    const off = bv.byteOffset ?? 0;
+    if (DDS_MAGIC.every((byte, j) => bin[off + j] === byte)) brokenImages.add(i);
+  });
+  if (brokenImages.size === 0) return buffer;
+
+  const brokenTextures = new Set<number>();
+  (json.textures ?? []).forEach((tex: { source?: number }, i: number) => {
+    if (tex.source != null && brokenImages.has(tex.source)) brokenTextures.add(i);
+  });
+
+  type TexRef = { index: number };
+  const strip = (obj: Record<string, TexRef | undefined> | undefined, key: string) => {
+    const ref = obj?.[key];
+    if (ref && brokenTextures.has(ref.index)) delete obj![key];
+  };
+  (json.materials ?? []).forEach((mat: Record<string, unknown>) => {
+    const pbr = mat.pbrMetallicRoughness as Record<string, TexRef> | undefined;
+    strip(pbr, "baseColorTexture");
+    strip(pbr, "metallicRoughnessTexture");
+    strip(mat as Record<string, TexRef>, "normalTexture");
+    strip(mat as Record<string, TexRef>, "occlusionTexture");
+    strip(mat as Record<string, TexRef>, "emissiveTexture");
+    const specGloss = (mat.extensions as Record<string, Record<string, TexRef>> | undefined)
+      ?.KHR_materials_pbrSpecularGlossiness;
+    strip(specGloss, "diffuseTexture");
+    strip(specGloss, "specularGlossinessTexture");
+  });
+
+  let jsonBytes = new TextEncoder().encode(JSON.stringify(json));
+  const pad = (4 - (jsonBytes.length % 4)) % 4;
+  if (pad) {
+    const padded = new Uint8Array(jsonBytes.length + pad).fill(0x20);
+    padded.set(jsonBytes);
+    jsonBytes = padded;
+  }
+
+  const totalLength = 12 + 8 + jsonBytes.length + 8 + binChunk.length;
+  const out = new ArrayBuffer(totalLength);
+  const outDv = new DataView(out);
+  outDv.setUint32(0, GLB_MAGIC, true);
+  outDv.setUint32(4, 2, true);
+  outDv.setUint32(8, totalLength, true);
+  outDv.setUint32(12, jsonBytes.length, true);
+  outDv.setUint32(16, JSON_CHUNK_TYPE, true);
+  new Uint8Array(out, 20, jsonBytes.length).set(jsonBytes);
+  const binHeaderOffset = 20 + jsonBytes.length;
+  outDv.setUint32(binHeaderOffset, binChunk.length, true);
+  outDv.setUint32(binHeaderOffset + 4, BIN_CHUNK_TYPE, true);
+  new Uint8Array(out, binHeaderOffset + 8, binChunk.length).set(
+    new Uint8Array(buffer, binChunk.start, binChunk.length),
+  );
+
+  return out;
+}
+
 export function ProjectModelViewer({ src, alt }: ProjectModelViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [loadState, setLoadState] = useState<LoadState>("loading");
@@ -84,7 +179,8 @@ export function ProjectModelViewer({ src, alt }: ProjectModelViewerProps) {
     dracoLoader.setDecoderPath("/draco/");
     const loader = new GLTFLoader();
     loader.setDRACOLoader(dracoLoader);
-    loader.load(src, (gltf) => {
+
+    const onModelLoaded = (gltf: { scene: THREE.Object3D }) => {
       if (disposed) return;
 
       const model = gltf.scene;
@@ -114,9 +210,18 @@ export function ProjectModelViewer({ src, alt }: ProjectModelViewerProps) {
       controls.target.set(0, 0, 0);
       controls.update();
       setLoadState("ready");
-    }, undefined, () => {
+    };
+    const onModelError = () => {
       if (!disposed) setLoadState("error");
-    });
+    };
+
+    fetch(src)
+      .then((res) => res.arrayBuffer())
+      .then((buffer) => {
+        if (disposed) return;
+        loader.parse(stripUndecodableTextures(buffer), "", onModelLoaded, onModelError);
+      })
+      .catch(onModelError);
     render();
 
     return () => {

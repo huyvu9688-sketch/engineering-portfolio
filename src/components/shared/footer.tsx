@@ -17,10 +17,10 @@ export function Footer() {
       <div>
         {/* Phone number — large, right aligned */}
         <a
-          href="tel:123456789"
+          href="tel:+84869051480"
           className="ml-auto mt-16 block w-max font-display text-3xl font-bold lowercase tracking-tight transition-colors duration-300 hover:text-accent md:mt-20 md:text-6xl"
         >
-          +123456789
+          +84 86 9051480
         </a>
 
         {/* Email — large, right aligned */}

@@ -46,16 +46,6 @@ export function ProjectRow({ project, reversed }: ProjectRowProps) {
         <p className="mt-4 text-base leading-relaxed text-ink-muted">
           {project.summary}
         </p>
-        <div className="mt-6 flex flex-wrap gap-2">
-          {project.tags.map((tag, index) => (
-            <span
-              key={`${tag}-${index}`}
-              className="rounded-full border border-hairline bg-surface px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-ink-muted"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
         <span className="mt-8 inline-flex items-center gap-1 font-mono text-xs uppercase tracking-widest text-ink transition-colors duration-300 group-hover:text-accent">
           View Project
           <ArrowUpRight className="h-4 w-4 stroke-[1.5] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />

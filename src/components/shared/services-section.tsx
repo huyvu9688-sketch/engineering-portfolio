@@ -39,7 +39,7 @@ const SERVICES: Service[] = [
 
 export function ServicesSection() {
   return (
-    <section id="services" className="bg-canvas px-4 pt-24 md:px-6 md:pt-40">
+    <section id="expertise" className="bg-canvas px-4 pt-24 md:px-6 md:pt-40">
       <div className="mx-auto max-w-[1600px]">
         {/* ── Title row ──────────────────────────────────────────── */}
         <div className="flex items-end justify-between">
@@ -47,10 +47,10 @@ export function ServicesSection() {
             as="h2"
             className="font-display text-[clamp(3.5rem,11vw,11rem)] font-bold uppercase leading-[0.74] tracking-[-0.04em]"
           >
-            Services
+            Expertise
           </ScrollSectionTitle>
           <span className="hidden pb-2 font-display text-sm font-bold uppercase tracking-tight text-ink md:block md:text-xl">
-            / what I build
+            / what I do
           </span>
         </div>
 

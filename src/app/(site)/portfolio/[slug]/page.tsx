@@ -50,7 +50,7 @@ export default async function ProjectDetailPage({
 
         <Reveal>
           <header className="mt-10 border-b border-hairline pb-10 md:mt-12">
-            <h1 className="max-w-4xl text-4xl font-semibold uppercase leading-[0.95] tracking-tighter md:text-7xl">
+            <h1 className="text-4xl font-semibold uppercase leading-[0.95] tracking-tighter md:whitespace-nowrap md:text-7xl">
               {project.title}
             </h1>
           </header>

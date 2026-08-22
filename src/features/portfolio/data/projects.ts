@@ -25,12 +25,12 @@ export const PROJECTS: Project[] = [
     image: "/1.png",
     images: ["/1.png", "/1.1.png"],
     video: "/1.mp4",
-    category: "[Category — e.g. Automation]",
+    category: "Full-Cycle Design & Implementation",
     summary:
-      "[One or two sentence summary: the problem, your approach, and the outcome.]",
+      "Designed and implemented a handling system for oversized foam panels, removing manual lifting and cutting headcount by 5 with a 1-year ROI.",
     tags: ["[Tool / Tech]", "[Tool / Tech]", "[Tool / Tech]"],
-    role: "Concept & Design Engineer",
-    timeframe: "2 months",
+    role: "Full-Cycle Design & Implementation",
+    timeframe: "5 months",
     overview: [
       "Participated in an automation project for the foam assembly process, designing and implementing a system to handle and assemble large foam components — up to 63 × 63 × 8 inches and 18–20 kg each.",
       "Manual handling of parts this size and weight was the core problem: it created ergonomic strain on operators, and inconsistent handling was directly hurting assembly quality — panels this large are easy to misalign or damage by hand, and that inconsistency carried through to the finished product.",
@@ -46,10 +46,10 @@ export const PROJECTS: Project[] = [
     video: "/2.mp4",
     category: "Robotics & Material Handling",
     summary:
-      "[One or two sentence summary: the problem, your approach, and the outcome.]",
+      "Led the concept for an automated panel-unloading system for a router line running hundreds of variable nesting layouts, using offline robot programming to deploy without re-teaching.",
     tags: ["[Tool / Tech]", "[Tool / Tech]"],
     role: "Concept & Design Engineer",
-    timeframe: "2 months",
+    timeframe: "1 month",
     overview: [
       "Supported system upgrades and cost reduction on the router line, and led the concept development for an automated unloading mechanism to remove wooden panels from the CNC after cutting — previously a manual step.",
       "The core challenge was variation: the router ran hundreds of different nesting layouts, each with a different part arrangement, so there was no fixed pick sequence for a robot to learn — a moving target instead of a repeatable motion.",
@@ -67,7 +67,7 @@ export const PROJECTS: Project[] = [
       "https://rcbdu7ailn7momwa.public.blob.vercel-storage.com/12400_10000.web.glb",
     category: "Conveyor & Robotic Integration",
     summary:
-      "[One or two sentence summary: the problem, your approach, and the outcome.]",
+      "Designed a conveyor and robotic pick-and-place system consolidating panels from 5 production lines, eliminating 3 operators and forklift traffic from the walkway.",
     tags: ["[Tool / Tech]", "[Tool / Tech]", "[Tool / Tech]"],
     role: "Concept & Design Engineer",
     timeframe: "2 months",
@@ -75,6 +75,42 @@ export const PROJECTS: Project[] = [
       "Collaborated with other members to design a conveyor and robotic pick-and-place system that transports large foam panels from 5 production lines and consolidates them at a central staging point, replacing manual transport by operators and forklifts.",
       "Built a custom alignment conveyor to correct panel position after the robot places it down — panels come off the robot slightly skewed, so this stage squares them up before the next process, keeping output positioning within ±1/8 in tolerance.",
       "Result: eliminated 2 forklift trips per shift and 3 operators previously needed for manual handling, and removed forklift traffic from the walkway — a safety win the plant flagged directly.",
+    ],
+  },
+  {
+    slug: "project-four",
+    title: "Automatic Reverse-Feed Module",
+    image: "/4.png",
+    images: ["/4.png", "/4.1.png"],
+    model: "/4.glb",
+    category: "Material Handling & Automation",
+    summary:
+      "Designed an automatic reverse-feed module that eliminates manual stack-and-transfer between machine passes, cutting headcount by 1 with a 0.8-year ROI.",
+    tags: ["[Tool / Tech]", "[Tool / Tech]", "[Tool / Tech]"],
+    role: "Full-Cycle Design & Implementation",
+    timeframe: "2 months",
+    overview: [
+      "The existing process for messaging Cushion required two passes through the machine — one for each side. Between passes, an operator had to manually stack the bags on a cart and transfer them back to the machine's feed end, creating a large time gap between the first and second pass and adding non-value-added labor to the line.",
+      "I designed an automatic module mounted behind the machine that rotates and reverses the Cushion in place, feeding it back through for the second pass without manual stacking or transfer.",
+      "Result: eliminated the manual stack-and-transfer step and cut the gap between first and second pass, reducing headcount by 1. Investment cost of $8k with a 0.8-year ROI.",
+    ],
+  },
+  {
+    slug: "project-five",
+    title: "T-nut Insert Machine",
+    image: "/5.png",
+    images: ["/5.png", "/5.1.png"],
+    model: "/5.glb",
+    category: "Process Optimization & Automation",
+    summary:
+      "Proposed a one-operator, two-machine concept for T-nut insertion that uses auto-cycle time to eliminate idle wait, cutting headcount by 2 across 2 shifts.",
+    tags: ["[Tool / Tech]", "[Tool / Tech]", "[Tool / Tech]"],
+    role: "Full-Cycle Design & Implementation",
+    timeframe: "3 months",
+    overview: [
+      "Currently, each T-nut insert machine runs with one operator per machine — a labor-intensive setup that depends entirely on a skilled operator's pace. The cycle: load workpiece into jig, machine auto-installs the T-nut, operator unloads and reloads for the next cycle.",
+      "I proposed a concept where a single operator runs two T-nut machines simultaneously, using the machine's auto-cycle time as the window to load/unload the second machine instead of standing idle waiting on one.",
+      "Result: reduced headcount by 2 across 2 shifts. Investment cost of $13k with a 1-year ROI.",
     ],
   },
 ];

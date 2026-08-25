@@ -33,7 +33,7 @@ export const PROJECTS: Project[] = [
     title: "Foam Cell Automation",
     image: "/1.png",
     images: ["/1.png", "/1.1.png"],
-    video: "/1.mp4",
+    video: "/api/asset/rgasjxbqqJex",
     category: "Full-Cycle Design & Implementation",
     summary:
       "Designed and implemented a handling system for oversized foam panels, removing manual lifting and cutting headcount by 5 with a 1-year ROI.",
@@ -52,7 +52,7 @@ export const PROJECTS: Project[] = [
     title: "Auto Router Cell",
     image: "/2.png",
     images: ["/2.png", "/2.1.png", "/2.2.jpg", "/2.3.jpg", "/2.4.png"],
-    video: "/2.mp4",
+    video: "/api/asset/j6Ciac14rRb9",
     category: "Robotics & Material Handling",
     summary:
       "Led the concept for an automated panel-unloading system for a router line running hundreds of variable nesting layouts, using offline robot programming to deploy without re-teaching.",
@@ -72,8 +72,7 @@ export const PROJECTS: Project[] = [
     title: "Verona Expansion",
     image: "/3.png",
     images: ["/3.png", "/3.1.png"],
-    model:
-      "https://rcbdu7ailn7momwa.public.blob.vercel-storage.com/12400_10000.web.glb",
+    model: "/api/asset/Ut3FhIPX_16r",
     category: "Conveyor & Robotic Integration",
     summary:
       "Designed a conveyor and robotic pick-and-place system consolidating panels from 5 production lines, eliminating 3 operators and forklift traffic from the walkway.",
@@ -91,7 +90,7 @@ export const PROJECTS: Project[] = [
     title: "Automatic Reverse-Feed Module",
     image: "/4.png",
     images: ["/4.png", "/4.1.png"],
-    model: "/4.glb",
+    model: "/api/asset/BN5p7N7K3l1k",
     category: "Material Handling & Automation",
     summary:
       "Designed an automatic reverse-feed module that eliminates manual stack-and-transfer between machine passes, cutting headcount by 1 with a 0.8-year ROI.",
@@ -109,7 +108,7 @@ export const PROJECTS: Project[] = [
     title: "T-nut Insert Machine",
     image: "/5.png",
     images: ["/5.png", "/5.1.png"],
-    model: "/5.glb",
+    model: "/api/asset/5RntW7w_eU1i",
     category: "Process Optimization & Automation",
     summary:
       "Proposed a one-operator, two-machine concept for T-nut insertion that uses auto-cycle time to eliminate idle wait, cutting headcount by 2 across 2 shifts.",

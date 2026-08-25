@@ -38,22 +38,36 @@ test("Works projects expose their approved media", () => {
     {
       "project-one": {
         images: ["/1.png", "/1.1.png"],
-        video: "/1.mp4",
+        video: "/api/asset/rgasjxbqqJex",
         model: undefined,
       },
       "project-two": {
         images: ["/2.png", "/2.1.png", "/2.2.jpg", "/2.3.jpg", "/2.4.png"],
-        video: "/2.mp4",
+        video: "/api/asset/j6Ciac14rRb9",
         model: undefined,
       },
       "project-three": {
         images: ["/3.png", "/3.1.png"],
         video: undefined,
-        model:
-          "https://rcbdu7ailn7momwa.public.blob.vercel-storage.com/12400_10000.web.glb",
+        model: "/api/asset/Ut3FhIPX_16r",
       },
     },
   );
+
+  // Video/model URLs must go through our own /api/asset proxy, not a
+  // direct public Blob (or /public) URL — see src/app/api/asset/[key]/route.ts
+  // for why: it keeps the real file location out of anything a visitor
+  // can see, bookmark, or share.
+  for (const slug of ["project-one", "project-two", "project-three"] as const) {
+    const project = getProjectBySlug(slug)!;
+    for (const url of [project.video, project.model].filter(Boolean)) {
+      assert.match(
+        url!,
+        /^\/api\/asset\/[A-Za-z0-9_-]+$/,
+        `${slug} media must be served via /api/asset, not a direct Blob or public/ URL`,
+      );
+    }
+  }
 
   assert.equal(Object.hasOwn(getProjectBySlug("project-three")!, "video"), false);
 });

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight, ImageOff } from "lucide-react";
@@ -33,6 +34,7 @@ export default async function ProjectDetailPage({
   const project = getProjectBySlug(slug);
   if (!project) notFound();
   const projectImages = project.images ?? (project.image ? [project.image] : []);
+  const isGroupedProject = Boolean(project.subprojects?.length);
 
   return (
     <>
@@ -56,6 +58,8 @@ export default async function ProjectDetailPage({
           </header>
         </Reveal>
 
+        {!isGroupedProject ? (
+          <>
         <div className="mt-10 grid grid-cols-1 gap-8 md:mt-12 md:grid-cols-12 md:items-center md:gap-12">
           <Reveal className="md:col-span-3">
             <div className="space-y-8">
@@ -136,8 +140,33 @@ export default async function ProjectDetailPage({
             </div>
           </Reveal>
         </div>
+          </>
+        ) : null}
 
-
+        {project.subprojects?.length ? (
+          <section className="mt-20 border-t border-hairline pt-10">
+            <h2 className="font-mono text-xs uppercase tracking-widest text-ink-faint">
+              Individual Projects
+            </h2>
+            <div className="mt-8 space-y-16">
+              {project.subprojects.map((subproject, index) => (
+                <Reveal key={subproject.title} delayMs={index * 80}>
+                  <article className="grid grid-cols-1 gap-8 border-b border-hairline pb-12 md:grid-cols-12 md:items-center">
+                    <div className="relative aspect-video overflow-hidden rounded-sm border border-hairline bg-surface md:col-span-7">
+                      <Image src={subproject.image} alt={subproject.title} fill sizes="(max-width: 768px) 100vw, 58vw" className="object-contain p-4" />
+                    </div>
+                    <div className="md:col-span-5">
+                      <p className="font-mono text-[10px] uppercase tracking-widest text-ink-faint">Project {index + 1}</p>
+                      <h3 className="mt-3 text-2xl font-semibold uppercase leading-tight tracking-tighter md:text-3xl">{subproject.title}</h3>
+                      <p className="mt-4 text-base leading-relaxed text-ink-muted">{subproject.summary}</p>
+                      <p className="mt-4 border-l-2 border-accent pl-4 text-sm leading-relaxed text-ink">{subproject.result}</p>
+                    </div>
+                  </article>
+                </Reveal>
+              ))}
+            </div>
+          </section>
+        ) : null}
         <Reveal>
           <div className="mt-20 border-t border-hairline pt-10">
             <Link

@@ -61,6 +61,48 @@ body {
 }
 
 /* ---------------------------------------------------------- */
+/* Works carousel — row slides left, holds, slides back        */
+/* ---------------------------------------------------------- */
+
+/* --works-shift and --works-duration are measured by
+   projects-carousel.tsx. This keyframe is pure travel, no built-in
+   dwell: a percentage-based hold (e.g. "0%, 6% { ... }") is a fraction
+   of animation-duration, so on a wide row (long travel distance) that
+   same 6% stretched into several extra *seconds* of stall instead of
+   the short pause it looked like on a narrow one. The actual end-of-row
+   pause is done in JS instead (fixed EDGE_PAUSE_MS, independent of
+   travel distance) by holding animation-play-state on each
+   `animationiteration`. */
+@keyframes works-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(var(--works-shift, -50%), 0, 0);
+  }
+}
+
+.works-track {
+  animation: works-marquee var(--works-duration, 28s) linear infinite
+    alternate;
+  will-change: transform;
+}
+
+/* Nothing overflows (few cards / very wide screen) — hold it still. */
+.works-viewport[data-works-overflowing="false"] .works-track {
+  animation: none;
+}
+
+/* Held paused before JS arms it (or if it never runs) — the SSR default
+   is data-works-armed="false", so the row sits still instead of jumping
+   as soon as this stylesheet loads. Hover/focus/edge-dwell pausing is
+   handled in projects-carousel.tsx via inline animation-play-state,
+   which — being inline — always outranks this rule once JS is running. */
+.works-viewport[data-works-armed="false"] .works-track {
+  animation-play-state: paused;
+}
+
+/* ---------------------------------------------------------- */
 /* Hero — per-line blur + rise reveal, plays once on load     */
 /* ---------------------------------------------------------- */
 
@@ -206,6 +248,7 @@ body {
     transform: translateY(0);
   }
 }
+
 
 /* ---------------------------------------------------------- */
 /* Scroll reveal — fades in once when entering the viewport   */

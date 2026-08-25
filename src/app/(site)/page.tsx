@@ -70,7 +70,7 @@ export default function LandingPage() {
                 style={{ width: "min(280px, 40%)" }}
               >
                 <Image
-                  src="/joe.png"
+                  src="/joe.jpg"
                   alt="Joseph Vu"
                   fill
                   className="object-cover object-center"

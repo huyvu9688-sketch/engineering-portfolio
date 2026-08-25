@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight } from "@/components/shared/arrow-up-right";
+import { ProjectsCarousel } from "@/components/shared/projects-carousel";
 import { Reveal } from "@/components/shared/reveal";
 import { ScrollSectionTitle } from "@/components/shared/scroll-section-title";
 import { PROJECTS } from "@/features/portfolio/data/projects";
@@ -18,7 +19,7 @@ const FALLBACK_IMAGES = [
 /**
  * "Recent works" — the reference renders this as a scroll-driven three.js
  * slider. We keep the spirit (a dark, full-bleed works showcase) with a
- * horizontal snap-scroll of grayscale cards that color on hover.
+ * horizontally auto-sliding row of grayscale cards that color on hover.
  */
 export function ProjectsSection() {
   return (
@@ -33,12 +34,12 @@ export function ProjectsSection() {
         Works
       </ScrollSectionTitle>
 
-      <div className="mt-12 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-6 md:mt-20 md:gap-8 md:px-8 scrollbar-none">
+      <ProjectsCarousel>
         {PROJECTS.map((project, i) => (
           <Link
             key={project.slug}
             href={`/portfolio/${project.slug}`}
-            className="group relative w-[80vw] shrink-0 snap-start md:w-[clamp(28rem,38vw,40rem)]"
+            className="group relative w-[80vw] shrink-0 md:w-[clamp(28rem,38vw,40rem)]"
           >
             <div className="relative aspect-4/3 overflow-hidden bg-[#1b1b1b]">
               <Image
@@ -65,7 +66,7 @@ export function ProjectsSection() {
             </div>
           </Link>
         ))}
-      </div>
+      </ProjectsCarousel>
 
       <Reveal delayMs={100}>
         <div className="mt-12 flex justify-center px-4 md:mt-16">

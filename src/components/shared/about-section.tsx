@@ -84,7 +84,7 @@ export function AboutSection() {
           <Reveal>
             <div className="relative aspect-3/4 w-full overflow-hidden bg-black/5">
               <Image
-                src="/joe.png"
+                src="/joe.jpg"
                 alt="Joseph Vu"
                 fill
                 className="object-cover object-center"

@@ -67,3 +67,31 @@ test("Auto Router project stills are available as public assets", () => {
     );
   }
 });
+
+test("Panasonic Projects groups four machine projects under project six", () => {
+  const project = getProjectBySlug("project-six");
+
+  assert.deepEqual(
+    project && {
+      title: project.title,
+      image: project.image,
+      images: project.images,
+      subprojects: project.subprojects?.map((entry) => ({ title: entry.title, image: entry.image })),
+    },
+    {
+      title: "Panasonic Projects",
+      image: "/6.jpg",
+      images: ["/6.jpg", "/6.3.jpg", "/6.1.jpg", "/6.2.jpg"],
+      subprojects: [
+        { title: "Motor-Cover Cleaning Machine", image: "/6.jpg" },
+        { title: "Accessory Pressing Machine", image: "/6.3.jpg" },
+        { title: "Rotor E-Ring Insert & Paint Machine", image: "/6.1.jpg" },
+        { title: "Hex Nut Insertion Machine", image: "/6.2.jpg" },
+      ],
+    },
+  );
+
+  assert.equal(getProjectBySlug("project-seven"), undefined);
+  assert.equal(getProjectBySlug("project-eight"), undefined);
+  assert.equal(getProjectBySlug("project-nine"), undefined);
+});

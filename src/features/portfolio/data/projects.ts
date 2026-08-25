@@ -1,3 +1,10 @@
+export interface ProjectSubproject {
+  title: string;
+  image: string;
+  summary: string;
+  result: string;
+}
+
 export interface Project {
   slug: string;
   title: string;
@@ -16,6 +23,8 @@ export interface Project {
   timeframe?: string;
   /** Detail-page body paragraphs. */
   overview?: string[];
+  /** Individual projects displayed within a grouped portfolio entry. */
+  subprojects?: ProjectSubproject[];
 }
 
 export const PROJECTS: Project[] = [
@@ -42,7 +51,7 @@ export const PROJECTS: Project[] = [
     slug: "project-two",
     title: "Auto Router Cell",
     image: "/2.png",
-    images: ["/2.png", "/2.1.png"],
+    images: ["/2.png", "/2.1.png", "/2.2.jpg", "/2.3.jpg", "/2.4.png"],
     video: "/2.mp4",
     category: "Robotics & Material Handling",
     summary:
@@ -111,6 +120,48 @@ export const PROJECTS: Project[] = [
       "Currently, each T-nut insert machine runs with one operator per machine — a labor-intensive setup that depends entirely on a skilled operator's pace. The cycle: load workpiece into jig, machine auto-installs the T-nut, operator unloads and reloads for the next cycle.",
       "I proposed a concept where a single operator runs two T-nut machines simultaneously, using the machine's auto-cycle time as the window to load/unload the second machine instead of standing idle waiting on one.",
       "Result: reduced headcount by 2 across 2 shifts. Investment cost of $13k with a 1-year ROI.",
+    ],
+  },
+  {
+    slug: "project-six",
+    title: "Panasonic Projects",
+    image: "/6.jpg",
+    images: ["/6.jpg", "/6.3.jpg", "/6.1.jpg", "/6.2.jpg"],
+    category: "Automation Machines & Process Improvement",
+    summary:
+      "A selection of automation machines designed and commissioned for Panasonic Electric Works Vietnam.",
+    tags: ["SOLIDWORKS", "Automation", "Kaizen", "TPM"],
+    role: "Automation Engineer & Production Foreman",
+    timeframe: "2022 – 2025",
+    overview: [
+      "At Panasonic Electric Works Vietnam, I owned automation equipment from requirements and design through assembly, commissioning, maintenance, and continuous improvement on live production lines.",
+      "The four selected machines below show how process automation reduced takt time, handling, floor space, and quality risk across assembly operations.",
+    ],
+    subprojects: [
+      {
+        title: "Motor-Cover Cleaning Machine",
+        image: "/6.jpg",
+        summary: "Converted motor-cover cleaning from a manual task to a fully automatic machine.",
+        result: "Takt time reduced from 10 seconds to 4 seconds, freeing 1–2 operators per line and eliminating cleaning-rag consumables.",
+      },
+      {
+        title: "Accessory Pressing Machine",
+        image: "/6.3.jpg",
+        summary: "Replaced 2–3 separate accessory-pressing jigs with one compact automated machine.",
+        result: "Designed and delivered in three weeks; takt time cut roughly in half with a smaller floor footprint.",
+      },
+      {
+        title: "Rotor E-Ring Insert & Paint Machine",
+        image: "/6.1.jpg",
+        summary: "Combined E-ring insertion, painting, and packing in one automated machine with an integrated pick-and-place arm.",
+        result: "Removed intermediate handling steps and consolidated three processes into one equipment footprint.",
+      },
+      {
+        title: "Hex Nut Insertion Machine",
+        image: "/6.2.jpg",
+        summary: "Automated hex-nut insertion with presence control before each workpiece advances.",
+        result: "Reduced takt time and achieved zero missing-part defects with a 100% quality pass rate.",
+      },
     ],
   },
 ];

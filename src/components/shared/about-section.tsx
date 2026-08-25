@@ -118,15 +118,6 @@ export function AboutSection() {
                 ))}
               </div>
 
-              <div className="mt-12 border border-hairline p-6 md:max-w-md">
-                <p className="font-mono text-[10px] uppercase tracking-widest text-accent">
-                  Education
-                </p>
-                <p className="mt-3 font-display text-xl font-bold uppercase tracking-tight md:text-2xl">
-                  VSVS College
-                </p>
-              </div>
-
               <a
                 href="mailto:huyvu9688@gmail.com"
                 className="link-line mt-12 inline-flex font-display text-2xl font-bold lowercase tracking-tight text-ink md:text-3xl"
